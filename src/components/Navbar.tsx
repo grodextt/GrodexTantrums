@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, LayoutGrid, BarChart3, LogIn, LogOut, User, ClipboardList } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, Menu, X, LayoutGrid, BarChart3, LogIn, LogOut, User, ClipboardList, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import SearchModal from './SearchModal';
@@ -10,20 +10,31 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isActive = (path: string) => location.pathname === path;
+  const isSubPage = location.pathname.startsWith('/manga/');
 
   return (
     <>
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30">
         <div className="container flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-              <span className="text-foreground font-bold text-sm">K</span>
-            </div>
-            <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
-          </Link>
+          {isSubPage ? (
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <ArrowLeft className="w-4 h-4 text-foreground" />
+              </div>
+              <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
+            </button>
+          ) : (
+            <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                <span className="text-foreground font-bold text-sm">K</span>
+              </div>
+              <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
+            </Link>
+          )}
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-2">
