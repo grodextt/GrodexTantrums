@@ -135,6 +135,7 @@ export const mockManga: Manga[] = [
     id: '4',
     slug: 'neon-knight',
     title: 'Neon Knight',
+    altTitles: ['네온 기사', 'Cybernetic Knight'],
     cover: '/manga/cover4.jpg',
     banner: '/manga/cover4.jpg',
     description: 'In a cyberpunk metropolis where corporations rule, a rogue cyborg knight fights to protect the innocent. With each mission, the lines between human and machine blur further.',
