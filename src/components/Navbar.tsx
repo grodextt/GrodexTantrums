@@ -153,9 +153,9 @@ export default function Navbar() {
               variant="ghost"
               size="icon"
               className="rounded-full h-11 w-11 bg-muted/60 hover:bg-muted"
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleTheme}
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             <Button variant="ghost" size="icon" className="rounded-full h-11 w-11 bg-muted/60 hover:bg-muted" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
