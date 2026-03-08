@@ -73,14 +73,14 @@ export default function Navbar() {
               <Link key={path} to={path}>
                 <Button
                   variant="ghost"
-                  className={`rounded-full gap-2 px-5 h-11 text-sm font-medium transition-all duration-200 hover:scale-[1.02] ${
+                  className={`rounded-full h-11 transition-all duration-200 hover:scale-[1.02] text-sm font-medium lg:gap-2 lg:px-5 md:px-0 md:w-11 ${
                     isActive(path)
                       ? 'bg-primary/15 text-primary hover:bg-primary/20 ring-1 ring-primary/30'
                       : 'bg-muted/60 hover:bg-muted'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  {label}
+                  <span className="hidden lg:inline">{label}</span>
                 </Button>
               </Link>
             ))}
