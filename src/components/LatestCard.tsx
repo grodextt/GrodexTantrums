@@ -40,7 +40,7 @@ export default function LatestCard({ manga }: { manga: Manga }) {
               }`}
             >
               <span className="flex items-center gap-1.5 text-muted-foreground hover:text-primary truncate">
-                <span className="truncate">Chapter {ch.number}</span>
+                <span className="truncate">Ch. {ch.number}</span>
                 <Crown className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
                 {idx === 0 && (
                   <span className="shrink-0 w-4 h-4 rounded-full bg-primary flex items-center justify-center pulse">
