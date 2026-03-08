@@ -20,12 +20,21 @@ export default function Navbar() {
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30">
         <div className="container flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-              <span className="text-foreground font-bold text-sm">K</span>
-            </div>
-            <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
-          </Link>
+          {isSubPage ? (
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <ArrowLeft className="w-4 h-4 text-foreground" />
+              </div>
+              <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
+            </button>
+          ) : (
+            <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                <span className="text-foreground font-bold text-sm">K</span>
+              </div>
+              <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
+            </Link>
+          )}
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-2">
