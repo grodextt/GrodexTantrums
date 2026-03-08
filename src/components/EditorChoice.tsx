@@ -26,8 +26,8 @@ export default function EditorChoice() {
         <h2 className="font-bold text-4xl">Editor's Choice</h2>
       </div>
 
-      <div className="relative rounded-xl overflow-hidden bg-card border border-border/40">
-        <div className="flex flex-col md:flex-row">
+      <div className="relative rounded-xl bg-card border border-border/40 overflow-visible">
+        <div className="flex flex-col md:flex-row items-center">
           {/* Left - Info */}
           <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">{manga.title}</h3>
@@ -70,24 +70,24 @@ export default function EditorChoice() {
             </div>
           </div>
 
-          {/* Right - Cover */}
-          <div className="relative w-full md:w-[340px] h-[250px] md:h-auto shrink-0">
-            <img
-              src={manga.banner || manga.cover}
-              alt={manga.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-card via-card/30 to-transparent hidden md:block" />
-            <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent md:hidden" />
-            <Link
-              to={`/manga/${manga.slug}`}
-              className="absolute bottom-4 right-4"
-            >
-              <Button size="sm" className="gap-2 rounded-lg">
-                <Play className="w-3.5 h-3.5 fill-current" />
-                Start Reading
-              </Button>
-            </Link>
+          {/* Right - Floating Cover */}
+          <div className="relative w-full md:w-[300px] h-[350px] shrink-0 md:-my-8 md:mr-8">
+            <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-border/30">
+              <img
+                src={manga.cover}
+                alt={manga.title}
+                className="w-full h-full object-cover"
+              />
+              <Link
+                to={`/manga/${manga.slug}`}
+                className="absolute bottom-4 right-4"
+              >
+                <Button size="sm" className="gap-2 rounded-lg">
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  Start Reading
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
