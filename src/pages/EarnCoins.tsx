@@ -55,7 +55,7 @@ export default function EarnCoins() {
         {/* Balance pill */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 rounded-full bg-card border border-border/60 px-4 py-2">
-            <Coins className="w-4 h-4 text-yellow-500" />
+            <Coins className="w-4 h-4 text-coin-gold" />
             <span className="font-semibold text-sm text-foreground">240</span>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-card border border-border/60 px-4 py-2">
