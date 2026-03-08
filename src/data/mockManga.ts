@@ -69,6 +69,7 @@ export const mockManga: Manga[] = [
       number: 45 - i,
       title: `Chapter ${45 - i}`,
       date: new Date(2026, 2, 8 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [
       { id: 1, user: 'MangaFan99', avatar: '', text: 'This series is absolutely amazing! The art keeps getting better.', date: '2 hours ago', likes: 24 },
