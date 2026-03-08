@@ -14,6 +14,10 @@ export default function ChapterReader() {
   const [zoom, setZoom] = useState(40);
   const [sortAsc, setSortAsc] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
+  const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({
+    like: 0, funny: 0, love: 0, surprised: 0, angry: 0, sad: 0,
+  });
 
   if (!manga) {
     return (
