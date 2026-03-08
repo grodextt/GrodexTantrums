@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, BookOpen, Library, LogIn, LogOut, User, Bookmark } from 'lucide-react';
+import { Search, Menu, X, LayoutGrid, BarChart3, LogIn, LogOut, User, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import SearchModal from './SearchModal';
@@ -43,7 +43,7 @@ export default function Navbar() {
                 size="sm"
                 className={`rounded-full px-3 h-9 bg-secondary/80 hover:bg-secondary ${isActive('/latest') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <Bookmark className="w-4 h-4" />
+                <ClipboardList className="w-4 h-4" />
               </Button>
             </Link>
 
@@ -53,7 +53,7 @@ export default function Navbar() {
                 size="sm"
                 className={`rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium ${isActive('/series') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <BookOpen className="w-4 h-4" />
+                <LayoutGrid className="w-4 h-4" />
                 Series
               </Button>
             </Link>
@@ -64,7 +64,7 @@ export default function Navbar() {
                 size="sm"
                 className={`rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium ${isActive('/library') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <Library className="w-4 h-4" />
+                <BarChart3 className="w-4 h-4" />
                 Library
               </Button>
             </Link>
@@ -107,17 +107,17 @@ export default function Navbar() {
               </Button>
               <Link to="/latest" onClick={() => setMobileOpen(false)}>
                 <Button variant={isActive('/latest') ? 'default' : 'secondary'} className="w-full justify-start gap-2 rounded-full">
-                  <Bookmark className="w-4 h-4" /> Latest
+                  <ClipboardList className="w-4 h-4" /> Latest
                 </Button>
               </Link>
               <Link to="/series" onClick={() => setMobileOpen(false)}>
                 <Button variant={isActive('/series') ? 'default' : 'secondary'} className="w-full justify-start gap-2 rounded-full">
-                  <BookOpen className="w-4 h-4" /> Series
+                  <LayoutGrid className="w-4 h-4" /> Series
                 </Button>
               </Link>
               <Link to="/library" onClick={() => setMobileOpen(false)}>
                 <Button variant={isActive('/library') ? 'default' : 'secondary'} className="w-full justify-start gap-2 rounded-full">
-                  <Library className="w-4 h-4" /> Library
+                  <BarChart3 className="w-4 h-4" /> Library
                 </Button>
               </Link>
               {isAuthenticated ? (
