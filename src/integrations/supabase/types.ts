@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      chapters: {
+        Row: {
+          created_at: string
+          id: string
+          manga_id: string
+          number: number
+          pages: string[] | null
+          premium: boolean | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          manga_id: string
+          number: number
+          pages?: string[] | null
+          premium?: boolean | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          manga_id?: string
+          number?: number
+          pages?: string[] | null
+          premium?: boolean | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_manga_id_fkey"
+            columns: ["manga_id"]
+            isOneToOne: false
+            referencedRelation: "manga"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manga: {
+        Row: {
+          alt_titles: string[] | null
+          artist: string
+          author: string
+          banner_url: string | null
+          bookmarks: number | null
+          cover_url: string
+          created_at: string
+          description: string
+          featured: boolean | null
+          genres: string[] | null
+          id: string
+          pinned: boolean | null
+          premium: boolean | null
+          rating: number | null
+          released: number
+          slug: string
+          status: string
+          title: string
+          trending: boolean | null
+          type: string
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          alt_titles?: string[] | null
+          artist: string
+          author: string
+          banner_url?: string | null
+          bookmarks?: number | null
+          cover_url: string
+          created_at?: string
+          description: string
+          featured?: boolean | null
+          genres?: string[] | null
+          id?: string
+          pinned?: boolean | null
+          premium?: boolean | null
+          rating?: number | null
+          released: number
+          slug: string
+          status: string
+          title: string
+          trending?: boolean | null
+          type: string
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          alt_titles?: string[] | null
+          artist?: string
+          author?: string
+          banner_url?: string | null
+          bookmarks?: number | null
+          cover_url?: string
+          created_at?: string
+          description?: string
+          featured?: boolean | null
+          genres?: string[] | null
+          id?: string
+          pinned?: boolean | null
+          premium?: boolean | null
+          rating?: number | null
+          released?: number
+          slug?: string
+          status?: string
+          title?: string
+          trending?: boolean | null
+          type?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +148,27 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }
