@@ -50,11 +50,11 @@ export default function EditorChoice() {
 
             {/* Arrows + Dots row */}
             <div className="flex items-center gap-3">
-              <button onClick={prev} className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors shrink-0">
-                <ChevronLeft className="w-5 h-5" />
+              <button onClick={prev} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors shrink-0">
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
-              <button onClick={next} className="w-10 h-10 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors shrink-0">
-                <ChevronRight className="w-5 h-5" />
+              <button onClick={next} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors shrink-0">
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <div className="flex items-center gap-1.5 ml-2">
                 {featured.map((_, i) => (
