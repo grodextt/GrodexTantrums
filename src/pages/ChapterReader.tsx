@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, List, Home } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, Minus, Plus, ArrowUp, ArrowDown, X, Share2, Flag, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { getMangaBySlug } from '@/data/mockManga';
 import CommentSection from '@/components/CommentSection';
 
@@ -10,6 +12,9 @@ export default function ChapterReader() {
   const navigate = useNavigate();
   const manga = getMangaBySlug(slug || '');
   const chapterNum = parseInt(chapterId || '1');
+  const [zoom, setZoom] = useState(40);
+  const [sortAsc, setSortAsc] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   if (!manga) {
     return (
@@ -24,79 +29,181 @@ export default function ChapterReader() {
   const hasPrev = chapterNum > 1;
   const hasNext = chapterNum < maxChapter;
 
-  const navBar = (
-    <div className="sticky top-16 z-40 glass border-b border-border/50">
-      <div className="container flex items-center justify-between py-2 gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <Link to={`/manga/${manga.slug}`}>
-            <Button variant="ghost" size="icon" className="shrink-0"><Home className="w-4 h-4" /></Button>
-          </Link>
-          <div className="hidden sm:block text-sm font-medium truncate">{manga.title}</div>
-        </div>
+  const adjustZoom = (delta: number) => {
+    setZoom(prev => Math.min(100, Math.max(20, prev + delta)));
+  };
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={!hasPrev}
-            onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          <Select value={String(chapterNum)} onValueChange={v => navigate(`/manga/${slug}/chapter/${v}`)}>
-            <SelectTrigger className="w-36 bg-secondary border-border">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {manga.chapters.map(ch => (
-                <SelectItem key={ch.id} value={String(ch.number)}>Chapter {ch.number}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" size="icon" disabled={!hasNext}
-            onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <Link to={`/manga/${manga.slug}`} className="hidden sm:block">
-          <Button variant="ghost" size="sm" className="gap-1"><List className="w-4 h-4" /> Chapters</Button>
-        </Link>
-      </div>
-    </div>
+  const sortedChapters = [...manga.chapters].sort((a, b) =>
+    sortAsc ? a.number - b.number : b.number - a.number
   );
 
   // Placeholder reader pages
-  const pages = Array.from({ length: 6 }, (_, i) => i);
+  const pages = Array.from({ length: 8 }, (_, i) => i);
 
   return (
-    <div>
-      {navBar}
+    <div className="min-h-screen bg-background">
+      {/* Title bar */}
+      <div className="text-center py-3 border-b border-border/50">
+        <p className="text-sm text-muted-foreground">
+          {manga.title} — <span className="text-foreground font-medium">Chapter {chapterNum}</span>
+        </p>
+      </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-1">
+      {/* Reader area */}
+      <div className="flex flex-col items-center py-4 pb-28">
         {pages.map(i => (
-          <div key={i} className="w-full aspect-[2/3] bg-secondary rounded-lg flex items-center justify-center border border-border/30">
+          <div
+            key={i}
+            className="bg-secondary flex items-center justify-center"
+            style={{ width: `${zoom}%`, aspectRatio: '2/3' }}
+          >
             <div className="text-center text-muted-foreground">
-              <p className="text-lg font-medium">Chapter {chapterNum} — Page {i + 1}</p>
-              <p className="text-sm">Manga page placeholder</p>
+              <p className="text-lg font-medium">Page {i + 1}</p>
+              <p className="text-xs">Chapter {chapterNum}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Bottom nav */}
-      <div className="container max-w-3xl py-6 flex justify-between">
-        <Button variant="outline" disabled={!hasPrev}
-          onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)}>
-          <ChevronLeft className="w-4 h-4 mr-1" /> Prev
-        </Button>
-        <Button variant="outline" disabled={!hasNext}
-          onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}>
-          Next <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
+      {/* After reader section */}
+      <div className="container max-w-3xl pb-10 space-y-8">
+        {/* Next chapter card */}
+        {hasNext && (
+          <button
+            onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}
+            className="w-full p-4 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-between hover:bg-primary/20 transition-colors"
+          >
+            <div className="text-left">
+              <p className="text-sm text-muted-foreground">Next Chapter</p>
+              <p className="font-semibold">Chapter {chapterNum + 1}</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-primary" />
+          </button>
+        )}
+
+        {/* Action cards */}
+        <div className="grid grid-cols-3 gap-3">
+          <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors">
+            <Share2 className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Share</span>
+          </button>
+          <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors">
+            <Flag className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Report</span>
+          </button>
+          <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors">
+            <MessageSquare className="w-5 h-5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Discord</span>
+          </button>
+        </div>
+
+        {/* Comments */}
+        <CommentSection comments={manga.comments} title="Chapter Comments" />
       </div>
 
-      {/* Comments */}
-      <div className="container max-w-3xl pb-10">
-        <CommentSection comments={manga.comments} title="Chapter Comments" />
+      {/* Fixed bottom navigation bar */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2">
+        {/* Prev button */}
+        <Button
+          variant="secondary"
+          size="icon"
+          disabled={!hasPrev}
+          onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)}
+          className="rounded-full h-10 w-10 bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+
+        {/* Chapter list trigger */}
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="secondary"
+              className="rounded-full h-10 px-4 bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg gap-2"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="text-sm">Chapters</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl p-0">
+            <SheetHeader className="p-4 pb-2 border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-base">
+                  {manga.chapters.length} Chapters
+                </SheetTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSortAsc(!sortAsc)}
+                  className="gap-1 text-xs"
+                >
+                  {sortAsc ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+                  {sortAsc ? 'Ascending' : 'Descending'}
+                </Button>
+              </div>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(80vh-60px)]">
+              <div className="grid grid-cols-2 gap-2 p-4">
+                {sortedChapters.map(ch => (
+                  <button
+                    key={ch.id}
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      navigate(`/manga/${slug}/chapter/${ch.number}`);
+                    }}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-colors text-left ${
+                      ch.number === chapterNum
+                        ? 'bg-primary/10 border-primary/40'
+                        : 'bg-secondary/40 border-border/30 hover:bg-secondary/70'
+                    }`}
+                  >
+                    <img
+                      src={manga.cover}
+                      alt=""
+                      className="w-10 h-14 object-cover rounded shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
+                      <p className="text-xs text-muted-foreground">{ch.date}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+
+        {/* Zoom controls */}
+        <div className="flex items-center gap-0 rounded-full bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg h-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => adjustZoom(-10)}
+            className="rounded-full h-10 w-10"
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
+          <span className="text-xs font-medium min-w-[40px] text-center">{zoom}%</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => adjustZoom(10)}
+            className="rounded-full h-10 w-10"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Next button */}
+        <Button
+          variant="secondary"
+          size="icon"
+          disabled={!hasNext}
+          onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}
+          className="rounded-full h-10 w-10 bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </Button>
       </div>
     </div>
   );
