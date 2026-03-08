@@ -15,6 +15,19 @@ export default function Navbar() {
   const isActive = (path: string) => location.pathname === path;
   const isSubPage = location.pathname.startsWith('/manga/');
 
+  // Extract slug from path for chapter pages
+  const pathParts = location.pathname.split('/');
+  const isChapterPage = pathParts.length >= 5 && pathParts[3] === 'chapter';
+  const mangaSlug = pathParts[2] || '';
+
+  const handleBack = () => {
+    if (isChapterPage) {
+      navigate(`/manga/${mangaSlug}`);
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <>
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30">
