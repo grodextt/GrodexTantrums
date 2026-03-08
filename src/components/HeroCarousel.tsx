@@ -59,7 +59,7 @@ export default function HeroCarousel() {
           {items.map(manga => (
             <div
               key={manga.id}
-              className="flex-[0_0_85%] sm:flex-[0_0_45%] lg:flex-[0_0_33.333%] min-w-0 px-2"
+              className="flex-[0_0_85%] sm:flex-[0_0_40%] lg:flex-[0_0_28%] min-w-0 px-2"
             >
               <Link
                 to={`/manga/${manga.slug}`}
