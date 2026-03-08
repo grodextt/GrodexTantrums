@@ -117,7 +117,7 @@ export default function Navbar() {
                   <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <span className="text-sm font-medium">{user?.name}</span>
+                  <span className="text-sm font-medium">{profile?.display_name || 'User'}</span>
                 </div>
                 <Button
                   variant="ghost"
