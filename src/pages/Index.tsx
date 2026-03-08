@@ -21,7 +21,7 @@ export default function Index() {
         <HeroCarousel />
       </div>
 
-      <div className="container space-y-10">
+      <div className="container max-w-[1600px] xl:px-12 2xl:px-16 space-y-10">
 
       {/* Trending */}
       <section>
