@@ -50,59 +50,51 @@ export default function MangaInfo() {
             <img
               src={manga.cover}
               alt={manga.title}
-              className="w-56 h-[320px] object-cover rounded-xl shrink-0 mx-auto sm:mx-0 shadow-lg"
+              className="w-64 h-[360px] object-cover rounded-xl shrink-0 mx-auto sm:mx-0 shadow-lg"
             />
             <div className="flex-1 space-y-3.5">
-              <h1 className="text-4xl sm:text-5xl font-bold leading-tight">{manga.title}</h1>
+              <h1 className="text-5xl sm:text-6xl font-bold leading-tight">{manga.title}</h1>
 
               <div>
-                <p className="text-sm text-muted-foreground font-medium">Alternative titles</p>
-                <p className="text-xs text-muted-foreground/70">—</p>
+                <p className="text-base text-muted-foreground font-medium italic">Alternative titles</p>
+                <p className="text-sm text-muted-foreground/70">—</p>
               </div>
 
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <span className={`px-3 py-1 rounded text-xs font-bold ${manga.status === 'Ongoing' ? 'bg-green-600 text-white' : manga.status === 'Completed' ? 'bg-blue-600 text-white' : 'bg-yellow-600 text-white'}`}>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`px-4 py-1.5 rounded-md text-sm font-bold ${manga.status === 'Ongoing' ? 'bg-green-600 text-white' : manga.status === 'Completed' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>
                   {manga.status}
                 </span>
                 <TypeBadge type={manga.type} />
-                <span className="text-xs text-muted-foreground flex items-center gap-1">⏱ {manga.chapters[0]?.date || '4 days ago'}</span>
+                <span className="text-sm text-muted-foreground flex items-center gap-1">⏱ {manga.chapters[0]?.date || '4 days ago'}</span>
                 {manga.genres.slice(0, 4).map(g => (
-                  <span key={g} className="text-xs text-muted-foreground flex items-center gap-1">
-                    <span className="text-xs">📖</span> {g}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                {manga.genres.map(g => (
-                  <span key={g} className="px-3 py-1 rounded-md bg-secondary border border-border text-xs font-medium text-foreground">
-                    {g}
+                  <span key={g} className="text-sm text-muted-foreground flex items-center gap-1">
+                    <span className="text-sm">📖</span> {g}
                   </span>
                 ))}
               </div>
 
               {/* Description */}
-              <div className="bg-secondary/60 rounded-lg p-5 text-sm leading-relaxed text-muted-foreground border border-border/50">
+              <div className="bg-secondary/60 rounded-lg p-6 text-base leading-relaxed text-muted-foreground border border-border/50">
                 {manga.description}
               </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-0 mt-2">
                 <Link to={`/manga/${manga.slug}/chapter/1`} className="flex-1">
-                  <Button variant="secondary" className="w-full gap-2 rounded-none rounded-l-lg border border-border/50 h-12 text-sm font-medium">
-                    <Play className="w-4 h-4" /> Start Reading
+                  <Button variant="secondary" className="w-full gap-2 rounded-none rounded-l-lg border border-border/50 h-14 text-base font-medium">
+                    <Play className="w-5 h-5" /> Start Reading
                   </Button>
                 </Link>
                 <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`} className="flex-1">
-                  <Button variant="secondary" className="w-full gap-2 rounded-none border-y border-r border-border/50 h-12 text-sm font-medium">
-                    <Play className="w-4 h-4" /> New Chapter
+                  <Button variant="secondary" className="w-full gap-2 rounded-none border-y border-r border-border/50 h-14 text-base font-medium">
+                    <Play className="w-5 h-5" /> New Chapter
                   </Button>
                 </Link>
-                <Button variant="secondary" className="flex-1 gap-2 rounded-none border-y border-r border-border/50 h-12 text-sm font-medium">
-                  <Plus className="w-4 h-4" /> Add to Library
+                <Button variant="secondary" className="flex-1 gap-2 rounded-none border-y border-r border-border/50 h-14 text-base font-medium">
+                  <Plus className="w-5 h-5" /> Add to Library
                 </Button>
-                <Button variant="secondary" className="rounded-none rounded-r-lg border-y border-r border-border/50 px-5 h-12">
-                  <Bell className="w-4 h-4" />
+                <Button variant="secondary" className="rounded-none rounded-r-lg border-y border-r border-border/50 px-5 h-14">
+                  <Bell className="w-5 h-5" />
                 </Button>
               </div>
             </div>
