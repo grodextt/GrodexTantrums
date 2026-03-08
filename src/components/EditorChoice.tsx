@@ -26,10 +26,10 @@ export default function EditorChoice() {
         <h2 className="font-bold text-4xl">Editor's Choice</h2>
       </div>
 
-      <div className="relative rounded-xl bg-card border border-border/40 overflow-visible">
-        <div className="flex flex-col md:flex-row items-center">
+      <div className="relative rounded-xl bg-card border border-border/40">
+        <div className="flex flex-col md:flex-row">
           {/* Left - Info */}
-          <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
+          <div className="flex-1 p-6 md:p-8 flex flex-col justify-center min-w-0">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">{manga.title}</h3>
             <p className="text-sm text-muted-foreground line-clamp-3 mb-5 max-w-lg">{manga.description}</p>
 
@@ -71,8 +71,8 @@ export default function EditorChoice() {
           </div>
 
           {/* Right - Floating Cover */}
-          <div className="relative w-full md:w-[300px] h-[350px] shrink-0 md:-my-8 md:mr-8">
-            <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-border/30">
+          <div className="hidden md:block relative md:w-[45%] shrink-0">
+            <div className="absolute -top-10 right-0 bottom-0 left-0 rounded-2xl overflow-hidden shadow-2xl border border-border/30">
               <img
                 src={manga.cover}
                 alt={manga.title}
@@ -82,6 +82,19 @@ export default function EditorChoice() {
                 to={`/manga/${manga.slug}`}
                 className="absolute bottom-4 right-4"
               >
+                <Button size="sm" className="gap-2 rounded-lg">
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  Start Reading
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Mobile Cover */}
+          <div className="md:hidden relative w-full h-[250px]">
+            <div className="relative w-full h-full rounded-b-xl overflow-hidden">
+              <img src={manga.cover} alt={manga.title} className="w-full h-full object-cover" />
+              <Link to={`/manga/${manga.slug}`} className="absolute bottom-4 right-4">
                 <Button size="sm" className="gap-2 rounded-lg">
                   <Play className="w-3.5 h-3.5 fill-current" />
                   Start Reading
