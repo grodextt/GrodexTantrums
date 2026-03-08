@@ -66,7 +66,7 @@ export default function EditorChoice() {
           {/* Info */}
           <div className="p-6 md:p-8 flex flex-col justify-center">
             <h3 className="text-4xl md:text-5xl font-extrabold text-foreground mb-2 truncate">{manga.title}</h3>
-            <p className="text-base md:text-lg text-muted-foreground line-clamp-4 mb-4 max-w-lg">{manga.description}</p>
+            <p className="text-base md:text-lg text-muted-foreground line-clamp-3 mb-4 max-w-lg">{manga.description}</p>
 
             {/* Cover Slider */}
             <div className="relative group/slider mb-3">
