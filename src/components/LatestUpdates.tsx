@@ -66,7 +66,7 @@ function LatestCard({ manga }: { manga: Manga }) {
   const freeChapters = allChapters.slice(2, 4);
 
   return (
-    <div className="flex gap-3 p-3 rounded-lg border border-border/40 bg-card/30 hover:bg-card/60 transition-colors group">
+    <div className="flex gap-3 p-3 rounded-lg border border-border/40 bg-card/60 hover:bg-card/80 transition-colors group">
       <Link to={`/manga/${manga.slug}`} className="shrink-0">
         <div className="relative w-[100px] h-[140px] rounded-md overflow-hidden">
           <img
@@ -82,18 +82,20 @@ function LatestCard({ manga }: { manga: Manga }) {
       </Link>
       <div className="flex-1 min-w-0 flex flex-col">
         <Link to={`/manga/${manga.slug}`}>
-          <h3 className="font-bold text-base text-foreground line-clamp-1 hover:text-primary transition-colors">
+          <h3 className="font-bold text-base text-foreground line-clamp-2 hover:text-primary transition-colors">
             {manga.title}
           </h3>
         </Link>
 
         {/* Premium chapters */}
-        <div className="mt-2 space-y-1">
+        <div className="mt-2">
           {premiumChapters.map((ch, idx) => (
             <Link
               key={ch.id}
               to={`/manga/${manga.slug}/chapter/${ch.number}`}
-              className="flex items-center justify-between text-xs hover:text-primary transition-colors"
+              className={`flex items-center justify-between text-xs py-1.5 hover:text-primary transition-colors ${
+                idx < premiumChapters.length - 1 || freeChapters.length > 0 ? 'border-b border-border/30' : ''
+              }`}
             >
               <span className="flex items-center gap-1.5 text-muted-foreground hover:text-primary">
                 <Crown className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
@@ -107,18 +109,15 @@ function LatestCard({ manga }: { manga: Manga }) {
           ))}
         </div>
 
-        {/* Divider */}
-        {freeChapters.length > 0 && (
-          <div className="border-t border-border/30 my-1.5" />
-        )}
-
         {/* Free chapters */}
-        <div className="space-y-1">
-          {freeChapters.map(ch => (
+        <div>
+          {freeChapters.map((ch, idx) => (
             <Link
               key={ch.id}
               to={`/manga/${manga.slug}/chapter/${ch.number}`}
-              className="flex items-center justify-between text-xs hover:text-primary transition-colors"
+              className={`flex items-center justify-between text-xs py-1.5 hover:text-primary transition-colors ${
+                idx < freeChapters.length - 1 ? 'border-b border-border/30' : ''
+              }`}
             >
               <span className="text-muted-foreground hover:text-primary">
                 Chapter {ch.number}
