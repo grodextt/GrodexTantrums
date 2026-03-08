@@ -101,7 +101,9 @@ function LatestCard({ manga }: { manga: Manga }) {
                 <span className="truncate">Chapter {ch.number}</span>
                 <Crown className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
                 {idx === 0 && (
-                  <span className="shrink-0 px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-semibold">NEW</span>
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
+                  </span>
                 )}
               </span>
               <span className="text-muted-foreground/50 text-[11px] shrink-0 ml-2">{ch.date}</span>
