@@ -32,11 +32,11 @@ export default function UserMenu() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 rounded-full bg-muted/60 border border-border/40 hover:bg-muted transition-all duration-200 hover:scale-[1.02] h-11 px-2 lg:px-4"
       >
-        <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
+        <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden shrink-0">
           {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <User className="w-4 h-4 text-primary" />
+            <User className="w-5 h-5 text-primary" />
           )}
         </div>
         <span className="hidden lg:inline text-sm font-medium truncate max-w-[120px]">
