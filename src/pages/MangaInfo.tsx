@@ -228,26 +228,26 @@ export default function MangaInfo() {
         </div>
 
         {/* Trending Sidebar */}
-        <aside className="w-full xl:w-[360px] shrink-0 space-y-2">
+        <aside className="w-full xl:w-[360px] shrink-0 space-y-0 rounded-xl overflow-hidden">
           {trending.map((m, i) => (
             <Link
               key={m.id}
               to={`/manga/${m.slug}`}
-              className={`flex items-center gap-3.5 p-3 rounded-xl transition-colors group ${
+              className={`flex items-center gap-3 px-3 py-3 transition-colors group border-b border-border/30 ${
                 m.slug === slug
-                  ? 'bg-primary/10 border border-primary/30'
-                  : 'hover:bg-secondary/80 border border-transparent'
+                  ? 'bg-primary/10'
+                  : 'hover:bg-secondary/60'
               }`}
             >
-              <img src={m.cover} alt="" className="w-14 h-[72px] object-cover rounded-lg shrink-0" />
-              <span className="text-2xl font-bold text-muted-foreground/60 shrink-0 w-7 text-center">{i + 1}</span>
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{m.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{m.genres.slice(0, 3).join(', ')}</p>
+              <img src={m.cover} alt="" className="w-12 h-16 object-cover rounded-md shrink-0" />
+              <span className="text-xl font-bold text-muted-foreground/50 shrink-0 w-6 text-center">{i + 1}</span>
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <p className="text-[13px] font-medium truncate group-hover:text-primary transition-colors">{m.title}</p>
+                <p className="text-[11px] text-orange-400/80 truncate">{m.genres.slice(0, 3).join(', ')}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <TypeBadge type={m.type} />
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-secondary text-muted-foreground font-medium">{m.type}</span>
                   {m.status === 'Completed' && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-600 text-white font-medium">Completed</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-destructive text-destructive-foreground font-medium">Completed</span>
                   )}
                 </div>
               </div>
