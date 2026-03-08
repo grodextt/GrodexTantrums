@@ -69,7 +69,7 @@ export default function ChapterReader() {
       </div>
 
       {/* After reader section */}
-      <div className="container max-w-3xl pb-10 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 pb-10 space-y-6">
         {/* Next Chapter or Series Page */}
         <div className="text-center space-y-3 pt-4">
           <h3 className="text-lg font-bold">{hasNext ? 'Next Chapter' : 'Series'}</h3>
@@ -98,6 +98,11 @@ export default function ChapterReader() {
               </div>
             </Link>
           )}
+          <div>
+            <Button variant="outline" size="sm" className="rounded-full gap-1.5 mt-2">
+              <Settings className="w-3.5 h-3.5" /> Options
+            </Button>
+          </div>
         </div>
 
         {/* Share row */}
@@ -130,6 +135,51 @@ export default function ChapterReader() {
             <Button size="sm" className="rounded-full gap-1.5 shrink-0 bg-[hsl(235,86%,65%)] hover:bg-[hsl(235,86%,55%)]">
               <MessageSquare className="w-3.5 h-3.5" /> Discord
             </Button>
+          </div>
+        </div>
+
+        {/* Reactions */}
+        <div className="text-center space-y-4 py-4">
+          <div>
+            <h3 className="text-lg font-bold">What do you think?</h3>
+            <p className="text-sm text-muted-foreground">
+              {Object.values(reactionCounts).reduce((a, b) => a + b, 0)} Reactions
+            </p>
+          </div>
+          <div className="flex justify-center gap-3">
+            {[
+              { key: 'like', emoji: '👍', label: 'Like' },
+              { key: 'funny', emoji: '🤣', label: 'Funny' },
+              { key: 'love', emoji: '😍', label: 'Love' },
+              { key: 'surprised', emoji: '😮', label: 'Surprised' },
+              { key: 'angry', emoji: '😠', label: 'Angry' },
+              { key: 'sad', emoji: '😢', label: 'Sad' },
+            ].map(r => (
+              <button
+                key={r.key}
+                onClick={() => {
+                  if (selectedReaction === r.key) {
+                    setSelectedReaction(null);
+                    setReactionCounts(prev => ({ ...prev, [r.key]: prev[r.key] - 1 }));
+                  } else {
+                    if (selectedReaction) {
+                      setReactionCounts(prev => ({ ...prev, [selectedReaction]: prev[selectedReaction] - 1 }));
+                    }
+                    setSelectedReaction(r.key);
+                    setReactionCounts(prev => ({ ...prev, [r.key]: prev[r.key] + 1 }));
+                  }
+                }}
+                className={`flex flex-col items-center gap-1 p-3 rounded-xl min-w-[72px] transition-colors ${
+                  selectedReaction === r.key
+                    ? 'bg-primary/20 border border-primary/50'
+                    : 'bg-secondary/50 hover:bg-secondary/80'
+                }`}
+              >
+                <span className="text-2xl">{r.emoji}</span>
+                <span className="text-xs font-medium">{reactionCounts[r.key]}</span>
+                <span className="text-[10px] text-muted-foreground">{r.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
