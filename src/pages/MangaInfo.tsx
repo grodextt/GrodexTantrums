@@ -1,13 +1,29 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, Eye, Bookmark, Clock, User, Palette, Calendar, BookOpen } from 'lucide-react';
+import { Play, Plus, Bell, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getMangaBySlug, formatViews } from '@/data/mockManga';
+import { getMangaBySlug, getTrendingManga, formatViews } from '@/data/mockManga';
 import TypeBadge from '@/components/TypeBadge';
 import CommentSection from '@/components/CommentSection';
+
+const REACTIONS = [
+  { emoji: '👍', label: 'Like' },
+  { emoji: '🤣', label: 'Funny' },
+  { emoji: '😍', label: 'Love' },
+  { emoji: '😮', label: 'Surprised' },
+  { emoji: '😠', label: 'Angry' },
+  { emoji: '😢', label: 'Sad' },
+];
 
 export default function MangaInfo() {
   const { slug } = useParams<{ slug: string }>();
   const manga = getMangaBySlug(slug || '');
+  const trending = getTrendingManga().slice(0, 8);
+  const [expanded, setExpanded] = useState(false);
+  const [reactions, setReactions] = useState<Record<string, number>>(
+    Object.fromEntries(REACTIONS.map(r => [r.label, 0]))
+  );
+  const [sortDesc, setSortDesc] = useState(true);
 
   if (!manga) {
     return (
@@ -18,100 +34,202 @@ export default function MangaInfo() {
     );
   }
 
-  return (
-    <div>
-      {/* Banner */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <img src={manga.banner || manga.cover} alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
-      </div>
+  const sortedChapters = [...manga.chapters].sort((a, b) =>
+    sortDesc ? b.number - a.number : a.number - b.number
+  );
+  const visibleChapters = expanded ? sortedChapters : sortedChapters.slice(0, 9);
+  const maxChapter = manga.chapters.length > 0 ? Math.max(...manga.chapters.map(c => c.number)) : 0;
 
-      <div className="container -mt-32 relative z-10">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Cover */}
-          <div className="shrink-0">
+  return (
+    <div className="container py-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 space-y-6">
+          {/* Header: Cover + Info */}
+          <div className="flex flex-col sm:flex-row gap-5">
             <img
               src={manga.cover}
               alt={manga.title}
-              className="w-48 h-72 object-cover rounded-xl shadow-2xl border-2 border-border mx-auto md:mx-0"
+              className="w-40 h-56 sm:w-44 sm:h-60 object-cover rounded-xl shrink-0 mx-auto sm:mx-0"
             />
+            <div className="flex-1 space-y-3">
+              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">{manga.title}</h1>
+
+              <div>
+                <p className="text-sm text-muted-foreground font-medium">Alternative titles</p>
+                <p className="text-xs text-muted-foreground/70">—</p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-3 py-1 rounded text-xs font-bold ${manga.status === 'Ongoing' ? 'bg-green-600 text-white' : manga.status === 'Completed' ? 'bg-blue-600 text-white' : 'bg-yellow-600 text-white'}`}>
+                  {manga.status}
+                </span>
+                <TypeBadge type={manga.type} />
+                <span className="text-xs text-muted-foreground">⏱ 4 days ago</span>
+                {manga.genres.slice(0, 4).map(g => (
+                  <span key={g} className="text-xs text-muted-foreground">{g}</span>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {manga.genres.map(g => (
+                  <span key={g} className="px-2.5 py-1 rounded-md bg-secondary border border-border text-xs text-foreground">
+                    {g}
+                  </span>
+                ))}
+              </div>
+
+              {/* Description */}
+              <div className="bg-secondary/60 rounded-lg p-4 text-sm text-muted-foreground leading-relaxed border border-border/50">
+                {manga.description}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Link to={`/manga/${manga.slug}/chapter/1`}>
+                  <Button size="sm" variant="secondary" className="gap-2 rounded-lg">
+                    <Play className="w-3.5 h-3.5" /> Start Reading
+                  </Button>
+                </Link>
+                <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`}>
+                  <Button size="sm" variant="secondary" className="gap-2 rounded-lg">
+                    <Play className="w-3.5 h-3.5" /> New Chapter
+                  </Button>
+                </Link>
+                <Button size="sm" variant="secondary" className="gap-2 rounded-lg">
+                  <Plus className="w-3.5 h-3.5" /> Add to Library
+                </Button>
+                <Button size="sm" variant="secondary" className="rounded-lg px-2.5">
+                  <Bell className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* Info */}
-          <div className="flex-1 space-y-3 pt-4 md:pt-16">
-            <div className="flex items-center gap-2 flex-wrap">
-              <TypeBadge type={manga.type} />
-              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${manga.status === 'Ongoing' ? 'bg-manga-manhua/20 text-manga-manhua border-manga-manhua/30' : 'bg-muted text-muted-foreground border-border'}`}>
-                {manga.status}
-              </span>
+          {/* Share / Report / Discord Cards */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-secondary/60 border border-border/50">
+              <div>
+                <p className="text-sm font-semibold">Share Kayn Scan</p>
+                <p className="text-xs text-muted-foreground">to your friends</p>
+              </div>
+              <Button size="icon" className="rounded-full bg-primary h-9 w-9">
+                <Share2 className="w-4 h-4" />
+              </Button>
             </div>
-
-            <h1 className="text-3xl md:text-4xl font-bold">{manga.title}</h1>
-
-            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-              <span className="flex items-center gap-1"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> {manga.rating}</span>
-              <span className="flex items-center gap-1"><Eye className="w-4 h-4" /> {formatViews(manga.views)}</span>
-              <span className="flex items-center gap-1"><Bookmark className="w-4 h-4" /> {formatViews(manga.bookmarks)}</span>
-            </div>
-
-            <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">{manga.description}</p>
-
-            <div className="flex flex-wrap gap-2">
-              {manga.genres.map(g => (
-                <span key={g} className="px-2.5 py-1 rounded-md bg-secondary text-xs">{g}</span>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm pt-2">
-              <div className="flex items-center gap-2 text-muted-foreground"><User className="w-4 h-4 text-primary" /> <span>{manga.author}</span></div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Palette className="w-4 h-4 text-primary" /> <span>{manga.artist}</span></div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="w-4 h-4 text-primary" /> <span>{manga.released}</span></div>
-              <div className="flex items-center gap-2 text-muted-foreground"><Clock className="w-4 h-4 text-primary" /> <span>{manga.chapters.length} chapters</span></div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              {manga.chapters.length > 0 && (
-                <>
-                  <Link to={`/manga/${manga.slug}/chapter/1`}>
-                    <Button className="gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      Read First
-                    </Button>
-                  </Link>
-                  <Link to={`/manga/${manga.slug}/chapter/${manga.chapters[0].number}`}>
-                    <Button variant="secondary" className="gap-2">
-                      Latest Ch. {manga.chapters[0].number}
-                    </Button>
-                  </Link>
-                </>
-              )}
+            <div className="flex gap-2">
+              <div className="flex-1 flex items-center justify-between p-3 rounded-xl bg-secondary/60 border border-border/50">
+                <div>
+                  <p className="text-xs font-medium">Facing an Issue?</p>
+                  <p className="text-[10px] text-muted-foreground">Let us know, and we'll help ASAP</p>
+                </div>
+                <Button size="sm" variant="destructive" className="text-xs rounded-lg gap-1 h-7">
+                  <AlertCircle className="w-3 h-3" /> Report
+                </Button>
+              </div>
+              <div className="flex-1 flex items-center justify-between p-3 rounded-xl bg-secondary/60 border border-border/50">
+                <div>
+                  <p className="text-xs font-medium">Join Our Socials</p>
+                  <p className="text-[10px] text-muted-foreground">to explore more</p>
+                </div>
+                <Button size="sm" className="text-xs rounded-lg gap-1 h-7 bg-[#5865F2] hover:bg-[#4752C4]">
+                  Discord
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Chapter List */}
-        <div className="mt-10 space-y-4">
-          <h2 className="text-xl font-bold">Chapters</h2>
-          <div className="rounded-xl border border-border overflow-hidden">
-            <div className="max-h-96 overflow-y-auto">
-              {manga.chapters.map(ch => (
+          {/* Chapters */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">{manga.chapters.length} Chapters</h2>
+              <button
+                onClick={() => setSortDesc(!sortDesc)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ArrowDownNarrowWide className="w-4 h-4" />
+                {sortDesc ? '9→1' : '1→9'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {visibleChapters.map(ch => (
                 <Link
                   key={ch.id}
                   to={`/manga/${manga.slug}/chapter/${ch.number}`}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-secondary/50 transition-colors border-b border-border last:border-0"
+                  className="group flex items-center gap-2.5 p-2 rounded-lg bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-colors"
                 >
-                  <span className="text-sm font-medium">Chapter {ch.number}</span>
-                  <span className="text-xs text-muted-foreground">{ch.date}</span>
+                  <img
+                    src={manga.cover}
+                    alt=""
+                    className="w-14 h-14 object-cover rounded-md shrink-0 opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
+                    <p className="text-[10px] text-muted-foreground">{ch.date}</p>
+                  </div>
                 </Link>
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Comments */}
-        <div className="mt-10 pb-10">
+            {!expanded && sortedChapters.length > 9 && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ChevronDown className="w-4 h-4" /> Expand
+              </button>
+            )}
+          </div>
+
+          {/* Reactions */}
+          <div className="rounded-xl bg-secondary/60 border border-border/50 p-6 text-center space-y-4">
+            <div>
+              <p className="font-bold">What do you think?</p>
+              <p className="text-xs text-muted-foreground">{Object.values(reactions).reduce((a, b) => a + b, 0)} Reactions</p>
+            </div>
+            <div className="flex justify-center gap-5">
+              {REACTIONS.map(r => (
+                <button
+                  key={r.label}
+                  onClick={() => setReactions(prev => ({ ...prev, [r.label]: prev[r.label] + 1 }))}
+                  className="flex flex-col items-center gap-1 hover:scale-110 transition-transform"
+                >
+                  <span className="text-2xl">{r.emoji}</span>
+                  <span className="text-xs text-muted-foreground">{reactions[r.label]}</span>
+                  <span className="text-[10px] text-muted-foreground">{r.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Comments */}
           <CommentSection comments={manga.comments} />
         </div>
+
+        {/* Trending Sidebar */}
+        <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-2">
+          {trending.map((m, i) => (
+            <Link
+              key={m.id}
+              to={`/manga/${m.slug}`}
+              className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-secondary/80 transition-colors group"
+            >
+              <img src={m.cover} alt="" className="w-11 h-14 object-cover rounded-md shrink-0" />
+              <span className="text-lg font-bold text-muted-foreground/50 shrink-0 w-5 text-center">{i + 1}</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{m.title}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{m.genres.slice(0, 3).join(', ')}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <TypeBadge type={m.type} />
+                  {m.status === 'Completed' && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-600 text-white font-medium">Completed</span>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </aside>
       </div>
     </div>
   );
