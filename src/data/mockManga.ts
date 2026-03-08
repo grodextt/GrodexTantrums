@@ -108,6 +108,7 @@ export const mockManga: Manga[] = [
     id: '3',
     slug: 'flame-fist',
     title: 'Flame Fist Chronicles',
+    altTitles: ['화염권 연대기', 'Flame Fist'],
     cover: '/manga/cover3.jpg',
     banner: '/manga/cover3.jpg',
     description: 'In the underground martial arts world, a young fighter with the legendary flame fist technique rises through the ranks. Each battle pushes him closer to discovering the truth about his family\'s legacy.',
