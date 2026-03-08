@@ -39,7 +39,7 @@ export default function EditorChoice() {
                 <button
                   key={m.id}
                   onClick={() => setCurrent(i)}
-                  className={`w-24 h-36 rounded-lg overflow-hidden border-2 transition-all ${
+                  className={`w-28 h-40 rounded-lg overflow-hidden border-2 transition-all ${
                     i === current ? 'border-primary scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
