@@ -69,18 +69,18 @@ export default function MangaInfo() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2.5 flex-wrap overflow-hidden">
-                <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${manga.status === 'Ongoing' ? 'bg-green-600 text-white' : manga.status === 'Completed' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>
+              <div className="flex items-center gap-2 flex-wrap overflow-hidden">
+                <span className={`px-3.5 py-1.5 rounded-lg text-sm font-bold ${manga.status === 'Ongoing' ? 'bg-green-600 text-white' : manga.status === 'Completed' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>
                   {manga.status}
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
-                  <TypeBadge type={manga.type} className="border-0 bg-transparent p-0 text-sm lowercase first-letter:uppercase tracking-normal" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
+                  <TypeFlag type={manga.type} /> {manga.type}
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
                   🕐 {manga.chapters[0]?.date || '4 days ago'}
                 </span>
                 {manga.genres.slice(0, 4).map(g => (
-                  <span key={g} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
+                  <span key={g} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
                     <span className="text-sm">{GENRE_EMOJI[g] || '📖'}</span> {g}
                   </span>
                 ))}
