@@ -75,7 +75,7 @@ export default function MangaInfo() {
                 <span className="text-sm text-muted-foreground flex items-center gap-1">⏱ {manga.chapters[0]?.date || '4 days ago'}</span>
                 {manga.genres.slice(0, 4).map(g => (
                   <span key={g} className="text-sm text-muted-foreground flex items-center gap-1">
-                    <span className="text-sm">📖</span> {g}
+                    <span className="text-sm">{GENRE_EMOJI[g] || '📖'}</span> {g}
                   </span>
                 ))}
               </div>
