@@ -42,7 +42,7 @@ export default function Navbar() {
             </button>
           ) : (
             <Link to="/" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur flex items-center justify-center overflow-hidden">
                 <span className="text-foreground font-bold text-base">K</span>
               </div>
               <span className="font-semibold text-lg text-foreground tracking-tight">Kayn Scan</span>
