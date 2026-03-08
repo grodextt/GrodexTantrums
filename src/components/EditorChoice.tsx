@@ -29,9 +29,9 @@ export default function EditorChoice() {
       <div className="relative rounded-xl overflow-hidden bg-card border border-border/40">
         <div className="flex flex-col md:flex-row">
           {/* Left - Info */}
-          <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-3">{manga.title}</h3>
-            <p className="text-sm text-muted-foreground line-clamp-3 mb-5 max-w-lg">{manga.description}</p>
+          <div className="flex-1 p-5 md:p-6 flex flex-col justify-center">
+            <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{manga.title}</h3>
+            <p className="text-base text-muted-foreground line-clamp-3 mb-4 max-w-lg">{manga.description}</p>
 
             {/* Small covers row */}
             <div className="flex gap-2 mb-5">
