@@ -76,7 +76,7 @@ function LatestCard({ manga }: { manga: Manga }) {
             loading="lazy"
           />
           <div className="absolute top-1 left-1">
-            <TypeBadge type={manga.type} size="xs" />
+            <TypeBadge type={manga.type} />
           </div>
         </div>
       </Link>
