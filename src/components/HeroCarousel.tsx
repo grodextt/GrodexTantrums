@@ -102,8 +102,8 @@ export default function HeroCarousel() {
       </div>
 
       {/* Edge fading overlays */}
-      <div className="absolute inset-y-0 left-0 w-16 sm:w-20 lg:w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-16 sm:w-20 lg:w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-12 sm:w-16 lg:w-16 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-12 sm:w-16 lg:w-16 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
       {/* Navigation Arrows */}
       <button
