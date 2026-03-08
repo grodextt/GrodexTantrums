@@ -107,7 +107,7 @@ export default function Navbar() {
               </Button>
               <Link to="/latest" onClick={() => setMobileOpen(false)}>
                 <Button variant={isActive('/latest') ? 'default' : 'secondary'} className="w-full justify-start gap-2 rounded-full">
-                  <Bookmark className="w-4 h-4" /> Latest
+                  <ClipboardList className="w-4 h-4" /> Latest
                 </Button>
               </Link>
               <Link to="/series" onClick={() => setMobileOpen(false)}>
