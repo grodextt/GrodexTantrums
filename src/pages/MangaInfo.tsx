@@ -154,23 +154,23 @@ export default function MangaInfo() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {visibleChapters.map(ch => (
                 <Link
                   key={ch.id}
                   to={`/manga/${manga.slug}/chapter/${ch.number}`}
-                  className="group flex items-center gap-3 p-2.5 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
+                  className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
                 >
                   <div className="relative shrink-0">
                     <img
                       src={manga.cover}
                       alt=""
-                      className="w-14 h-14 object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                      className="w-16 h-16 object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
                     />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{ch.date}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{ch.date}</p>
                   </div>
                 </Link>
               ))}
