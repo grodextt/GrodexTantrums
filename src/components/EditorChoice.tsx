@@ -34,12 +34,12 @@ export default function EditorChoice() {
             <p className="text-base text-muted-foreground line-clamp-3 mb-4 max-w-lg">{manga.description}</p>
 
             {/* Small covers row */}
-            <div className="flex gap-2 mb-5">
+            <div className="flex gap-3 mb-5">
               {featured.map((m, i) => (
                 <button
                   key={m.id}
                   onClick={() => setCurrent(i)}
-                  className={`w-12 h-16 rounded overflow-hidden border-2 transition-all ${
+                  className={`w-20 h-28 rounded-lg overflow-hidden border-2 transition-all ${
                     i === current ? 'border-primary scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
