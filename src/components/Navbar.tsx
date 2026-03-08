@@ -18,53 +18,50 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 flex h-14 items-center justify-between">
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 flex h-16 items-center justify-between">
           {/* Logo */}
           {isSubPage ? (
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <ArrowLeft className="w-4 h-4 text-foreground" />
+            <button onClick={() => navigate(-1)} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <ArrowLeft className="w-5 h-5 text-foreground" />
               </div>
-              <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
+              <span className="font-semibold text-lg text-foreground tracking-tight">Kayn Scan</span>
             </button>
           ) : (
-            <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                <span className="text-foreground font-bold text-sm">K</span>
+            <Link to="/" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                <span className="text-foreground font-bold text-base">K</span>
               </div>
-              <span className="font-semibold text-base text-foreground tracking-tight">Kayn Scan</span>
+              <span className="font-semibold text-lg text-foreground tracking-tight">Kayn Scan</span>
             </Link>
           )}
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2.5">
             <Button
               variant="secondary"
-              size="sm"
-              className="rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium"
+              className="rounded-full gap-2.5 px-5 h-11 bg-secondary/80 hover:bg-secondary text-base font-medium"
               onClick={() => setSearchOpen(true)}
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-5 h-5" />
               Search
             </Button>
 
             <Link to="/latest">
               <Button
                 variant="secondary"
-                size="sm"
-                className={`rounded-full px-3 h-9 bg-secondary/80 hover:bg-secondary ${isActive('/latest') ? 'bg-secondary text-foreground' : ''}`}
+                className={`rounded-full px-4 h-11 bg-secondary/80 hover:bg-secondary ${isActive('/latest') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <ClipboardList className="w-4 h-4" />
+                <ClipboardList className="w-5 h-5" />
               </Button>
             </Link>
 
             <Link to="/series">
               <Button
                 variant="secondary"
-                size="sm"
-                className={`rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium ${isActive('/series') ? 'bg-secondary text-foreground' : ''}`}
+                className={`rounded-full gap-2.5 px-5 h-11 bg-secondary/80 hover:bg-secondary text-base font-medium ${isActive('/series') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <LayoutGrid className="w-4 h-4" />
+                <LayoutGrid className="w-5 h-5" />
                 Series
               </Button>
             </Link>
@@ -72,32 +69,30 @@ export default function Navbar() {
             <Link to="/library">
               <Button
                 variant="secondary"
-                size="sm"
-                className={`rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium ${isActive('/library') ? 'bg-secondary text-foreground' : ''}`}
+                className={`rounded-full gap-2.5 px-5 h-11 bg-secondary/80 hover:bg-secondary text-base font-medium ${isActive('/library') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <BarChart3 className="w-4 h-4" />
+                <BarChart3 className="w-5 h-5" />
                 Library
               </Button>
             </Link>
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-2 ml-1">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/80">
-                  <User className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">{user?.name}</span>
+              <div className="flex items-center gap-2.5 ml-1">
+                <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-secondary/80">
+                  <User className="w-5 h-5 text-primary" />
+                  <span className="text-base font-medium">{user?.name}</span>
                 </div>
-                <Button variant="secondary" size="sm" className="rounded-full h-9 px-3 bg-secondary/80" onClick={logout}>
-                  <LogOut className="w-4 h-4" />
+                <Button variant="secondary" className="rounded-full h-11 px-4 bg-secondary/80" onClick={logout}>
+                  <LogOut className="w-5 h-5" />
                 </Button>
               </div>
             ) : (
               <Button
                 variant="secondary"
-                size="sm"
-                className="rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium ml-1"
+                className="rounded-full gap-2.5 px-5 h-11 bg-secondary/80 hover:bg-secondary text-base font-medium ml-1"
                 onClick={() => setShowLoginModal(true)}
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-5 h-5" />
                 Sign in
               </Button>
             )}
