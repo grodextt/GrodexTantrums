@@ -65,35 +65,68 @@ export default function ChapterReader() {
       </div>
 
       {/* After reader section */}
-      <div className="container max-w-3xl pb-10 space-y-8">
-        {/* Next chapter card */}
-        {hasNext && (
-          <button
-            onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}
-            className="w-full p-4 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-between hover:bg-primary/20 transition-colors"
-          >
-            <div className="text-left">
-              <p className="text-sm text-muted-foreground">Next Chapter</p>
-              <p className="font-semibold">Chapter {chapterNum + 1}</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-primary" />
-          </button>
-        )}
+      <div className="container max-w-3xl pb-10 space-y-6">
+        {/* Next Chapter or Series Page */}
+        <div className="text-center space-y-3 pt-4">
+          <h3 className="text-lg font-bold">{hasNext ? 'Next Chapter' : 'Series'}</h3>
+          {hasNext ? (
+            <button
+              onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}
+              className="inline-flex items-center gap-3 p-3 pr-6 rounded-xl bg-secondary/60 border border-border/30 hover:bg-secondary transition-colors mx-auto"
+            >
+              <img src={manga.cover} alt="" className="w-16 h-[80px] object-cover rounded-lg" />
+              <div className="text-left">
+                <p className="text-sm font-semibold">Chapter {chapterNum + 1}</p>
+                <p className="text-xs text-muted-foreground">
+                  {manga.chapters.find(c => c.number === chapterNum + 1)?.date || ''}
+                </p>
+              </div>
+            </button>
+          ) : (
+            <Link
+              to={`/manga/${manga.slug}`}
+              className="inline-flex items-center gap-3 p-3 pr-6 rounded-xl bg-secondary/60 border border-border/30 hover:bg-secondary transition-colors mx-auto"
+            >
+              <img src={manga.cover} alt="" className="w-16 h-[80px] object-cover rounded-lg" />
+              <div className="text-left">
+                <p className="text-sm font-semibold">{manga.title}</p>
+                <p className="text-xs text-muted-foreground">View Series Page</p>
+              </div>
+            </Link>
+          )}
+        </div>
 
-        {/* Action cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors">
-            <Share2 className="w-5 h-5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Share</span>
-          </button>
-          <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors">
-            <Flag className="w-5 h-5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Report</span>
-          </button>
-          <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-secondary/50 border border-border/30 hover:bg-secondary transition-colors">
-            <MessageSquare className="w-5 h-5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Discord</span>
-          </button>
+        {/* Share row */}
+        <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/40 border-l-2 border-primary">
+          <div>
+            <p className="text-sm font-semibold">Share MangaRead</p>
+            <p className="text-xs text-muted-foreground">to your friends</p>
+          </div>
+          <Button variant="default" size="icon" className="rounded-full h-9 w-9">
+            <Share2 className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Report & Discord row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/40 border-l-2 border-destructive">
+            <div>
+              <p className="text-sm font-semibold">Facing an Issue?</p>
+              <p className="text-xs text-muted-foreground">Let us know, and we'll help ASAP</p>
+            </div>
+            <Button variant="destructive" size="sm" className="rounded-full gap-1.5 shrink-0">
+              <Flag className="w-3.5 h-3.5" /> Report
+            </Button>
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/40 border-l-2 border-[hsl(235,86%,65%)]">
+            <div>
+              <p className="text-sm font-semibold">Join Our Socials</p>
+              <p className="text-xs text-muted-foreground">to explore more</p>
+            </div>
+            <Button size="sm" className="rounded-full gap-1.5 shrink-0 bg-[hsl(235,86%,65%)] hover:bg-[hsl(235,86%,55%)]">
+              <MessageSquare className="w-3.5 h-3.5" /> Discord
+            </Button>
+          </div>
         </div>
 
         {/* Comments */}
