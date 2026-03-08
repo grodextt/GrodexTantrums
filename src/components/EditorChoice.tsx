@@ -89,7 +89,7 @@ export default function EditorChoice() {
           </div>
 
           {/* Mobile Cover */}
-          <div className="md:hidden relative w-full h-[250px]">
+          <div className="md:hidden relative w-full h-[200px] sm:h-[250px]">
             <div className="relative w-full h-full rounded-b-xl overflow-hidden">
               <img src={manga.cover} alt={manga.title} className="w-full h-full object-cover" />
               <Link to={`/manga/${manga.slug}`} className="absolute bottom-4 right-4">
