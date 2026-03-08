@@ -22,7 +22,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
+        <ThemeProvider>
         <Sonner />
         <BrowserRouter>
           <div className="min-h-screen flex flex-col">
