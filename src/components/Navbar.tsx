@@ -64,7 +64,7 @@ export default function Navbar() {
                 size="sm"
                 className={`rounded-full gap-2 px-4 h-9 bg-secondary/80 hover:bg-secondary text-sm font-medium ${isActive('/library') ? 'bg-secondary text-foreground' : ''}`}
               >
-                <Library className="w-4 h-4" />
+                <BarChart3 className="w-4 h-4" />
                 Library
               </Button>
             </Link>
