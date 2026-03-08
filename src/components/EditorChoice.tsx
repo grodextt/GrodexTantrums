@@ -28,7 +28,7 @@ export default function EditorChoice() {
 
       <div className="relative rounded-xl bg-card border border-border/40 md:pr-[660px]">
         {/* Floating Cover */}
-        <div className="hidden md:block absolute right-6 top-6 bottom-6 w-[620px] rounded-2xl overflow-hidden border border-border/40 shadow-xl z-10">
+        <div className="hidden md:block absolute right-6 -top-8 w-[620px] h-[440px] rounded-2xl overflow-hidden border border-border/40 shadow-xl z-10">
           <img
             src={manga.banner || manga.cover}
             alt={manga.title}
