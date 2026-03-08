@@ -7,6 +7,7 @@ export interface Chapter {
   title: string;
   date: string;
   pages?: string[];
+  premium?: boolean;
 }
 
 export interface Comment {
@@ -68,6 +69,7 @@ export const mockManga: Manga[] = [
       number: 45 - i,
       title: `Chapter ${45 - i}`,
       date: new Date(2026, 2, 8 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [
       { id: 1, user: 'MangaFan99', avatar: '', text: 'This series is absolutely amazing! The art keeps getting better.', date: '2 hours ago', likes: 24 },
@@ -99,6 +101,7 @@ export const mockManga: Manga[] = [
       number: 32 - i,
       title: `Chapter ${32 - i}`,
       date: new Date(2026, 2, 7 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [
       { id: 1, user: 'WitchLover', avatar: '', text: 'The magic system in this is so well thought out!', date: '3 hours ago', likes: 15 },
@@ -128,6 +131,7 @@ export const mockManga: Manga[] = [
       number: 28 - i,
       title: `Chapter ${28 - i}`,
       date: new Date(2026, 2, 6 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [],
   },
@@ -155,6 +159,7 @@ export const mockManga: Manga[] = [
       number: 52 - i,
       title: `Chapter ${52 - i}`,
       date: new Date(2026, 2, 8 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [
       { id: 1, user: 'CyberFan', avatar: '', text: 'Best cyberpunk manhwa out there!', date: '1 hour ago', likes: 33 },
@@ -182,6 +187,7 @@ export const mockManga: Manga[] = [
       number: 24 - i,
       title: `Chapter ${24 - i}`,
       date: new Date(2026, 1, 20 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [],
   },
@@ -208,6 +214,7 @@ export const mockManga: Manga[] = [
       number: 15 - i,
       title: `Chapter ${15 - i}`,
       date: new Date(2026, 2, 5 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [],
   },
@@ -234,6 +241,7 @@ export const mockManga: Manga[] = [
       number: 38 - i,
       title: `Chapter ${38 - i}`,
       date: new Date(2026, 2, 7 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [],
   },
@@ -261,6 +269,7 @@ export const mockManga: Manga[] = [
       number: 35 - i,
       title: `Chapter ${35 - i}`,
       date: new Date(2026, 2, 8 - i).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      premium: i < 2,
     })),
     comments: [
       { id: 1, user: 'IsekaiLord', avatar: '', text: 'Unique take on the isekai genre!', date: '4 hours ago', likes: 21 },

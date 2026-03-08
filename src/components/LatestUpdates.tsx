@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Grid3X3, Check } from 'lucide-react';
+import { Grid3X3, Check, Crown } from 'lucide-react';
 import { mockManga, Manga } from '@/data/mockManga';
 import TypeBadge from './TypeBadge';
 
@@ -22,11 +22,6 @@ export default function LatestUpdates() {
       return m.type === activeTab;
     })
     .sort((a, b) => b.chapters.length - a.chapters.length);
-
-  const rows: Manga[][] = [];
-  for (let i = 0; i < filtered.length; i += 3) {
-    rows.push(filtered.slice(i, i + 3));
-  }
 
   return (
     <section>
@@ -56,13 +51,9 @@ export default function LatestUpdates() {
         </Link>
       </div>
 
-      <div className="space-y-0">
-        {rows.map((row, ri) => (
-          <div key={ri} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-0 border-t border-border/40">
-            {row.map(manga => (
-              <LatestCard key={manga.id} manga={manga} />
-            ))}
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        {filtered.map(manga => (
+          <LatestCard key={manga.id} manga={manga} />
         ))}
       </div>
     </section>
@@ -70,12 +61,14 @@ export default function LatestUpdates() {
 }
 
 function LatestCard({ manga }: { manga: Manga }) {
-  const recentChapters = manga.chapters.slice(0, 3);
+  const allChapters = manga.chapters.slice(0, 4);
+  const premiumChapters = allChapters.slice(0, 2);
+  const freeChapters = allChapters.slice(2, 4);
 
   return (
-    <div className="flex gap-3 p-3 border-b border-r border-border/30 hover:bg-card/60 transition-colors group">
+    <div className="flex gap-3 p-3 rounded-lg border border-border/40 bg-card/30 hover:bg-card/60 transition-colors group">
       <Link to={`/manga/${manga.slug}`} className="shrink-0">
-        <div className="relative w-[70px] h-[95px] rounded-md overflow-hidden">
+        <div className="relative w-[100px] h-[140px] rounded-md overflow-hidden">
           <img
             src={manga.cover}
             alt={manga.title}
@@ -87,14 +80,41 @@ function LatestCard({ manga }: { manga: Manga }) {
           </div>
         </div>
       </Link>
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex flex-col">
         <Link to={`/manga/${manga.slug}`}>
-          <h3 className="font-semibold text-sm text-foreground line-clamp-1 hover:text-primary transition-colors">
+          <h3 className="font-bold text-base text-foreground line-clamp-1 hover:text-primary transition-colors">
             {manga.title}
           </h3>
         </Link>
-        <div className="mt-1.5 space-y-1">
-          {recentChapters.map(ch => (
+
+        {/* Premium chapters */}
+        <div className="mt-2 space-y-1">
+          {premiumChapters.map((ch, idx) => (
+            <Link
+              key={ch.id}
+              to={`/manga/${manga.slug}/chapter/${ch.number}`}
+              className="flex items-center justify-between text-xs hover:text-primary transition-colors"
+            >
+              <span className="flex items-center gap-1.5 text-muted-foreground hover:text-primary">
+                <Crown className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                Chapter {ch.number}
+                {idx === 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-semibold">NEW</span>
+                )}
+              </span>
+              <span className="text-muted-foreground/50 text-[11px]">{ch.date}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Divider */}
+        {freeChapters.length > 0 && (
+          <div className="border-t border-border/30 my-1.5" />
+        )}
+
+        {/* Free chapters */}
+        <div className="space-y-1">
+          {freeChapters.map(ch => (
             <Link
               key={ch.id}
               to={`/manga/${manga.slug}/chapter/${ch.number}`}
@@ -102,9 +122,6 @@ function LatestCard({ manga }: { manga: Manga }) {
             >
               <span className="text-muted-foreground hover:text-primary">
                 Chapter {ch.number}
-                {ch.number === manga.chapters[0]?.number && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-medium">NEW</span>
-                )}
               </span>
               <span className="text-muted-foreground/50 text-[11px]">{ch.date}</span>
             </Link>
