@@ -160,36 +160,45 @@ export default function MangaInfo() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {visibleChapters.map(ch => (
-                <Link
-                  key={ch.id}
-                  to={`/manga/${manga.slug}/chapter/${ch.number}`}
-                  className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
-                >
-                  <div className="relative shrink-0">
-                    <img
-                      src={manga.cover}
-                      alt=""
-                      className="w-16 h-16 object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{ch.date}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <div className="relative">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {visibleChapters.map((ch, idx) => (
+                  <Link
+                    key={ch.id}
+                    to={`/manga/${manga.slug}/chapter/${ch.number}`}
+                    className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
+                  >
+                    <div className="relative shrink-0">
+                      <img
+                        src={manga.cover}
+                        alt=""
+                        className="w-[72px] h-[56px] object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
+                        {idx === 0 && sortDesc && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground font-semibold">New</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{ch.date}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
 
-            {!expanded && sortedChapters.length > 9 && (
-              <button
-                onClick={() => setExpanded(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronDown className="w-4 h-4" /> Expand
-              </button>
-            )}
+              {!expanded && sortedChapters.length > 9 && (
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent flex items-end justify-center pb-3 pointer-events-none">
+                  <button
+                    onClick={() => setExpanded(true)}
+                    className="pointer-events-auto flex items-center gap-1.5 px-5 py-2 rounded-lg bg-secondary border border-border/50 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+                  >
+                    <ChevronDown className="w-4 h-4" /> Expand
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Reactions */}
