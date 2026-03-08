@@ -74,12 +74,8 @@ export default function Index() {
       {/* Latest Updates */}
       <LatestUpdates />
 
-      </div>
-
-      {/* Editor's Choice — full width */}
+      {/* Editor's Choice */}
       <EditorChoice />
-
-      <div className="container space-y-10">
 
       {/* Manga - Black & White */}
       {mangaType.length > 0 && (
