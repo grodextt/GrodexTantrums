@@ -125,21 +125,31 @@ export default function ChapterReader() {
               <span className="text-sm">Chapters</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[60vh] rounded-t-2xl p-0">
+          <SheetContent side="bottom" className="h-[60vh] rounded-t-2xl p-0 max-w-lg mx-auto [&>button.absolute]:hidden">
             <SheetHeader className="px-4 pt-4 pb-3 border-b border-border/50">
               <div className="flex items-center justify-between gap-3">
                 <SheetTitle className="text-base">
                   {manga.chapters.length} Chapters
                 </SheetTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSortAsc(!sortAsc)}
-                  className="gap-1.5 text-xs rounded-full"
-                >
-                  {sortAsc ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
-                  {sortAsc ? 'Ascending' : 'Descending'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortAsc(!sortAsc)}
+                    className="gap-1.5 text-xs rounded-full"
+                  >
+                    {sortAsc ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+                    {sortAsc ? 'Ascending' : 'Descending'}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDrawerOpen(false)}
+                    className="h-8 w-8 rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </SheetHeader>
             <ScrollArea className="h-[calc(60vh-60px)]">
