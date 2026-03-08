@@ -87,7 +87,7 @@ export default function MangaInfo() {
               </div>
 
               {/* Description */}
-              <div className="bg-secondary/60 rounded-lg p-4 text-base leading-relaxed text-foreground border border-border/50">
+              <div className="bg-secondary/60 rounded-lg p-4 text-base leading-relaxed text-foreground border border-border/50 break-words">
                 {manga.description}
               </div>
 
