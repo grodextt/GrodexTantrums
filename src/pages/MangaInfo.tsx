@@ -171,7 +171,7 @@ export default function MangaInfo() {
                   >
                     <div className="relative shrink-0">
                       <img
-                        src={manga.cover}
+                        src={`/manga/cover${(ch.number % 8) + 1}.jpg`}
                         alt=""
                         className="w-[72px] h-[56px] object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
                       />

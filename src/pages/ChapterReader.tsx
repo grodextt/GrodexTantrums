@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Home, List, ZoomIn, ZoomOut, RotateCcw,
@@ -23,6 +23,10 @@ export default function ChapterReader() {
   const [reactionCounts, setReactionCounts] = useState<Record<string, number>>({
     like: 0, funny: 0, love: 0, surprised: 0, angry: 0, sad: 0,
   });
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [chapterNum]);
 
   if (!manga) {
     return (
