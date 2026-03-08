@@ -100,6 +100,64 @@ export default function ChapterReader() {
         <CommentSection comments={manga.comments} title="Chapter Comments" />
       </div>
 
+      {/* Chapter list floating panel */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setDrawerOpen(false)}>
+          <div
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 w-[90vw] max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4">
+              <h3 className="text-lg font-bold">{manga.chapters.length} Chapters</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSortAsc(!sortAsc)}
+                className="h-9 w-9 rounded-lg"
+              >
+                <div className="flex flex-col items-center leading-none">
+                  <ArrowDown className="w-3.5 h-3.5" />
+                  <span className="text-[9px] font-bold leading-none">
+                    {sortAsc ? <>9<br/>1</> : <>1<br/>9</>}
+                  </span>
+                </div>
+              </Button>
+            </div>
+
+            {/* Chapter grid */}
+            <ScrollArea className="h-[50vh]">
+              <div className="grid grid-cols-2 gap-2.5 px-5 pb-5">
+                {sortedChapters.map(ch => (
+                  <button
+                    key={ch.id}
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      navigate(`/manga/${slug}/chapter/${ch.number}`);
+                    }}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors text-left ${
+                      ch.number === chapterNum
+                        ? 'bg-primary/10 border border-primary/40'
+                        : 'bg-secondary/50 hover:bg-secondary/80'
+                    }`}
+                  >
+                    <img
+                      src={manga.cover}
+                      alt=""
+                      className="w-14 h-[72px] object-cover rounded-lg shrink-0 bg-muted"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">Chapter {ch.number}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{ch.date}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+      )}
+
       {/* Fixed bottom navigation bar */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2">
         {/* Prev button */}
@@ -114,73 +172,14 @@ export default function ChapterReader() {
         </Button>
 
         {/* Chapter list trigger */}
-        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="secondary"
-              className="rounded-full h-10 px-4 bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg gap-2"
-            >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="text-sm">Chapters</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-[60vh] rounded-t-2xl p-0 max-w-lg mx-auto [&>button.absolute]:hidden">
-            <SheetHeader className="px-4 pt-4 pb-3 border-b border-border/50">
-              <div className="flex items-center justify-between gap-3">
-                <SheetTitle className="text-base">
-                  {manga.chapters.length} Chapters
-                </SheetTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSortAsc(!sortAsc)}
-                    className="gap-1.5 text-xs rounded-full"
-                  >
-                    {sortAsc ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
-                    {sortAsc ? 'Ascending' : 'Descending'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDrawerOpen(false)}
-                    className="h-8 w-8 rounded-full"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </SheetHeader>
-            <ScrollArea className="h-[calc(60vh-60px)]">
-              <div className="grid grid-cols-2 gap-2 p-4">
-                {sortedChapters.map(ch => (
-                  <button
-                    key={ch.id}
-                    onClick={() => {
-                      setDrawerOpen(false);
-                      navigate(`/manga/${slug}/chapter/${ch.number}`);
-                    }}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-colors text-left ${
-                      ch.number === chapterNum
-                        ? 'bg-primary/10 border-primary/40'
-                        : 'bg-secondary/40 border-border/30 hover:bg-secondary/70'
-                    }`}
-                  >
-                    <img
-                      src={manga.cover}
-                      alt=""
-                      className="w-10 h-14 object-cover rounded shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
-                      <p className="text-xs text-muted-foreground">{ch.date}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </SheetContent>
-        </Sheet>
+        <Button
+          variant="secondary"
+          onClick={() => setDrawerOpen(!drawerOpen)}
+          className="rounded-full h-10 px-4 bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg gap-2"
+        >
+          <LayoutGrid className="w-4 h-4" />
+          <span className="text-sm">Chapters</span>
+        </Button>
 
         {/* Zoom controls */}
         <div className="flex items-center gap-0 rounded-full bg-secondary/90 backdrop-blur-sm border border-border/50 shadow-lg h-10">
