@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, LayoutGrid, Minus, Plus, ArrowDown, ArrowUp, Share2, Flag, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutGrid, Minus, Plus, ArrowDown, ArrowUp, Share2, Flag, MessageSquare, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getMangaBySlug } from '@/data/mockManga';
