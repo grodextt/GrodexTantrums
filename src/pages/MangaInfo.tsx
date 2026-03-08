@@ -41,19 +41,19 @@ export default function MangaInfo() {
   const maxChapter = manga.chapters.length > 0 ? Math.max(...manga.chapters.map(c => c.number)) : 0;
 
   return (
-    <div className="container py-8">
-      <div className="flex flex-col lg:flex-row gap-8">
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Content */}
-        <div className="flex-1 min-w-0 space-y-6">
+        <div className="flex-1 min-w-0 space-y-5">
           {/* Header: Cover + Info */}
-          <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex flex-col sm:flex-row gap-5">
             <img
               src={manga.cover}
               alt={manga.title}
-              className="w-44 h-[260px] object-cover rounded-xl shrink-0 mx-auto sm:mx-0 shadow-lg"
+              className="w-48 h-[280px] object-cover rounded-xl shrink-0 mx-auto sm:mx-0 shadow-lg"
             />
             <div className="flex-1 space-y-3">
-              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">{manga.title}</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold leading-tight">{manga.title}</h1>
 
               <div>
                 <p className="text-sm text-muted-foreground font-medium">Alternative titles</p>
@@ -86,23 +86,23 @@ export default function MangaInfo() {
                 {manga.description}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3">
-                <Link to={`/manga/${manga.slug}/chapter/1`}>
-                  <Button size="sm" variant="secondary" className="gap-2 rounded-lg border border-border/50 px-5 h-9">
+              {/* Action Buttons - wider like KaynScan */}
+              <div className="flex items-center gap-0 mt-1">
+                <Link to={`/manga/${manga.slug}/chapter/1`} className="flex-1">
+                  <Button size="sm" variant="secondary" className="w-full gap-2 rounded-none rounded-l-lg border border-border/50 h-10 text-sm">
                     <Play className="w-3.5 h-3.5" /> Start Reading
                   </Button>
                 </Link>
-                <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`}>
-                  <Button size="sm" variant="secondary" className="gap-2 rounded-lg border border-border/50 px-5 h-9">
+                <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`} className="flex-1">
+                  <Button size="sm" variant="secondary" className="w-full gap-2 rounded-none border-y border-r border-border/50 h-10 text-sm">
                     <Play className="w-3.5 h-3.5" /> New Chapter
                   </Button>
                 </Link>
-                <Button size="sm" variant="secondary" className="gap-2 rounded-lg border border-border/50 px-5 h-9">
+                <Button size="sm" variant="secondary" className="flex-1 gap-2 rounded-none border-y border-r border-border/50 h-10 text-sm">
                   <Plus className="w-3.5 h-3.5" /> Add to Library
                 </Button>
-                <Button size="sm" variant="secondary" className="rounded-lg border border-border/50 px-3 h-9">
-                  <Bell className="w-3.5 h-3.5" />
+                <Button size="sm" variant="secondary" className="rounded-none rounded-r-lg border-y border-r border-border/50 px-4 h-10">
+                  <Bell className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -212,7 +212,7 @@ export default function MangaInfo() {
         </div>
 
         {/* Trending Sidebar */}
-        <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-2">
+        <aside className="w-full lg:w-80 xl:w-96 shrink-0 space-y-2">
           {trending.map((m, i) => (
             <Link
               key={m.id}
