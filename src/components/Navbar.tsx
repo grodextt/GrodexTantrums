@@ -73,7 +73,7 @@ export default function Navbar() {
               <Link key={path} to={path}>
                 <Button
                   variant="ghost"
-                  className={`rounded-full h-11 transition-all duration-200 hover:scale-[1.02] text-sm font-medium lg:gap-2 lg:px-5 md:px-0 md:w-11 ${
+                  className={`rounded-full h-11 transition-all duration-200 hover:scale-[1.02] text-sm font-medium md:w-11 md:px-0 lg:w-auto lg:gap-2 lg:px-5 ${
                     isActive(path)
                       ? 'bg-primary/15 text-primary hover:bg-primary/20 ring-1 ring-primary/30'
                       : 'bg-muted/60 hover:bg-muted'
