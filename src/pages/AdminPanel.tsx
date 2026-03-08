@@ -99,7 +99,7 @@ export default function AdminPanel() {
     { id: 'settings', label: 'Settings', icon: <Settings className="w-4 h-4" /> },
   ];
 
-  const filteredManga = mockManga.filter(m =>
+  const filteredManga = supabaseManga.filter(m =>
     m.title.toLowerCase().includes(mangaSearch.toLowerCase())
   );
 
@@ -107,9 +107,36 @@ export default function AdminPanel() {
     (u.display_name || '').toLowerCase().includes(userSearch.toLowerCase())
   );
 
-  const totalViews = mockManga.reduce((acc, m) => acc + m.views, 0);
-  const totalBookmarks = mockManga.reduce((acc, m) => acc + m.bookmarks, 0);
-  const totalChapters = mockManga.reduce((acc, m) => acc + m.chapters.length, 0);
+  const totalViews = supabaseManga.reduce((acc, m) => acc + (m.views || 0), 0);
+  const totalBookmarks = supabaseManga.reduce((acc, m) => acc + (m.bookmarks || 0), 0);
+
+  const handleEditManga = (manga: Manga) => {
+    setEditingManga(manga);
+    setMangaFormOpen(true);
+  };
+
+  const handleManageChapters = (manga: Manga) => {
+    setSelectedManga(manga);
+    setChapterManagerOpen(true);
+  };
+
+  const handleDeleteManga = async () => {
+    if (!deleteMangaId) return;
+    const manga = supabaseManga.find(m => m.id === deleteMangaId);
+    if (!manga) return;
+
+    await deleteManga.mutateAsync({
+      id: deleteMangaId,
+      coverUrl: manga.cover_url,
+      bannerUrl: manga.banner_url || undefined,
+    });
+    setDeleteMangaId(null);
+  };
+
+  const handleMangaFormClose = () => {
+    setMangaFormOpen(false);
+    setEditingManga(null);
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col lg:flex-row">
