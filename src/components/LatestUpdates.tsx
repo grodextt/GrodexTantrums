@@ -67,8 +67,8 @@ function LatestCard({ manga }: { manga: Manga }) {
 
   return (
     <div className="flex gap-3 pr-3 rounded-lg border border-border/40 bg-card/60 hover:bg-card/80 transition-colors group overflow-hidden">
-      <Link to={`/manga/${manga.slug}`} className="shrink-0">
-        <div className="relative w-[120px] self-stretch overflow-hidden">
+      <Link to={`/manga/${manga.slug}`} className="shrink-0 self-stretch">
+        <div className="relative w-[120px] h-full overflow-hidden">
           <img
             src={manga.cover}
             alt={manga.title}
