@@ -144,53 +144,64 @@ export default function Navbar() {
           </Button>
         </div>
 
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-border/30 bg-card/95 backdrop-blur-xl">
-            <div className="px-6 sm:px-10 py-4 flex flex-col gap-1.5">
+      </nav>
+
+      {/* Mobile menu popup */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[100] md:hidden flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="relative w-full max-w-sm rounded-2xl bg-card border border-border/60 shadow-2xl p-5 flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-muted transition-colors"
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
+            </button>
+
+            <p className="text-sm font-semibold text-muted-foreground mb-2 px-1">Menu</p>
+
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2.5 rounded-xl h-12 bg-muted/40 hover:bg-muted text-sm font-medium"
+              onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
+            >
+              <Search className="w-4 h-4" /> Search
+            </Button>
+            {NAV_LINKS.map(({ path, label, icon: Icon }) => (
+              <Link key={path} to={path} onClick={() => setMobileOpen(false)}>
+                <Button
+                  variant="ghost"
+                  className={`w-full justify-start gap-2.5 rounded-xl h-12 text-sm font-medium ${
+                    isActive(path)
+                      ? 'bg-primary/15 text-primary'
+                      : 'bg-muted/40 hover:bg-muted'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" /> {label}
+                </Button>
+              </Link>
+            ))}
+            <div className="h-px bg-border/40 my-1" />
+            {isAuthenticated ? (
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-2.5 rounded-xl h-12 bg-muted/40 hover:bg-muted text-sm font-medium"
-                onClick={() => { setSearchOpen(true); setMobileOpen(false); }}
+                onClick={() => { logout(); setMobileOpen(false); }}
               >
-                <Search className="w-4 h-4" /> Search
+                <LogOut className="w-4 h-4" /> Sign Out
               </Button>
-              {NAV_LINKS.map(({ path, label, icon: Icon }) => (
-                <Link key={path} to={path} onClick={() => setMobileOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className={`w-full justify-start gap-2.5 rounded-xl h-12 text-sm font-medium ${
-                      isActive(path)
-                        ? 'bg-primary/15 text-primary'
-                        : 'bg-muted/40 hover:bg-muted'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" /> {label}
-                  </Button>
-                </Link>
-              ))}
-              <div className="h-px bg-border/40 my-1" />
-              {isAuthenticated ? (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2.5 rounded-xl h-12 bg-muted/40 hover:bg-muted text-sm font-medium"
-                  onClick={() => { logout(); setMobileOpen(false); }}
-                >
-                  <LogOut className="w-4 h-4" /> Sign Out
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2.5 rounded-xl h-12 bg-primary/15 text-primary text-sm font-medium"
-                  onClick={() => { setShowLoginModal(true); setMobileOpen(false); }}
-                >
-                  <LogIn className="w-4 h-4" /> Sign in
-                </Button>
-              )}
-            </div>
+            ) : (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2.5 rounded-xl h-12 bg-primary/15 text-primary text-sm font-medium"
+                onClick={() => { setShowLoginModal(true); setMobileOpen(false); }}
+              >
+                <LogIn className="w-4 h-4" /> Sign in
+              </Button>
+            )}
           </div>
-        )}
-      </nav>
+        </div>
+      )}
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
