@@ -41,7 +41,7 @@ export default function MangaInfo() {
   const maxChapter = manga.chapters.length > 0 ? Math.max(...manga.chapters.map(c => c.number)) : 0;
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Content */}
         <div className="flex-1 min-w-0 space-y-5">
