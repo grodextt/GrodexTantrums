@@ -18,7 +18,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/30">
-        <div className="container flex h-14 items-center justify-between">
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 flex h-14 items-center justify-between">
           {/* Logo */}
           {isSubPage ? (
             <button onClick={() => navigate(-1)} className="flex items-center gap-2.5">
@@ -112,7 +112,7 @@ export default function Navbar() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden border-t border-border/30 bg-background animate-fade-up">
-            <div className="container py-4 flex flex-col gap-2">
+            <div className="px-6 sm:px-10 lg:px-16 xl:px-24 py-4 flex flex-col gap-2">
               <Button variant="secondary" className="w-full justify-start gap-2 rounded-full" onClick={() => { setSearchOpen(true); setMobileOpen(false); }}>
                 <Search className="w-4 h-4" /> Search
               </Button>
