@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { TrendingUp, ArrowRight, Megaphone } from 'lucide-react';
+import { ArrowRight, Megaphone } from 'lucide-react';
 import HeroCarousel from '@/components/HeroCarousel';
 import MangaCard from '@/components/MangaCard';
 import AnnouncementBar from '@/components/AnnouncementBar';
@@ -7,6 +7,7 @@ import PinnedCarousel from '@/components/PinnedCarousel';
 import LatestUpdates from '@/components/LatestUpdates';
 import EditorChoice from '@/components/EditorChoice';
 import CompletedSeries from '@/components/CompletedSeries';
+import TypeBadge from '@/components/TypeBadge';
 import { getTrendingManga, mockManga } from '@/data/mockManga';
 
 export default function Index() {
@@ -20,18 +21,35 @@ export default function Index() {
 
       {/* Trending */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold">Trending</h2>
-          </div>
-          <Link to="/series" className="flex items-center gap-1 text-sm text-primary hover:underline">
-            View All <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <h2 className="text-2xl font-extrabold mb-4">Trending</h2>
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
           {trending.map((m, i) => (
-            <MangaCard key={m.id} manga={m} rank={i + 1} />
+            <Link
+              key={m.id}
+              to={`/manga/${m.slug}`}
+              className="flex-shrink-0 w-[70vw] sm:w-[45vw] md:w-[30vw] lg:w-[calc(100%/6-14px)] group"
+            >
+              <div className="relative overflow-hidden rounded-lg aspect-[3/4.2] bg-secondary">
+                <img
+                  src={m.cover}
+                  alt={m.title}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute top-2 left-2">
+                  <TypeBadge type={m.type} variant="uniform" />
+                </div>
+              </div>
+              <div className="mt-2">
+                <p className="text-sm font-bold text-foreground truncate">
+                  <span className="text-primary mr-1.5">{i + 1}.</span>
+                  {m.title}
+                </p>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  {m.genres.slice(0, 2).join(' · ')}
+                </p>
+              </div>
+            </Link>
           ))}
         </div>
       </section>

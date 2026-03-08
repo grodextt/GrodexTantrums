@@ -7,9 +7,21 @@ const typeStyles: Record<MangaType, string> = {
   Manhua: 'bg-manga-manhua/20 text-manga-manhua border-manga-manhua/30',
 };
 
-export default function TypeBadge({ type, className }: { type: MangaType; className?: string }) {
+interface TypeBadgeProps {
+  type: MangaType;
+  className?: string;
+  variant?: 'default' | 'uniform';
+}
+
+export default function TypeBadge({ type, className, variant = 'default' }: TypeBadgeProps) {
   return (
-    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border', typeStyles[type], className)}>
+    <span className={cn(
+      'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider',
+      variant === 'uniform'
+        ? 'bg-secondary text-secondary-foreground border-0'
+        : cn('border', typeStyles[type]),
+      className
+    )}>
       {type}
     </span>
   );
