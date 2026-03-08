@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, Users, Settings, ArrowLeft, Plus, Search,
   Eye, Star, Bookmark, TrendingUp, Edit, Trash2, Shield, ChevronDown,
-  BarChart3, FileText, Bell, Globe, Upload, MoreHorizontal
+  BarChart3, FileText, Bell, Globe, Upload, MoreHorizontal, List
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,22 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { mockManga, formatViews } from '@/data/mockManga';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminManga, useDeleteManga } from '@/hooks/useManga';
+import { MangaFormModal } from '@/components/admin/MangaFormModal';
+import { ChapterManager } from '@/components/admin/ChapterManager';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Tables } from '@/integrations/supabase/types';
+
+type Manga = Tables<"manga">;
 
 type Tab = 'overview' | 'manga' | 'users' | 'settings';
 
