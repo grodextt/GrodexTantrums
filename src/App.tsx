@@ -37,6 +37,10 @@ const AppLayout = () => {
           <Route path="/latest" element={<Latest />} />
           <Route path="/series" element={<Series />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/earn" element={<EarnCoins />} />
+          <Route path="/coin-shop" element={<CoinShop />} />
+          <Route path="/settings" element={<UserSettings />} />
+          <Route path="/dmca" element={<DMCA />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
