@@ -3,11 +3,22 @@ import { BookOpen, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import MangaCard from '@/components/MangaCard';
-import { mockManga, allGenres, allTypes, MangaType, MangaStatus } from '@/data/mockManga';
+import { useAllManga } from '@/hooks/useAllManga';
 
-const statuses: MangaStatus[] = ['Ongoing', 'Completed', 'Hiatus'];
+const allGenres = [
+  'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Isekai',
+  'Magic', 'Martial Arts', 'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life',
+  'Sports', 'Thriller', 'Cyberpunk'
+];
+
+const allTypes = ['manga', 'manhwa', 'manhua'] as const;
+const statuses = ['ongoing', 'completed', 'hiatus'] as const;
+
+type MangaType = typeof allTypes[number];
+type MangaStatus = typeof statuses[number];
 
 export default function Series() {
+  const { data: allManga = [] } = useAllManga();
   const [search, setSearch] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<MangaType | ''>('');
@@ -18,14 +29,14 @@ export default function Series() {
   };
 
   const filtered = useMemo(() => {
-    return mockManga.filter(m => {
+    return allManga.filter(m => {
       if (search && !m.title.toLowerCase().includes(search.toLowerCase())) return false;
       if (selectedType && m.type !== selectedType) return false;
       if (selectedStatus && m.status !== selectedStatus) return false;
-      if (selectedGenres.length > 0 && !selectedGenres.some(g => m.genres.includes(g))) return false;
+      if (selectedGenres.length > 0 && !selectedGenres.some(g => m.genres?.includes(g))) return false;
       return true;
     });
-  }, [search, selectedType, selectedStatus, selectedGenres]);
+  }, [search, selectedType, selectedStatus, selectedGenres, allManga]);
 
   const hasFilters = search || selectedType || selectedStatus || selectedGenres.length > 0;
 
@@ -57,7 +68,7 @@ export default function Series() {
                 size="sm"
                 variant={selectedType === t ? 'default' : 'secondary'}
                 onClick={() => setSelectedType(selectedType === t ? '' : t)}
-                className="text-xs h-7"
+                className="text-xs h-7 capitalize"
               >
                 {t}
               </Button>
@@ -74,7 +85,7 @@ export default function Series() {
                 size="sm"
                 variant={selectedStatus === s ? 'default' : 'secondary'}
                 onClick={() => setSelectedStatus(selectedStatus === s ? '' : s)}
-                className="text-xs h-7"
+                className="text-xs h-7 capitalize"
               >
                 {s}
               </Button>
@@ -100,7 +111,17 @@ export default function Series() {
         </div>
 
         {hasFilters && (
-          <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => { setSearch(''); setSelectedType(''); setSelectedStatus(''); setSelectedGenres([]); }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 h-7 text-xs"
+            onClick={() => {
+              setSearch('');
+              setSelectedGenres([]);
+              setSelectedType('');
+              setSelectedStatus('');
+            }}
+          >
             <X className="w-3 h-3" /> Clear Filters
           </Button>
         )}
@@ -108,15 +129,12 @@ export default function Series() {
 
       {/* Results */}
       <div>
-        <p className="text-sm text-muted-foreground mb-4">{filtered.length} series found</p>
+        <p className="text-sm text-muted-foreground mb-4">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filtered.map(m => (
             <MangaCard key={m.id} manga={m} />
           ))}
         </div>
-        {filtered.length === 0 && (
-          <p className="text-center text-muted-foreground py-12">No series match your filters.</p>
-        )}
       </div>
     </div>
   );

@@ -2,10 +2,11 @@ import { Library as LibraryIcon, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import MangaCard from '@/components/MangaCard';
-import { mockManga } from '@/data/mockManga';
+import { useAllManga } from '@/hooks/useAllManga';
 
 export default function Library() {
   const { isAuthenticated, setShowLoginModal } = useAuth();
+  const { data: allManga = [] } = useAllManga();
 
   if (!isAuthenticated) {
     return (
@@ -22,7 +23,7 @@ export default function Library() {
   }
 
   // Mock bookmarks: show first 3
-  const bookmarked = mockManga.slice(0, 3);
+  const bookmarked = allManga.slice(0, 3);
 
   return (
     <div className="container py-8 space-y-6">
@@ -32,7 +33,7 @@ export default function Library() {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {bookmarked.map(m => (
-          <MangaCard key={m.id} manga={m} showChapters />
+          <MangaCard key={m.id} manga={m} />
         ))}
       </div>
     </div>
