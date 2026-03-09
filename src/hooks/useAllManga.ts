@@ -23,7 +23,7 @@ export const useAllManga = () => {
         ...m,
         chapters: (m.chapters || [])
           .sort((a, b) => b.number - a.number)
-          .slice(0, 4),
+          .slice(0, 8),
       }));
     },
   });

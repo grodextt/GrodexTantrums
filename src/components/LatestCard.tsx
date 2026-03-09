@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Diamond } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { MangaWithChapters } from '@/hooks/useAllManga';
 import TypeBadge from './TypeBadge';
 
@@ -28,14 +28,36 @@ function isNewChapter(dateStr: string): boolean {
 
 function NewBadge() {
   return (
-    <span className="shrink-0 w-4 h-4 rounded-full bg-muted-foreground/40 flex items-center justify-center pulse">
-      <span className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
+    <span className="shrink-0 inline-flex items-center rounded-sm bg-primary/20 text-primary text-[9px] font-bold px-1 py-0.5 animate-blink">
+      New
     </span>
+  );
+}
+
+function ChapterRow({ ch, slug }: { ch: { id: string; number: number; premium: boolean | null; created_at: string }; slug: string }) {
+  return (
+    <Link
+      key={ch.id}
+      to={`/manga/${slug}/chapter/${ch.number}`}
+      className="flex items-center justify-between text-xs py-1 hover:bg-muted/30 rounded px-1 -mx-1 transition-colors"
+    >
+      <span className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground truncate">
+        <span className="truncate">Chapter {ch.number}</span>
+        {ch.premium && <Coins className="w-3 h-3 text-amber-400 shrink-0" />}
+        {isNewChapter(ch.created_at) && <NewBadge />}
+      </span>
+      <span className="text-muted-foreground/50 text-[11px] shrink-0 ml-2">
+        {formatRelativeDate(ch.created_at)}
+      </span>
+    </Link>
   );
 }
 
 export default function LatestCard({ manga }: LatestCardProps) {
   const chapters = manga.chapters || [];
+  const premiumChapters = chapters.filter(ch => ch.premium === true).slice(0, 2);
+  const freeChapters = chapters.filter(ch => !ch.premium).slice(0, 2);
+  const hasBoth = premiumChapters.length > 0 && freeChapters.length > 0;
 
   return (
     <div className="flex gap-3 pr-3 rounded-lg border border-border/40 bg-card/60 hover:bg-card/80 transition-colors group overflow-hidden">
@@ -63,21 +85,17 @@ export default function LatestCard({ manga }: LatestCardProps) {
           {chapters.length === 0 && (
             <span className="text-xs text-muted-foreground italic">No chapters yet</span>
           )}
-          {chapters.map(ch => (
-            <Link
-              key={ch.id}
-              to={`/manga/${manga.slug}/chapter/${ch.number}`}
-              className="flex items-center justify-between text-xs py-1 hover:bg-muted/30 rounded px-1 -mx-1 transition-colors"
-            >
-              <span className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground truncate">
-                <span className="truncate">Chapter {ch.number}</span>
-                {ch.premium && <Diamond className="w-3 h-3 text-primary shrink-0" />}
-                {isNewChapter(ch.created_at) && <NewBadge />}
-              </span>
-              <span className="text-muted-foreground/50 text-[11px] shrink-0 ml-2">
-                {formatRelativeDate(ch.created_at)}
-              </span>
-            </Link>
+
+          {premiumChapters.map(ch => (
+            <ChapterRow key={ch.id} ch={ch} slug={manga.slug} />
+          ))}
+
+          {hasBoth && (
+            <div className="border-t border-border/40 my-1" />
+          )}
+
+          {freeChapters.map(ch => (
+            <ChapterRow key={ch.id} ch={ch} slug={manga.slug} />
           ))}
         </div>
       </div>
