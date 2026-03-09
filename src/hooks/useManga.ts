@@ -342,6 +342,52 @@ export const useUpdateChapter = () => {
   });
 };
 
+// Push premium chapter to free (resets created_at)
+export const usePushChapterToFree = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, mangaId }: { id: string; mangaId: string }) => {
+      const { error } = await supabase
+        .from("chapters")
+        .update({ premium: false, created_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { mangaId }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-chapters", mangaId] });
+      queryClient.invalidateQueries({ queryKey: ["all-manga"] });
+      toast.success("Chapter pushed to free");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to push chapter to free: ${error.message}`);
+    },
+  });
+};
+
+// Bulk push premium chapters to free
+export const useBulkPushToFree = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, mangaId }: { ids: string[]; mangaId: string }) => {
+      const { error } = await supabase
+        .from("chapters")
+        .update({ premium: false, created_at: new Date().toISOString() })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_, { mangaId }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-chapters", mangaId] });
+      queryClient.invalidateQueries({ queryKey: ["all-manga"] });
+      toast.success("Chapters pushed to free");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to push chapters to free: ${error.message}`);
+    },
+  });
+};
+
 // Delete chapter
 export const useDeleteChapter = () => {
   const queryClient = useQueryClient();
