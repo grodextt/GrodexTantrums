@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,14 +30,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   useAdminChapters,
   useCreateChapter,
   useDeleteChapter,
   useUpdateChapter,
+  usePushChapterToFree,
+  useBulkPushToFree,
 } from "@/hooks/useManga";
 import { Tables } from "@/integrations/supabase/types";
-import { Loader2, Plus, Trash2, Edit, FileImage } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Trash2,
+  Edit,
+  FileImage,
+  Unlock,
+  ArrowUpDown,
+  CheckSquare,
+} from "lucide-react";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 
 type Manga = Tables<"manga">;
 type Chapter = Tables<"chapters">;
@@ -46,7 +66,11 @@ interface ChapterManagerProps {
   manga: Manga | null;
 }
 
-export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProps) => {
+export const ChapterManager = ({
+  open,
+  onOpenChange,
+  manga,
+}: ChapterManagerProps) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null);
   const [chapterNumber, setChapterNumber] = useState("");
@@ -54,11 +78,27 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const [isPremium, setIsPremium] = useState(false);
   const [pageFiles, setPageFiles] = useState<FileList | null>(null);
   const [deleteChapterId, setDeleteChapterId] = useState<string | null>(null);
+  const [pushToFreeId, setPushToFreeId] = useState<string | null>(null);
+  const [sortAsc, setSortAsc] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const { data: chapters = [], isLoading } = useAdminChapters(manga?.id || null);
+  const { data: chapters = [], isLoading } = useAdminChapters(
+    manga?.id || null
+  );
   const createChapter = useCreateChapter();
   const updateChapter = useUpdateChapter();
   const deleteChapter = useDeleteChapter();
+  const pushToFree = usePushChapterToFree();
+  const bulkPushToFree = useBulkPushToFree();
+
+  const sortedChapters = [...chapters].sort((a, b) =>
+    sortAsc ? a.number - b.number : b.number - a.number
+  );
+
+  const premiumChapters = sortedChapters.filter((c) => c.premium);
+  const selectedPremiumIds = [...selectedIds].filter((id) =>
+    premiumChapters.some((c) => c.id === id)
+  );
 
   const resetForm = () => {
     setChapterNumber("");
@@ -79,7 +119,6 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!manga) return;
 
     const num = parseFloat(chapterNumber);
@@ -131,7 +170,6 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
 
   const handleDelete = async () => {
     if (!deleteChapterId) return;
-
     const chapter = chapters.find((c) => c.id === deleteChapterId);
     if (!chapter || !manga) return;
 
@@ -140,29 +178,100 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
       mangaId: manga.id,
       pages: chapter.pages || undefined,
     });
-
     setDeleteChapterId(null);
   };
 
-  const isSaving = createChapter.isPending || updateChapter.isPending;
+  const handlePushToFree = async () => {
+    if (!pushToFreeId || !manga) return;
+    await pushToFree.mutateAsync({ id: pushToFreeId, mangaId: manga.id });
+    setPushToFreeId(null);
+  };
+
+  const handleBulkPushToFree = async () => {
+    if (selectedPremiumIds.length === 0 || !manga) return;
+    await bulkPushToFree.mutateAsync({
+      ids: selectedPremiumIds,
+      mangaId: manga.id,
+    });
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedChapters.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedChapters.map((c) => c.id)));
+    }
+  };
+
+  const isSaving =
+    createChapter.isPending ||
+    updateChapter.isPending ||
+    pushToFree.isPending ||
+    bulkPushToFree.isPending;
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Manage Chapters - {manga?.title}
+            <DialogTitle className="flex items-center gap-2">
+              Manage Chapters — {manga?.title}
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {chapters.length} chapters
+              </Badge>
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {!showAddForm ? (
               <>
-                <Button onClick={() => setShowAddForm(true)} className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add New Chapter
-                </Button>
+                {/* Top action bar */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    onClick={() => setShowAddForm(true)}
+                    size="sm"
+                  >
+                    <Plus className="mr-1 h-4 w-4" />
+                    Add Chapter
+                  </Button>
+
+                  {selectedPremiumIds.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkPushToFree}
+                      disabled={isSaving}
+                      className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+                    >
+                      {bulkPushToFree.isPending && (
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                      )}
+                      <Unlock className="mr-1 h-4 w-4" />
+                      Push {selectedPremiumIds.length} to Free
+                    </Button>
+                  )}
+
+                  <div className="ml-auto">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSortAsc((p) => !p)}
+                    >
+                      <ArrowUpDown className="mr-1 h-4 w-4" />
+                      {sortAsc ? "Oldest first" : "Newest first"}
+                    </Button>
+                  </div>
+                </div>
 
                 {isLoading ? (
                   <div className="flex justify-center py-8">
@@ -176,42 +285,115 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Chapter #</TableHead>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={
+                              selectedIds.size === sortedChapters.length &&
+                              sortedChapters.length > 0
+                            }
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead>Ch #</TableHead>
                         <TableHead>Title</TableHead>
                         <TableHead>Pages</TableHead>
-                        <TableHead>Premium</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Released</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {chapters.map((chapter) => (
+                      {sortedChapters.map((chapter) => (
                         <TableRow key={chapter.id}>
-                          <TableCell>{chapter.number}</TableCell>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedIds.has(chapter.id)}
+                              onCheckedChange={() => toggleSelect(chapter.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {chapter.number}
+                          </TableCell>
                           <TableCell>{chapter.title}</TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              <FileImage className="h-4 w-4" />
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <FileImage className="h-3.5 w-3.5" />
                               {chapter.pages?.length || 0}
                             </div>
                           </TableCell>
                           <TableCell>
-                            {chapter.premium ? "Yes" : "No"}
+                            {chapter.premium ? (
+                              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30">
+                                Premium
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="secondary"
+                                className="text-muted-foreground"
+                              >
+                                Free
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(
+                              new Date(chapter.created_at),
+                              { addSuffix: true }
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditClick(chapter)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setDeleteChapterId(chapter.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <TooltipProvider delayDuration={300}>
+                              <div className="flex items-center justify-end gap-0.5">
+                                {chapter.premium && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                                        onClick={() =>
+                                          setPushToFreeId(chapter.id)
+                                        }
+                                        disabled={isSaving}
+                                      >
+                                        <Unlock className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      Push to Free
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => handleEditClick(chapter)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() =>
+                                        setDeleteChapterId(chapter.id)
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </TooltipProvider>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -234,7 +416,6 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="chapter-title">Chapter Title</Label>
                     <Input
@@ -258,7 +439,9 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
 
                 <div className="space-y-2">
                   <Label htmlFor="pages">
-                    Page Images {editingChapter && "(Leave empty to keep existing pages)"}
+                    Page Images{" "}
+                    {editingChapter &&
+                      "(Leave empty to keep existing pages)"}
                   </Label>
                   <Input
                     id="pages"
@@ -289,7 +472,9 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isSaving}>
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSaving && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     {editingChapter ? "Update Chapter" : "Create Chapter"}
                   </Button>
                 </div>
@@ -299,13 +484,42 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteChapterId} onOpenChange={() => setDeleteChapterId(null)}>
+      {/* Push to Free confirmation */}
+      <AlertDialog
+        open={!!pushToFreeId}
+        onOpenChange={() => setPushToFreeId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Push to Free</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will make the chapter free and reset its release date to now.
+              Users will see it as a newly released free chapter.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePushToFree}>
+              {pushToFree.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Push to Free
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteChapterId}
+        onOpenChange={() => setDeleteChapterId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Chapter</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this chapter? This will permanently delete
-              all chapter pages and cannot be undone.
+              Are you sure you want to delete this chapter? This will
+              permanently delete all chapter pages and cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
