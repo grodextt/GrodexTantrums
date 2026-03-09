@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Star, Eye } from 'lucide-react';
-import { Manga, formatViews } from '@/data/mockManga';
+import { Tables } from '@/integrations/supabase/types';
+import { formatViews } from '@/lib/utils';
 import TypeBadge from './TypeBadge';
+
+type Manga = Tables<"manga"> & { 
+  chapters?: Array<{ id: string; number: number; date: string }> 
+};
 
 interface Props {
   manga: Manga;
