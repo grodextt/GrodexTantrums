@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Play, Plus, Bell, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getMangaBySlug, getTrendingManga } from '@/data/mockManga';
+import { useMangaBySlug, useMangaChapters } from '@/hooks/useMangaBySlug';
+import { useAllManga } from '@/hooks/useAllManga';
 import TypeBadge from '@/components/TypeBadge';
 import TypeFlag from '@/components/TypeFlag';
 import CommentSection from '@/components/CommentSection';
@@ -26,8 +27,10 @@ const REACTIONS = [
 
 export default function MangaInfo() {
   const { slug } = useParams<{ slug: string }>();
-  const manga = getMangaBySlug(slug || '');
-  const trending = getTrendingManga().slice(0, 8);
+  const { data: manga, isLoading } = useMangaBySlug(slug || '');
+  const { data: chapters = [] } = useMangaChapters(manga?.id);
+  const { data: allManga = [] } = useAllManga();
+  const trending = allManga.filter(m => m.trending).slice(0, 8);
   const [expanded, setExpanded] = useState(false);
   const [reactions, setReactions] = useState<Record<string, number>>(
     Object.fromEntries(REACTIONS.map(r => [r.label, 0]))
@@ -38,10 +41,18 @@ export default function MangaInfo() {
 
   // Check for content warnings on mount
   useEffect(() => {
-    if (manga && (manga as any).content_warnings && (manga as any).content_warnings.length > 0 && !warningAcknowledged) {
+    if (manga && manga.content_warnings && manga.content_warnings.length > 0 && !warningAcknowledged) {
       setShowWarning(true);
     }
   }, [manga, warningAcknowledged]);
+
+  if (isLoading) {
+    return (
+      <div className="container py-20 text-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   if (!manga) {
     return (
@@ -52,11 +63,14 @@ export default function MangaInfo() {
     );
   }
 
-  const sortedChapters = [...manga.chapters].sort((a, b) =>
+  const sortedChapters = [...chapters].sort((a, b) =>
     sortDesc ? b.number - a.number : a.number - b.number
   );
   const visibleChapters = expanded ? sortedChapters : sortedChapters.slice(0, 9);
-  const maxChapter = manga.chapters.length > 0 ? Math.max(...manga.chapters.map(c => c.number)) : 0;
+  const maxChapter = chapters.length > 0 ? Math.max(...chapters.map(c => c.number)) : 0;
+  const latestDate = chapters.length > 0 
+    ? new Date(chapters[0].created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : 'N/A';
 
   const handleWarningClose = (open: boolean) => {
     if (!open) {
@@ -67,11 +81,11 @@ export default function MangaInfo() {
 
   return (
     <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-6">
-      {manga && (manga as any).content_warnings && (manga as any).content_warnings.length > 0 && (
+      {manga.content_warnings && manga.content_warnings.length > 0 && (
         <ContentWarningDialog
           open={showWarning}
           onOpenChange={handleWarningClose}
-          warnings={(manga as any).content_warnings}
+          warnings={manga.content_warnings}
           mangaTitle={manga.title}
         />
       )}
@@ -81,31 +95,31 @@ export default function MangaInfo() {
           {/* Header: Cover + Info */}
           <div className="flex flex-col sm:flex-row gap-5">
             <img
-              src={manga.cover}
+              src={manga.cover_url}
               alt={manga.title}
               className="w-64 h-[360px] object-cover rounded-xl shrink-0 mx-auto sm:mx-0 shadow-lg"
             />
             <div className="flex-1 min-w-0 space-y-3.5">
               <h1 className="text-3xl sm:text-4xl font-bold leading-tight">{manga.title}</h1>
 
-              {manga.altTitles && manga.altTitles.length > 0 && (
+              {manga.alt_titles && manga.alt_titles.length > 0 && (
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground">Alternative titles</p>
-                  <p className="text-sm text-muted-foreground/70">{manga.altTitles.join(' · ')}</p>
+                  <p className="text-sm text-muted-foreground/70">{manga.alt_titles.join(' · ')}</p>
                 </div>
               )}
 
               <div className="flex items-center gap-2 flex-wrap overflow-hidden">
-                <span className={`px-3.5 py-1.5 rounded-lg text-sm font-bold ${manga.status === 'Ongoing' ? 'bg-green-600 text-white' : manga.status === 'Completed' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>
+                <span className={`px-3.5 py-1.5 rounded-lg text-sm font-bold capitalize ${manga.status === 'ongoing' ? 'bg-green-600 text-white' : manga.status === 'completed' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}`}>
                   {manga.status}
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium capitalize">
                   <TypeFlag type={manga.type} /> {manga.type}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
-                  🕐 {manga.chapters[0]?.date || '4 days ago'}
+                  🕐 {latestDate}
                 </span>
-                {manga.genres.slice(0, 4).map(g => (
+                {manga.genres?.slice(0, 4).map(g => (
                   <span key={g} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/60 border border-border/40 text-sm text-foreground font-medium">
                     <span className="text-sm">{GENRE_EMOJI[g] || '📖'}</span> {g}
                   </span>
@@ -124,11 +138,13 @@ export default function MangaInfo() {
                     <Play className="w-4 h-4" /> Start Reading
                   </Button>
                 </Link>
-                <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`}>
-                  <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
-                    <Play className="w-4 h-4" /> New Chapter
-                  </Button>
-                </Link>
+                {maxChapter > 0 && (
+                  <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`}>
+                    <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
+                      <Play className="w-4 h-4" /> New Chapter
+                    </Button>
+                  </Link>
+                )}
                 <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
                   <Plus className="w-4 h-4" /> Add to Library
                 </Button>
@@ -176,7 +192,7 @@ export default function MangaInfo() {
           {/* Chapters */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">{manga.chapters.length} Chapters</h2>
+              <h2 className="text-lg font-bold">{chapters.length} Chapters</h2>
               <button
                 onClick={() => setSortDesc(!sortDesc)}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -188,30 +204,33 @@ export default function MangaInfo() {
 
             <div className="relative">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {visibleChapters.map((ch, idx) => (
-                  <Link
-                    key={ch.id}
-                    to={`/manga/${manga.slug}/chapter/${ch.number}`}
-                    className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
-                  >
-                    <div className="relative shrink-0">
-                      <img
-                        src={`/manga/cover${(ch.number % 8) + 1}.jpg`}
-                        alt=""
-                        className="w-[72px] h-[56px] object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
-                        {idx === 0 && sortDesc && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground font-semibold">New</span>
-                        )}
+                {visibleChapters.map((ch, idx) => {
+                  const chDate = new Date(ch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  return (
+                    <Link
+                      key={ch.id}
+                      to={`/manga/${manga.slug}/chapter/${ch.number}`}
+                      className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
+                    >
+                      <div className="relative shrink-0">
+                        <img
+                          src={manga.cover_url}
+                          alt=""
+                          className="w-[72px] h-[56px] object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{ch.date}</p>
-                    </div>
-                  </Link>
-                ))}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
+                          {idx === 0 && sortDesc && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground font-semibold">New</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{chDate}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
 
               {!expanded && sortedChapters.length > 9 && (
@@ -249,7 +268,7 @@ export default function MangaInfo() {
           </div>
 
           {/* Comments */}
-          <CommentSection comments={manga.comments} />
+          <CommentSection comments={[]} />
         </div>
 
         {/* Trending Sidebar */}
@@ -260,14 +279,14 @@ export default function MangaInfo() {
               to={`/manga/${m.slug}`}
               className="flex items-center gap-3.5 p-3.5 rounded-xl transition-colors group bg-secondary/40 border border-border/30 hover:bg-secondary/70"
             >
-              <img src={m.cover} alt="" className="w-14 h-[76px] object-cover rounded-lg shrink-0" />
+              <img src={m.cover_url} alt="" className="w-14 h-[76px] object-cover rounded-lg shrink-0" />
               <span className="text-2xl font-bold text-muted-foreground/40 shrink-0 w-7 text-center">{i + 1}</span>
               <div className="min-w-0 flex-1 space-y-1">
                 <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{m.title}</p>
-                <p className="text-xs text-destructive/80 truncate">{m.genres.slice(0, 3).join(', ')}</p>
+                <p className="text-xs text-destructive/80 truncate">{m.genres?.slice(0, 3).join(', ')}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">{m.type}</span>
-                  {m.status === 'Completed' && (
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium capitalize">{m.type}</span>
+                  {m.status === 'completed' && (
                     <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-destructive text-destructive-foreground font-semibold">Completed</span>
                   )}
                 </div>

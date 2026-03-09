@@ -2,21 +2,36 @@ import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getFeaturedManga } from '@/data/mockManga';
+import { useFeaturedManga } from '@/hooks/useFeaturedManga';
 
 export default function EditorChoice() {
-  const featured = getFeaturedManga();
+  const { data: featured = [], isLoading } = useFeaturedManga();
   const [current, setCurrent] = useState(0);
 
-  const next = useCallback(() => setCurrent((i) => (i + 1) % featured.length), [featured.length]);
-  const prev = useCallback(() => setCurrent((i) => (i - 1 + featured.length) % featured.length), [featured.length]);
+  const next = useCallback(() => setCurrent((i) => (i + 1) % Math.max(featured.length, 1)), [featured.length]);
+  const prev = useCallback(() => setCurrent((i) => (i - 1 + Math.max(featured.length, 1)) % Math.max(featured.length, 1)), [featured.length]);
 
   useEffect(() => {
-    const t = setInterval(next, 7000);
-    return () => clearInterval(t);
-  }, [next]);
+    if (featured.length > 0) {
+      const t = setInterval(next, 7000);
+      return () => clearInterval(t);
+    }
+  }, [next, featured.length]);
+
+  if (isLoading) {
+    return (
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <Award className="text-primary h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
+          <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl">Editor's Choice</h2>
+        </div>
+        <div className="relative rounded-xl bg-card border border-border/40 overflow-hidden min-h-[350px] animate-pulse" />
+      </section>
+    );
+  }
 
   if (!featured.length) return null;
+  
   const manga = featured[current];
 
   return (
@@ -43,7 +58,7 @@ export default function EditorChoice() {
                     i === current ? 'border-primary scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
-                  <img src={m.cover} alt={m.title} className="w-full h-full object-cover" />
+                  <img src={m.cover_url} alt={m.title} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -72,7 +87,7 @@ export default function EditorChoice() {
           <div className="hidden md:block relative md:w-[45%] shrink-0 self-stretch">
             <div className="absolute -top-10 -right-2 -bottom-4 -left-2 rounded-2xl overflow-hidden shadow-2xl border border-border/30">
               <img
-                src={manga.cover}
+                src={manga.cover_url}
                 alt={manga.title}
                 className="w-full h-full object-cover"
               />
@@ -91,7 +106,7 @@ export default function EditorChoice() {
           {/* Mobile Cover */}
           <div className="md:hidden relative w-full h-[200px] sm:h-[250px]">
             <div className="relative w-full h-full rounded-b-xl overflow-hidden">
-              <img src={manga.cover} alt={manga.title} className="w-full h-full object-cover" />
+              <img src={manga.cover_url} alt={manga.title} className="w-full h-full object-cover" />
               <Link to={`/manga/${manga.slug}`} className="absolute bottom-4 right-4">
                 <Button size="sm" className="gap-2 rounded-lg">
                   <Play className="w-3.5 h-3.5 fill-current" />

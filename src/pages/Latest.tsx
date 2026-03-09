@@ -1,26 +1,34 @@
 import { useState } from 'react';
 import { Clock, Grid3X3, Check } from 'lucide-react';
-import { mockManga } from '@/data/mockManga';
+import { useAllManga } from '@/hooks/useAllManga';
 import LatestCard from '@/components/LatestCard';
 
-const FILTER_TABS = ['All Series', 'Manga', 'Manhwa', 'Manhua'] as const;
+const FILTER_TABS = ['All Series', 'manga', 'manhwa', 'manhua'] as const;
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
   'All Series': <Grid3X3 className="w-3.5 h-3.5" />,
-  'Manga': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇯🇵</span>,
-  'Manhwa': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇰🇷</span>,
-  'Manhua': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇨🇳</span>,
+  'manga': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇯🇵</span>,
+  'manhwa': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇰🇷</span>,
+  'manhua': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇨🇳</span>,
+};
+
+const TAB_LABELS: Record<string, string> = {
+  'All Series': 'All Series',
+  'manga': 'Manga',
+  'manhwa': 'Manhwa',
+  'manhua': 'Manhua',
 };
 
 export default function Latest() {
+  const { data: allManga = [] } = useAllManga();
   const [activeTab, setActiveTab] = useState<string>('All Series');
 
-  const filtered = mockManga
+  const filtered = allManga
     .filter(m => {
       if (activeTab === 'All Series') return true;
       return m.type === activeTab;
     })
-    .sort((a, b) => b.chapters.length - a.chapters.length);
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
   return (
     <div className="container py-8 space-y-6">
@@ -41,7 +49,7 @@ export default function Latest() {
               }`}
             >
               {TAB_ICONS[tab]}
-              <span>{tab}</span>
+              <span>{TAB_LABELS[tab]}</span>
               {activeTab === tab && <Check className="w-3.5 h-3.5 ml-0.5" />}
             </button>
           ))}

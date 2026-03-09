@@ -5,7 +5,7 @@ import {
   BookOpen, Share2, Flag, MessageSquare, Settings, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getMangaBySlug } from '@/data/mockManga';
+import { useMangaBySlug, useMangaChapters } from '@/hooks/useMangaBySlug';
 import CommentSection from '@/components/CommentSection';
 import ChapterListModal from '@/components/ChapterListModal';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function ChapterReader() {
   const { slug, chapterId } = useParams<{ slug: string; chapterId: string }>();
   const navigate = useNavigate();
-  const manga = getMangaBySlug(slug || '');
+  const { data: manga, isLoading } = useMangaBySlug(slug || '');
+  const { data: chapters = [] } = useMangaChapters(manga?.id);
   const chapterNum = parseInt(chapterId || '1');
   const [zoom, setZoom] = useState(100);
   const [showChapterList, setShowChapterList] = useState(false);
@@ -28,6 +29,14 @@ export default function ChapterReader() {
     window.scrollTo(0, 0);
   }, [chapterNum]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
   if (!manga) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -40,7 +49,8 @@ export default function ChapterReader() {
     );
   }
 
-  const maxChapter = manga.chapters.length > 0 ? Math.max(...manga.chapters.map(c => c.number)) : 0;
+  const currentChapter = chapters.find(c => c.number === chapterNum);
+  const maxChapter = chapters.length > 0 ? Math.max(...chapters.map(c => c.number)) : 0;
   const hasPrev = chapterNum > 1;
   const hasNext = chapterNum < maxChapter;
 
@@ -48,7 +58,18 @@ export default function ChapterReader() {
     setZoom(prev => Math.max(50, Math.min(200, prev + delta)));
   };
 
-  const pages = Array.from({ length: 8 }, (_, i) => i);
+  // Use actual chapter pages if available, otherwise show placeholder
+  const pageUrls = currentChapter?.pages || [];
+  const pages = pageUrls.length > 0 ? pageUrls : Array.from({ length: 8 }, (_, i) => null);
+
+  const chapterListItems = chapters.map(ch => ({
+    id: ch.id,
+    number: ch.number,
+    title: ch.title,
+    date: new Date(ch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    pages: ch.pages || undefined,
+    premium: ch.premium || undefined,
+  }));
 
   const reactions = [
     { key: 'like', emoji: '👍', label: 'Like' },
@@ -135,11 +156,19 @@ export default function ChapterReader() {
       </header>
 
       <div className="flex-1 min-w-0">
-          <div className="w-full px-2 sm:px-4 py-4 sm:py-8">
-            {/* Pages */}
-            <div className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
-              {pages.map(i => (
-                <div key={i} className="flex justify-center">
+        <div className="w-full px-2 sm:px-4 py-4 sm:py-8">
+          {/* Pages */}
+          <div className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
+            {pages.map((page, i) => (
+              <div key={i} className="flex justify-center">
+                {typeof page === 'string' ? (
+                  <img
+                    src={page}
+                    alt={`Page ${i + 1}`}
+                    className="rounded-lg shadow-lg"
+                    style={{ width: `${Math.min(zoom, 100)}%`, maxWidth: '100%' }}
+                  />
+                ) : (
                   <div
                     className="bg-secondary flex items-center justify-center rounded-lg shadow-lg"
                     style={{ width: `${Math.min(zoom, 100)}%`, aspectRatio: '2/3', maxWidth: '100%' }}
@@ -149,155 +178,112 @@ export default function ChapterReader() {
                       <p className="text-xs">Chapter {chapterNum}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            ))}
+          </div>
 
-            {/* Chapter Navigation Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between bg-card rounded-lg p-3 sm:p-4 border border-border shadow-sm gap-3 sm:gap-0">
+          {/* Chapter Navigation Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between bg-card rounded-lg p-3 sm:p-4 border border-border shadow-sm gap-3 sm:gap-0">
+            <Button
+              variant="outline"
+              disabled={!hasPrev}
+              onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)}
+              className="w-full sm:w-auto text-xs sm:text-sm"
+            >
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Previous
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setShowChapterList(true)}
+              className="w-full sm:w-auto text-xs sm:text-sm"
+            >
+              <List className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Chapters
+            </Button>
+
+            {hasNext ? (
               <Button
-                variant="outline"
-                disabled={!hasPrev}
-                onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)}
+                onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}
                 className="w-full sm:w-auto text-xs sm:text-sm"
               >
-                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Previous
+                Next
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
               </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => setShowChapterList(true)}
-                className="w-full sm:w-auto text-xs sm:text-sm"
-              >
-                <List className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Chapters
+            ) : (
+              <Button variant="outline" asChild className="w-full sm:w-auto text-xs sm:text-sm">
+                <Link to={`/manga/${manga.slug}`}>
+                  <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  Manga Info
+                </Link>
               </Button>
+            )}
+          </div>
 
-              {hasNext ? (
-                <Button
-                  onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)}
-                  className="w-full sm:w-auto text-xs sm:text-sm"
-                >
-                  Next
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
-                </Button>
-              ) : (
-                <Button variant="outline" asChild className="w-full sm:w-auto text-xs sm:text-sm">
-                  <Link to={`/manga/${manga.slug}`}>
-                    <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Manga Info
-                  </Link>
-                </Button>
-              )}
+          {/* After-reader section */}
+          <div className="max-w-5xl mx-auto mt-8 space-y-6">
+            {/* Reactions */}
+            <div className="text-center space-y-4 py-4">
+              <div>
+                <h3 className="text-lg font-bold">What do you think?</h3>
+                <p className="text-sm text-muted-foreground">
+                  {Object.values(reactionCounts).reduce((a, b) => a + b, 0)} Reactions
+                </p>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 max-w-lg sm:max-w-2xl mx-auto">
+                {reactions.map(r => (
+                  <button
+                    key={r.key}
+                    onClick={() => handleReaction(r.key)}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl w-full transition-colors border ${
+                      selectedReaction === r.key
+                        ? 'bg-primary/20 border-primary/50'
+                        : 'bg-secondary/50 hover:bg-secondary/80 border-transparent'
+                    }`}
+                  >
+                    <span className="text-2xl">{r.emoji}</span>
+                    <span className="text-xs font-medium">{reactionCounts[r.key]}</span>
+                    <span className="text-[10px] text-muted-foreground">{r.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* After-reader section */}
-            <div className="max-w-5xl mx-auto mt-8 space-y-6">
-              {/* Reactions */}
-              <div className="text-center space-y-4 py-4">
-                <div>
-                  <h3 className="text-lg font-bold">What do you think?</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {Object.values(reactionCounts).reduce((a, b) => a + b, 0)} Reactions
-                  </p>
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 max-w-lg sm:max-w-2xl mx-auto">
-                  {reactions.map(r => (
-                    <button
-                      key={r.key}
-                      onClick={() => handleReaction(r.key)}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl w-full transition-colors border ${
-                        selectedReaction === r.key
-                          ? 'bg-primary/20 border-primary/50'
-                          : 'bg-secondary/50 hover:bg-secondary/80 border-transparent'
-                      }`}
-                    >
-                      <span className="text-2xl">{r.emoji}</span>
-                      <span className="text-xs font-medium">{reactionCounts[r.key]}</span>
-                      <span className="text-[10px] text-muted-foreground">{r.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Comments */}
-              <div className="py-6">
-                <CommentSection comments={manga.comments} title="Chapter Comments" />
-              </div>
+            {/* Comments */}
+            <div className="py-6">
+              <CommentSection comments={[]} title="Chapter Comments" />
             </div>
           </div>
         </div>
+      </div>
 
       {/* Floating Options Button */}
       <div className="fixed bottom-6 right-6 z-50">
-        {/* Options menu */}
         {showOptions && (
           <div className="absolute bottom-14 right-0 w-52 bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
             <div className="p-2 space-y-1">
-              <button
-                onClick={handleShare}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <Share2 className="w-4 h-4 text-primary" />
-                Share Chapter
+              <button onClick={handleShare} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <Share2 className="w-4 h-4 text-primary" /> Share Chapter
               </button>
-              <button
-                onClick={handleReport}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <Flag className="w-4 h-4 text-destructive" />
-                Report Issue
+              <button onClick={handleReport} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <Flag className="w-4 h-4 text-destructive" /> Report Issue
               </button>
-              <button
-                onClick={() => {
-                  window.open('https://discord.gg', '_blank');
-                  setShowOptions(false);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <MessageSquare className="w-4 h-4 text-[hsl(235,86%,65%)]" />
-                Join Discord
+              <button onClick={() => { window.open('https://discord.gg', '_blank'); setShowOptions(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <MessageSquare className="w-4 h-4 text-[hsl(235,86%,65%)]" /> Join Discord
               </button>
-              <button
-                onClick={() => {
-                  setShowChapterList(true);
-                  setShowOptions(false);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <List className="w-4 h-4 text-muted-foreground" />
-                Chapter List
+              <button onClick={() => { setShowChapterList(true); setShowOptions(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <List className="w-4 h-4 text-muted-foreground" /> Chapter List
               </button>
-              <button
-                onClick={() => {
-                  adjustZoom(10);
-                  setShowOptions(false);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <ZoomIn className="w-4 h-4 text-muted-foreground" />
-                Zoom In
+              <button onClick={() => { adjustZoom(10); setShowOptions(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <ZoomIn className="w-4 h-4 text-muted-foreground" /> Zoom In
               </button>
-              <button
-                onClick={() => {
-                  adjustZoom(-10);
-                  setShowOptions(false);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <ZoomOut className="w-4 h-4 text-muted-foreground" />
-                Zoom Out
+              <button onClick={() => { adjustZoom(-10); setShowOptions(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <ZoomOut className="w-4 h-4 text-muted-foreground" /> Zoom Out
               </button>
-              <button
-                onClick={() => {
-                  setZoom(100);
-                  setShowOptions(false);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors"
-              >
-                <RotateCcw className="w-4 h-4 text-muted-foreground" />
-                Reset Zoom
+              <button onClick={() => { setZoom(100); setShowOptions(false); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-secondary/80 transition-colors">
+                <RotateCcw className="w-4 h-4 text-muted-foreground" /> Reset Zoom
               </button>
             </div>
           </div>
@@ -312,19 +298,17 @@ export default function ChapterReader() {
         </Button>
       </div>
 
-      {/* Backdrop for options menu */}
       {showOptions && (
         <div className="fixed inset-0 z-40" onClick={() => setShowOptions(false)} />
       )}
 
-      {/* Chapter List Modal */}
       {showChapterList && (
         <ChapterListModal
           isOpen={showChapterList}
           onClose={() => setShowChapterList(false)}
-          chapters={manga.chapters}
+          chapters={chapterListItems}
           mangaSlug={manga.slug}
-          mangaCover={manga.cover}
+          mangaCover={manga.cover_url}
           currentChapterNumber={chapterNum}
         />
       )}

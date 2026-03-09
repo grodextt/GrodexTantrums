@@ -2,27 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { mockManga, MangaStatus } from '@/data/mockManga';
+import { useAllManga } from '@/hooks/useAllManga';
 import TypeBadge from './TypeBadge';
 
-const statusColors: Record<MangaStatus, string> = {
-  Ongoing: 'bg-green-400',
-  Hiatus: 'bg-yellow-600',
-  'Season End': 'bg-sky-400',
-  Completed: 'bg-green-700',
-  Cancelled: 'bg-red-400',
+const statusColors: Record<string, string> = {
+  ongoing: 'bg-green-400',
+  hiatus: 'bg-yellow-600',
+  season_end: 'bg-sky-400',
+  completed: 'bg-green-700',
+  cancelled: 'bg-red-400',
 };
 
-const statusTextColors: Record<MangaStatus, string> = {
-  Ongoing: 'text-green-400',
-  Hiatus: 'text-yellow-600',
-  'Season End': 'text-sky-400',
-  Completed: 'text-green-700',
-  Cancelled: 'text-red-400',
+const statusTextColors: Record<string, string> = {
+  ongoing: 'text-green-400',
+  hiatus: 'text-yellow-600',
+  season_end: 'text-sky-400',
+  completed: 'text-green-700',
+  cancelled: 'text-red-400',
 };
 
 export default function HeroCarousel() {
-  const items = mockManga.filter(m => m.featured || m.pinned || m.trending).slice(0, 8);
+  const { data: allManga = [] } = useAllManga();
+  const items = allManga.filter(m => m.featured || m.pinned || m.trending).slice(0, 8);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
@@ -67,7 +68,7 @@ export default function HeroCarousel() {
               >
                 <div className="relative h-[500px] md:h-[550px]">
                   <img
-                    src={manga.cover}
+                    src={manga.cover_url}
                     alt={manga.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -82,13 +83,13 @@ export default function HeroCarousel() {
 
                   {/* Bottom Content */}
                   <div className="absolute inset-x-0 bottom-0 p-4 space-y-1.5">
-                    {manga.altTitles?.[0] && (
-                      <p className="text-[11px] text-white/50 truncate">{manga.altTitles[0]}</p>
+                    {manga.alt_titles?.[0] && (
+                      <p className="text-[11px] text-white/50 truncate">{manga.alt_titles[0]}</p>
                     )}
                     <h3 className="text-lg font-bold text-white line-clamp-1">{manga.title}</h3>
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full animate-[blink_1.5s_ease-in-out_infinite] ${statusColors[manga.status]}`} />
-                      <span className={`text-xs font-semibold ${statusTextColors[manga.status]}`}>
+                      <span className={`w-2 h-2 rounded-full animate-[blink_1.5s_ease-in-out_infinite] ${statusColors[manga.status] || 'bg-gray-400'}`} />
+                      <span className={`text-xs font-semibold capitalize ${statusTextColors[manga.status] || 'text-gray-400'}`}>
                         {manga.status}
                       </span>
                     </div>

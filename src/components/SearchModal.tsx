@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { mockManga } from '@/data/mockManga';
+import { useAllManga } from '@/hooks/useAllManga';
 import TypeBadge from './TypeBadge';
 
 interface Props {
@@ -12,12 +12,13 @@ interface Props {
 }
 
 export default function SearchModal({ open, onClose }: Props) {
+  const { data: allManga = [] } = useAllManga();
   const [query, setQuery] = useState('');
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
-    return mockManga.filter(m => m.title.toLowerCase().includes(query.toLowerCase())).slice(0, 6);
-  }, [query]);
+    return allManga.filter(m => m.title.toLowerCase().includes(query.toLowerCase())).slice(0, 6);
+  }, [query, allManga]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -44,12 +45,12 @@ export default function SearchModal({ open, onClose }: Props) {
                 onClick={onClose}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary transition-colors"
               >
-                <img src={manga.cover} alt={manga.title} className="w-10 h-14 object-cover rounded" />
+                <img src={manga.cover_url} alt={manga.title} className="w-10 h-14 object-cover rounded" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{manga.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <TypeBadge type={manga.type} />
-                    <span className="text-xs text-muted-foreground">{manga.chapters.length} chapters</span>
+                    <span className="text-xs text-muted-foreground capitalize">{manga.status}</span>
                   </div>
                 </div>
               </Link>

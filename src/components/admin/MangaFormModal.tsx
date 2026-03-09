@@ -108,11 +108,11 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       featured: false,
       trending: false,
       discord_enabled: false,
-      discord_webhook_url: "",
+      discord_webhook_url: "https://discord.com/api/webhooks/1410909744855515197/P8ne4BD5HkS1QDCcHMMg5h6sjzHvDhc-K7BfGWv78HzXQil-hJWBQNLYrdHl-jezxXn8",
       discord_channel_name: "",
-      discord_primary_role_id: "",
+      discord_primary_role_id: "784110780672638996",
       discord_secondary_role_id: "",
-      discord_notification_template: "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}",
+      discord_notification_template: "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}\nRead now: {chapter_url}",
     },
   });
 

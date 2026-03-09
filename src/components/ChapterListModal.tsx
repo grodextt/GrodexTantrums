@@ -3,7 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import type { Chapter } from "@/data/mockManga";
+import type { Chapter } from "@/types/manga";
 
 interface ChapterListModalProps {
   isOpen: boolean;

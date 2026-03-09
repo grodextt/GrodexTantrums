@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Comment } from '@/data/mockManga';
+import type { Comment } from '@/types/manga';
 
 type SortMode = 'best' | 'newest' | 'oldest';
 

@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Star, Eye } from 'lucide-react';
-import { Manga, formatViews } from '@/data/mockManga';
+import { Tables } from '@/integrations/supabase/types';
+import { formatViews } from '@/lib/utils';
 import TypeBadge from './TypeBadge';
+
+type Manga = Tables<"manga"> & { 
+  chapters?: Array<{ id: string; number: number; date: string }> 
+};
 
 interface Props {
   manga: Manga;
@@ -14,7 +19,7 @@ export default function MangaCard({ manga, rank, showChapters }: Props) {
     <Link to={`/manga/${manga.slug}`} className="group relative block">
       <div className="relative overflow-hidden rounded-lg aspect-[3/4] bg-secondary">
         <img
-          src={manga.cover}
+          src={manga.cover_url}
           alt={manga.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"

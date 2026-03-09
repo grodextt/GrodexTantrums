@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Megaphone } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import HeroCarousel from '@/components/HeroCarousel';
 import MangaCard from '@/components/MangaCard';
 import AnnouncementBar from '@/components/AnnouncementBar';
@@ -8,11 +8,12 @@ import LatestUpdates from '@/components/LatestUpdates';
 import EditorChoice from '@/components/EditorChoice';
 import CompletedSeries from '@/components/CompletedSeries';
 import TypeBadge from '@/components/TypeBadge';
-import { getTrendingManga, mockManga } from '@/data/mockManga';
+import { useAllManga } from '@/hooks/useAllManga';
 
 export default function Index() {
-  const trending = getTrendingManga();
-  const mangaType = mockManga.filter(m => m.type === 'Manga');
+  const { data: allManga = [] } = useAllManga();
+  const trending = allManga.filter(m => m.trending);
+  const mangaType = allManga.filter(m => m.type === 'manga');
 
   return (
     <div className="py-6 space-y-10">
@@ -35,7 +36,7 @@ export default function Index() {
             >
               <div className="relative overflow-hidden rounded-lg aspect-[3/4.2] bg-secondary">
                 <img
-                  src={m.cover}
+                  src={m.cover_url}
                   alt={m.title}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
@@ -48,7 +49,7 @@ export default function Index() {
                 <span className="text-2xl font-extrabold text-primary">{i + 1}</span>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{m.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{m.genres.slice(0, 2).join(' · ')}</p>
+                  <p className="text-xs text-muted-foreground truncate capitalize">{m.type}</p>
                 </div>
               </div>
             </Link>
@@ -56,46 +57,34 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Announcement Bar */}
       <AnnouncementBar />
 
-      {/* New manga announcement */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-sm">
-        <Megaphone className="w-4 h-4 text-primary shrink-0" />
-        <span className="text-muted-foreground">
-          <strong className="text-foreground">New Manga Series Added</strong> · Check out our latest additions in the 'Latest Series' section — your feedback means a lot!
-        </span>
-        <Link to="/latest" className="ml-auto text-primary hover:underline text-xs font-medium whitespace-nowrap">View all</Link>
-      </div>
+        {/* Pinned Carousel */}
+        <PinnedCarousel />
 
-      {/* Pinned Series */}
-      <PinnedCarousel />
+        {/* Latest Updates */}
+        <LatestUpdates />
 
-      {/* Latest Updates */}
-      <LatestUpdates />
+        {/* Editor's Choice */}
+        <EditorChoice />
 
-      {/* Editor's Choice */}
-      <EditorChoice />
+        {/* Completed Series */}
+        <CompletedSeries />
 
-      {/* Manga - Black & White */}
-      {mangaType.length > 0 && (
+        {/* Manga */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Manga – Black & White</h2>
-            <Link to="/series" className="flex items-center gap-1 text-sm text-primary hover:underline">
+            <h2 className="text-xl font-bold">Manga</h2>
+            <Link to="/series?type=manga" className="flex items-center gap-1 text-sm text-primary hover:underline">
               View all <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {mangaType.map(m => (
+            {mangaType.slice(0, 6).map(m => (
               <MangaCard key={m.id} manga={m} />
             ))}
           </div>
         </section>
-      )}
-
-      {/* Completed Series */}
-      <CompletedSeries />
       </div>
     </div>
   );
