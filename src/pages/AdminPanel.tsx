@@ -268,16 +268,16 @@ export default function AdminPanel() {
             <div className="bg-card border border-border rounded-2xl p-5">
               <h3 className="font-semibold mb-3">Recent Series</h3>
               <div className="space-y-2">
-                {mockManga.slice(0, 5).map(m => (
+                {supabaseManga.slice(0, 5).map(m => (
                   <div key={m.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors">
-                    <img src={m.cover} alt={m.title} className="w-10 h-14 rounded-lg object-cover" />
+                    <img src={m.cover_url} alt={m.title} className="w-10 h-14 rounded-lg object-cover" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{m.title}</p>
-                      <p className="text-xs text-muted-foreground">{m.type} · {m.chapters.length} chapters</p>
+                      <p className="text-xs text-muted-foreground capitalize">{m.type}</p>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      m.status === 'Ongoing' ? 'bg-emerald-500/10 text-emerald-500' :
-                      m.status === 'Completed' ? 'bg-blue-500/10 text-blue-500' :
+                      m.status === 'ongoing' ? 'bg-emerald-500/10 text-emerald-500' :
+                      m.status === 'completed' ? 'bg-blue-500/10 text-blue-500' :
                       'bg-amber-500/10 text-amber-500'
                     }`}>
                       {m.status}
