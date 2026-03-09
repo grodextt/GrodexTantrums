@@ -53,6 +53,7 @@ const CONTENT_WARNINGS = [
 const mangaFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   slug: z.string().min(1, "Slug is required"),
+  alt_titles: z.string().optional(),
   type: z.enum(["manga", "manhwa", "manhua"]),
   status: z.enum(["ongoing", "completed", "hiatus", "season end", "cancelled"]),
   author: z.string().min(1, "Author is required"),
@@ -99,6 +100,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       status: "ongoing",
       author: "",
       artist: "",
+      alt_titles: "",
       description: "",
       rating: 0,
       released: new Date().getFullYear(),
