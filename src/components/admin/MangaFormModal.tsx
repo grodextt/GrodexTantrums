@@ -197,7 +197,11 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       banner_url: manga?.banner_url,
       content_warnings: values.content_warnings,
       discord_webhook_url: values.discord_enabled ? values.discord_webhook_url : null,
-    };
+      discord_channel_name: values.discord_enabled ? values.discord_channel_name : null,
+      discord_primary_role_id: values.discord_enabled ? values.discord_primary_role_id : null,
+      discord_secondary_role_id: values.discord_enabled ? values.discord_secondary_role_id : null,
+      discord_notification_template: values.discord_enabled ? values.discord_notification_template : null,
+    } as any;
 
     if (manga) {
       await updateManga.mutateAsync({
