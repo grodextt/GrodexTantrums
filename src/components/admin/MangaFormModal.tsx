@@ -109,6 +109,10 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       trending: false,
       discord_enabled: false,
       discord_webhook_url: "",
+      discord_channel_name: "",
+      discord_primary_role_id: "",
+      discord_secondary_role_id: "",
+      discord_notification_template: "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}",
     },
   });
 
