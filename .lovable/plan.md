@@ -1,135 +1,103 @@
 
+# Implementation Plan: Fix Errors & Complete Mock Data Removal
 
-## Error Analysis & Plan
+## Issue Analysis
 
-### Issue 1: Database Constraint Violation
+### 1. **ReferenceError: formatViews is not defined**
 
-The error "new row for relation 'manga' violates check constraint 'manga_status_check'" is occurring because:
+**Root Cause**: After removing `mockManga.ts` dependencies in the previous refactor, the `formatViews` utility function (which was exported from `mockManga.ts`) is still being imported in several files but the file will be deleted. This causes a runtime error.
 
-**Root Cause:** The database constraint expects lowercase status values (`'ongoing'`, `'completed'`, `'hiatus'`, `'season end'`, `'cancelled'`) but the form is submitting the status value exactly as the user selects it from the dropdown, which sends lowercase values correctly. However, looking at the database query result, the constraint is properly defined.
+**Affected Files**:
+- `src/pages/AdminPanel.tsx` - imports and uses `formatViews` (lines 12, 239, 240, 350)
+- `src/components/MangaCard.tsx` - imports and uses `formatViews` (lines 3, 43)
+- `src/components/CompletedSeries.tsx` - imports and uses `formatViews` (lines 3, 44)
+- `src/components/PinnedCarousel.tsx` - imports and uses `formatViews` (lines 4, 74)
 
-After checking the code:
-- **Form schema** (line 57): `z.enum(["ongoing", "completed", "hiatus", "season end", "cancelled"])` ✓ lowercase
-- **Form dropdown** (lines 323-327): Values are lowercase ✓
-- **Database constraint**: Expects lowercase values ✓
+### 2. **Remaining Mock Data Dependencies**
 
-The issue is likely that there's a mismatch in how the type/status fields are being submitted. Looking at line 184 in MangaFormModal.tsx, the status is passed directly from `values.status`, but the type field might have an issue.
+**Files still using mockManga.ts**:
+- `src/components/CompletedSeries.tsx` - uses `mockManga.filter(m => m.status === 'Completed')`
+- `src/components/PinnedCarousel.tsx` - uses `getPinnedManga()`
+- `src/components/MangaCard.tsx` - imports types from mockManga
+- `src/pages/AdminPanel.tsx` - imports `mockManga` (but not actively using it after refactor)
 
-**Actual Problem Found:** Line 56 in the schema defines type as `z.enum(["manga", "manhwa", "manhua"])` (lowercase), and the Select items at lines 300-302 also use lowercase values. However, the database might be expecting lowercase for both type and status.
+### 3. **Discord Webhook Integration**
 
-### Issue 2: Remove Demo/Mock Data
+The Discord webhook URL and role ID need to be connected to the frontend for testing manga creation with notifications.
 
-The codebase currently uses `mockManga.ts` extensively across multiple pages:
-- `src/pages/Index.tsx` - Uses `getTrendingManga()` and `mockManga`
-- `src/pages/Latest.tsx` - Uses `mockManga`
-- `src/pages/Library.tsx` - Uses `mockManga.slice(0, 3)`
-- `src/pages/Series.tsx` - Uses `mockManga`, `allGenres`, `allTypes`
-- `src/pages/MangaInfo.tsx` - Uses `getMangaBySlug()`
-- `src/components/HeroCarousel.tsx` - Uses `mockManga.filter()`
-- `src/components/LatestUpdates.tsx` - Uses `mockManga`
-- `src/components/CompletedSeries.tsx` - Uses `mockManga`
-- `src/components/PinnedCarousel.tsx` - Uses `getPinnedManga()`
-- `src/components/SearchModal.tsx` - Uses `mockManga`
-- And 10 more files...
+## Implementation Steps
 
-## Implementation Plan
+### Step 1: Create Shared Utility Function
+- Move `formatViews` from `mockManga.ts` to `src/lib/utils.ts`
+- This makes it a proper shared utility accessible across the app
 
-### 1. Fix Database Constraint Error
-- Add a database migration to drop and recreate the `manga_type_check` constraint to ensure it matches what the form is sending
-- Verify that the type values are being properly converted to lowercase
+### Step 2: Update All Imports
+- Update `AdminPanel.tsx` to import `formatViews` from `@/lib/utils`
+- Update `MangaCard.tsx` to import `formatViews` from `@/lib/utils`
+- Update `CompletedSeries.tsx` to import `formatViews` from `@/lib/utils` and use Supabase hook
+- Update `PinnedCarousel.tsx` to import `formatViews` from `@/lib/utils` and use Supabase hook
 
-### 2. Create Supabase Data Fetching Hooks
-- Extend `src/hooks/useManga.ts` to add public-facing queries for:
-  - `useMangaList()` - Fetch all manga with filters
-  - `useMangaBySlug(slug)` - Fetch single manga by slug
-  - `useFeaturedManga()` - Fetch featured manga
-  - `useTrendingManga()` - Fetch trending manga
-  - `usePinnedManga()` - Fetch pinned manga
-  - `useCompletedManga()` - Fetch completed series
-  - `useMangaChapters(mangaId)` - Fetch chapters for a manga
+### Step 3: Refactor Remaining Mock Data Components
+**CompletedSeries.tsx**:
+- Replace `mockManga.filter(m => m.status === 'Completed')` with `useCompletedManga()` hook
+- Add loading states
+- Update to use Supabase manga data structure
 
-### 3. Replace Mock Data Usage
-Update all pages and components to use the new Supabase hooks instead of mockManga:
-- **Index.tsx** - Replace `getTrendingManga()` and `mockManga` with `useTrendingManga()` and `useMangaList()`
-- **Latest.tsx** - Replace `mockManga` with `useMangaList()`
-- **Library.tsx** - Replace mock bookmarks with actual user bookmarks (will need to create a bookmarks table)
-- **Series.tsx** - Replace `mockManga`, `allGenres`, `allTypes` with Supabase queries
-- **MangaInfo.tsx** - Replace `getMangaBySlug()` with `useMangaBySlug()`
-- **HeroCarousel.tsx** - Replace `mockManga.filter()` with combined featured/pinned/trending query
-- **LatestUpdates.tsx** - Replace with Supabase query
-- **CompletedSeries.tsx** - Replace with `useCompletedManga()`
-- **PinnedCarousel.tsx** - Replace with `usePinnedManga()`
-- **SearchModal.tsx** - Replace with Supabase search query
-- All other components using mock data
+**PinnedCarousel.tsx**:
+- Replace `getPinnedManga()` with `usePinnedManga()` hook
+- Add loading states
+- Update to use Supabase manga data structure
 
-### 4. Database Schema Updates
-Need to add:
-- **bookmarks table** - To store user bookmarks (user_id, manga_id, created_at)
-- **manga_views tracking** - Consider adding a views increment function
-- Ensure all necessary indexes are in place for performance
+**MangaCard.tsx**:
+- Update type imports to use Supabase types from `@/integrations/supabase/types`
+- Map Supabase manga structure to component props
 
-### 5. Cleanup
-- Remove or deprecate `src/data/mockManga.ts` after all migration is complete
-- Update TypeScript types to use Supabase-generated types from `src/integrations/supabase/types.ts`
+### Step 4: Delete Mock Data File
+- Remove `src/data/mockManga.ts` completely
 
-## Technical Approach
+### Step 5: Discord Webhook Testing Setup
+**Create Test Configuration**:
+- Add a helper function or admin UI section to test Discord notifications
+- Pre-populate webhook URL: `https://discord.com/api/webhooks/1410909744855515197/P8ne4BD5HkS1QDCcHMMg5h6sjzHvDhc-K7BfGWv78HzXQil-hJWBQNLYrdHl-jezxXn8`
+- Pre-populate role ID: `784110780672638996`
 
-**Database Migration:**
-```sql
--- Fix type constraint if needed
-ALTER TABLE manga DROP CONSTRAINT IF EXISTS manga_type_check;
-ALTER TABLE manga ADD CONSTRAINT manga_type_check 
-  CHECK (type IN ('manga', 'manhwa', 'manhua'));
+**Testing Flow**:
+1. Create 5-10 test manga entries via admin panel
+2. For each manga, configure Discord notification settings with the provided webhook and role
+3. Add chapters to trigger Discord notifications
+4. Verify notifications appear in Discord with proper formatting
 
--- Create bookmarks table
-CREATE TABLE IF NOT EXISTS bookmarks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  manga_id uuid REFERENCES manga(id) ON DELETE CASCADE NOT NULL,
-  created_at timestamptz DEFAULT now() NOT NULL,
-  UNIQUE(user_id, manga_id)
-);
+## Technical Details
 
--- Enable RLS
-ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
-
--- RLS policies for bookmarks
-CREATE POLICY "Users can view own bookmarks" ON bookmarks
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own bookmarks" ON bookmarks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own bookmarks" ON bookmarks
-  FOR DELETE USING (auth.uid() = user_id);
-```
-
-**Hook Pattern:**
+### formatViews Utility Migration
 ```typescript
-export const useMangaBySlug = (slug: string) => {
-  return useQuery({
-    queryKey: ["manga", slug],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("manga")
-        .select("*")
-        .eq("slug", slug)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!slug,
-  });
-};
+// Add to src/lib/utils.ts
+export function formatViews(n: number): string {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toString();
+}
 ```
 
-**Component Update Pattern:**
+### Type Mapping for MangaCard
 ```typescript
-// Before
-const manga = getMangaBySlug(slug || '');
-
-// After
-const { data: manga, isLoading } = useMangaBySlug(slug || '');
-if (isLoading) return <LoadingSpinner />;
+// Use Supabase types
+import { Tables } from '@/integrations/supabase/types';
+type Manga = Tables<"manga">;
 ```
 
+### Hook Usage Pattern
+```typescript
+const { data: completedManga = [], isLoading } = useCompletedManga();
+const { data: pinnedManga = [], isLoading: pinnedLoading } = usePinnedManga();
+```
+
+## Expected Outcome
+
+After implementation:
+1. ✅ No more `formatViews is not defined` error
+2. ✅ All components use real Supabase data instead of mock data
+3. ✅ `mockManga.ts` file deleted
+4. ✅ Discord webhook integrated and testable
+5. ✅ Admin can create test manga entries with Discord notifications
+6. ✅ Application fully functional with database-backed content
