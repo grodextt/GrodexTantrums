@@ -135,6 +135,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       form.reset({
         title: manga.title,
         slug: manga.slug,
+        alt_titles: (manga.alt_titles || []).join('\n'),
         type: manga.type as "manga" | "manhwa" | "manhua",
         status: manga.status as "ongoing" | "completed" | "hiatus" | "season end" | "cancelled",
         author: manga.author,
@@ -191,7 +192,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       rating: values.rating || 0,
       released: values.released,
       genres: values.genres,
-      alt_titles: [],
+      alt_titles: (values.alt_titles || '').split('\n').map(t => t.trim()).filter(Boolean),
       pinned: values.pinned,
       featured: values.featured,
       trending: values.trending,
