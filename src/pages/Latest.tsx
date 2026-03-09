@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Clock, Grid3X3, Check } from 'lucide-react';
-import { useAllManga } from '@/hooks/useAllManga';
+import { useAllManga, MangaWithChapters } from '@/hooks/useAllManga';
 import LatestCard from '@/components/LatestCard';
 
 const FILTER_TABS = ['All Series', 'manga', 'manhwa', 'manhua'] as const;

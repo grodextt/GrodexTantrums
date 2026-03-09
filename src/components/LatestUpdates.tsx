@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Grid3X3, Check } from 'lucide-react';
-import { useAllManga } from '@/hooks/useAllManga';
+import { useAllManga, MangaWithChapters } from '@/hooks/useAllManga';
 import LatestCard from './LatestCard';
 
 const FILTER_TABS = ['All Series', 'manga', 'manhwa', 'manhua'] as const;
