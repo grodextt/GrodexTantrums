@@ -144,9 +144,21 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
 
   const onSubmit = async (values: MangaFormValues) => {
     const mangaData = {
-      ...values,
+      title: values.title,
+      slug: values.slug,
+      type: values.type,
+      status: values.status,
+      author: values.author,
+      artist: values.artist,
+      description: values.description,
+      rating: values.rating || 0,
+      released: values.released,
       genres: values.genres.split(",").map((g) => g.trim()).filter(Boolean),
       alt_titles: [],
+      premium: values.premium,
+      pinned: values.pinned,
+      featured: values.featured,
+      trending: values.trending,
       cover_url: manga?.cover_url || "",
       banner_url: manga?.banner_url,
     };

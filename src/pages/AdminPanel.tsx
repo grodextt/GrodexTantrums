@@ -294,9 +294,9 @@ export default function AdminPanel() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h1 className="text-2xl font-bold">Manga Management</h1>
-                <p className="text-muted-foreground text-sm mt-1">{mockManga.length} series total</p>
+                <p className="text-muted-foreground text-sm mt-1">{supabaseManga.length} series total</p>
               </div>
-              <Button className="gap-2 rounded-xl">
+              <Button className="gap-2 rounded-xl" onClick={() => setMangaFormOpen(true)}>
                 <Plus className="w-4 h-4" /> Add Series
               </Button>
             </div>
@@ -312,53 +312,85 @@ export default function AdminPanel() {
             </div>
 
             <div className="bg-card border border-border rounded-2xl overflow-hidden">
-              {/* Table header */}
-              <div className="hidden md:grid grid-cols-[1fr_100px_100px_100px_100px_80px] gap-3 px-5 py-3 bg-muted/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
-                <span>Series</span>
-                <span>Type</span>
-                <span>Status</span>
-                <span>Chapters</span>
-                <span>Views</span>
-                <span>Actions</span>
-              </div>
-
-              {/* Rows */}
-              <div className="divide-y divide-border">
-                {filteredManga.map(m => (
-                  <div key={m.id} className="flex flex-col md:grid md:grid-cols-[1fr_100px_100px_100px_100px_80px] gap-2 md:gap-3 px-5 py-3 hover:bg-muted/30 transition-colors items-start md:items-center">
-                    <div className="flex items-center gap-3">
-                      <img src={m.cover} alt={m.title} className="w-10 h-14 rounded-lg object-cover shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{m.title}</p>
-                        <p className="text-xs text-muted-foreground">{m.author}</p>
-                      </div>
-                    </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full w-fit ${
-                      m.type === 'Manhwa' ? 'bg-blue-500/10 text-blue-500' :
-                      m.type === 'Manga' ? 'bg-red-500/10 text-red-500' :
-                      'bg-emerald-500/10 text-emerald-500'
-                    }`}>{m.type}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full w-fit ${
-                      m.status === 'Ongoing' ? 'bg-emerald-500/10 text-emerald-500' :
-                      m.status === 'Completed' ? 'bg-blue-500/10 text-blue-500' :
-                      'bg-amber-500/10 text-amber-500'
-                    }`}>{m.status}</span>
-                    <span className="text-sm">{m.chapters.length}</span>
-                    <span className="text-sm">{formatViews(m.views)}</span>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-muted">
-                        <Edit className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-destructive/10 text-destructive">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
+              {mangaLoading ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">Loading manga...</div>
+              ) : (
+                <>
+                  {/* Table header */}
+                  <div className="hidden md:grid grid-cols-[1fr_100px_100px_100px_100px_120px] gap-3 px-5 py-3 bg-muted/30 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
+                    <span>Series</span>
+                    <span>Type</span>
+                    <span>Status</span>
+                    <span>Views</span>
+                    <span>Flags</span>
+                    <span>Actions</span>
                   </div>
-                ))}
-              </div>
 
-              {filteredManga.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground text-sm">No series found.</div>
+                  {/* Rows */}
+                  <div className="divide-y divide-border">
+                    {filteredManga.map(m => (
+                      <div key={m.id} className="flex flex-col md:grid md:grid-cols-[1fr_100px_100px_100px_100px_120px] gap-2 md:gap-3 px-5 py-3 hover:bg-muted/30 transition-colors items-start md:items-center">
+                        <div className="flex items-center gap-3">
+                          <img src={m.cover_url} alt={m.title} className="w-10 h-14 rounded-lg object-cover shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{m.title}</p>
+                            <p className="text-xs text-muted-foreground">{m.author}</p>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full w-fit capitalize ${
+                          m.type === 'manhwa' ? 'bg-blue-500/10 text-blue-500' :
+                          m.type === 'manga' ? 'bg-red-500/10 text-red-500' :
+                          'bg-emerald-500/10 text-emerald-500'
+                        }`}>{m.type}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full w-fit capitalize ${
+                          m.status === 'ongoing' ? 'bg-emerald-500/10 text-emerald-500' :
+                          m.status === 'completed' ? 'bg-blue-500/10 text-blue-500' :
+                          'bg-amber-500/10 text-amber-500'
+                        }`}>{m.status}</span>
+                        <span className="text-sm">{formatViews(m.views || 0)}</span>
+                        <div className="flex gap-1 flex-wrap">
+                          {m.premium && <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500">P</span>}
+                          {m.pinned && <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500">📌</span>}
+                          {m.featured && <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500">⭐</span>}
+                          {m.trending && <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/10 text-red-500">🔥</span>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-lg hover:bg-muted"
+                            onClick={() => handleManageChapters(m)}
+                            title="Manage Chapters"
+                          >
+                            <List className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-lg hover:bg-muted"
+                            onClick={() => handleEditManga(m)}
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-lg hover:bg-destructive/10 text-destructive"
+                            onClick={() => setDeleteMangaId(m.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {filteredManga.length === 0 && (
+                    <div className="text-center py-12 text-muted-foreground text-sm">
+                      {mangaSearch ? 'No series found.' : 'No series yet. Add your first series!'}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
