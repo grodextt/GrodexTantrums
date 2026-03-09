@@ -1,8 +1,9 @@
-import { MangaType } from '@/data/mockManga';
 import { cn } from '@/lib/utils';
 
+export type MangaType = 'manhwa' | 'manga' | 'manhua';
+
 interface TypeBadgeProps {
-  type: MangaType;
+  type: MangaType | string;
   className?: string;
 }
 
