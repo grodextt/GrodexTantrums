@@ -24,12 +24,18 @@ export default function LatestUpdates() {
   const { data: allManga = [], isLoading } = useAllManga();
   const [activeTab, setActiveTab] = useState<string>('All Series');
 
+  const getLatestChapterDate = (m: MangaWithChapters) => {
+    const chapters = m.chapters || [];
+    if (chapters.length === 0) return 0;
+    return Math.max(...chapters.map(ch => new Date(ch.created_at).getTime()));
+  };
+
   const filtered = allManga
     .filter(m => {
       if (activeTab === 'All Series') return true;
       return m.type === activeTab;
     })
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    .sort((a, b) => getLatestChapterDate(b) - getLatestChapterDate(a));
 
   return (
     <section>
