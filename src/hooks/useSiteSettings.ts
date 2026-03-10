@@ -11,6 +11,8 @@ export interface GeneralSettings {
 
 export interface AnnouncementSettings {
   message: string;
+  button_text?: string;
+  button_url?: string;
 }
 
 export interface UploadSettings {
@@ -18,10 +20,25 @@ export interface UploadSettings {
   allowed_formats: string;
 }
 
+export interface StorageSettings {
+  provider: 'supabase' | 'blogger';
+  blogger_blog_id?: string;
+  blogger_api_key?: string;
+}
+
+export interface ThemeSettings {
+  preset: string;
+  custom_primary_hsl?: string;
+  primary?: string;
+  primaryDark?: string;
+}
+
 export interface SiteSettings {
   general: GeneralSettings;
   announcements: AnnouncementSettings;
   upload: UploadSettings;
+  storage: StorageSettings;
+  theme: ThemeSettings;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -33,6 +50,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
   },
   announcements: { message: '' },
   upload: { max_size_mb: 10, allowed_formats: 'jpg, png, webp' },
+  storage: { provider: 'supabase' },
+  theme: { preset: 'Purple Night' },
 };
 
 export const useSiteSettings = () => {
