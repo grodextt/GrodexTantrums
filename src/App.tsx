@@ -27,9 +27,27 @@ const queryClient = new QueryClient();
 
 const AppLayout = () => {
   const location = useLocation();
+  const { settings } = useSiteSettings();
   const isChapterReader = /^\/manga\/[^/]+\/chapter\//.test(location.pathname);
   const isAdminPanel = location.pathname.startsWith('/admin');
   const hideShell = isChapterReader || isAdminPanel;
+
+  // Apply theme from settings
+  useEffect(() => {
+    const theme = (settings as any)?.theme;
+    if (theme?.primary) {
+      document.documentElement.style.setProperty('--primary', theme.primary);
+      document.documentElement.style.setProperty('--ring', theme.primary);
+    }
+    if (theme?.primaryDark) {
+      // Apply to dark mode via a class check
+      const isDark = document.documentElement.classList.contains('dark');
+      if (isDark) {
+        document.documentElement.style.setProperty('--primary', theme.primaryDark);
+        document.documentElement.style.setProperty('--ring', theme.primaryDark);
+      }
+    }
+  }, [settings]);
 
   return (
     <div className="min-h-screen flex flex-col">
