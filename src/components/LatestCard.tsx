@@ -55,8 +55,10 @@ function ChapterRow({ ch, slug }: { ch: { id: string; number: number; premium: b
 
 export default function LatestCard({ manga }: LatestCardProps) {
   const chapters = manga.chapters || [];
-  const premiumChapters = chapters.filter(ch => ch.premium === true).slice(0, 2);
-  const freeChapters = chapters.filter(ch => !ch.premium).slice(0, 2);
+  const sortByDate = (a: typeof chapters[0], b: typeof chapters[0]) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  const premiumChapters = chapters.filter(ch => ch.premium === true).sort(sortByDate).slice(0, 2);
+  const freeChapters = chapters.filter(ch => ch.premium === false || ch.premium === null).sort(sortByDate).slice(0, 2);
   const hasBoth = premiumChapters.length > 0 && freeChapters.length > 0;
 
   return (
