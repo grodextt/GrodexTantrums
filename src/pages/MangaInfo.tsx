@@ -153,8 +153,16 @@ export default function MangaInfo() {
                 <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
                   <Plus className="w-4 h-4" /> Add to Library
                 </Button>
-                <Button variant="secondary" className="rounded-lg bg-muted/60 border border-border/40 hover:bg-muted px-3.5 h-11 text-foreground">
-                  <Bell className="w-4 h-4" />
+                <Button
+                  variant="secondary"
+                  className={`rounded-lg border border-border/40 hover:bg-muted px-3.5 h-11 ${isSubscribed ? 'bg-primary/15 text-primary border-primary/30' : 'bg-muted/60 text-foreground'}`}
+                  onClick={() => {
+                    if (!isAuthenticated) { setShowLoginModal(true); return; }
+                    toggleSubscription.mutate();
+                    toast.success(isSubscribed ? 'Notifications disabled' : 'Notifications enabled');
+                  }}
+                >
+                  {isSubscribed ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                 </Button>
               </div>
             </div>
