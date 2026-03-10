@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, LayoutGrid, LogIn, ClipboardList, ArrowLeft, Bell, Moon, Sun } from 'lucide-react';
+import { Search, Menu, X, LayoutGrid, LogIn, ClipboardList, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import SearchModal from './SearchModal';
 import UserMenu from './UserMenu';
+import NotificationMenu from './NotificationMenu';
 import logoImg from '@/assets/logo.png';
 
 const NAV_LINKS = [
