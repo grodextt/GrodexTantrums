@@ -34,6 +34,7 @@ export default function MangaInfo() {
   const { data: chapters = [] } = useMangaChapters(manga?.id);
   const { isAuthenticated, setShowLoginModal } = useAuth();
   const { isSubscribed, toggleSubscription } = useMangaSubscription(manga?.id);
+  const { data: allManga = [] } = useAllManga();
   const trending = allManga.filter(m => m.trending).slice(0, 8);
   const [expanded, setExpanded] = useState(false);
   const [reactions, setReactions] = useState<Record<string, number>>(
