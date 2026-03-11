@@ -12,7 +12,8 @@ import { useAllManga } from '@/hooks/useAllManga';
 
 export default function Index() {
   const { data: allManga = [] } = useAllManga();
-  const trending = allManga.filter(m => m.trending);
+  // Trending: top 6 by views (automatic, not manual toggle)
+  const trending = [...allManga].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 6);
   const mangaType = allManga.filter(m => m.type === 'manga');
 
   return (

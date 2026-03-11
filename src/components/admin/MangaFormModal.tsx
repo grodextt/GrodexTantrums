@@ -469,20 +469,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                     name="featured"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                        <FormLabel>Featured</FormLabel>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="trending"
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                        <FormLabel>Trending</FormLabel>
+                        <FormLabel>Editor's Choice</FormLabel>
                         <FormControl>
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
