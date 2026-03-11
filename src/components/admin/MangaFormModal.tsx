@@ -476,6 +476,19 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="trending"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                        <FormLabel>Featured Slider</FormLabel>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </TabsContent>
 

@@ -36,14 +36,7 @@ interface UserRow {
   created_at: string;
 }
 
-const THEME_PRESETS = [
-  { name: 'Purple Night', primary: '258 89% 66%', primaryDark: '255 91% 76%', accent: '269 100% 98%' },
-  { name: 'Ocean Blue', primary: '210 100% 50%', primaryDark: '210 100% 65%', accent: '210 100% 95%' },
-  { name: 'Forest Green', primary: '142 71% 45%', primaryDark: '142 71% 55%', accent: '142 71% 95%' },
-  { name: 'Crimson', primary: '0 84% 55%', primaryDark: '0 84% 65%', accent: '0 100% 96%' },
-  { name: 'Amber Gold', primary: '38 92% 50%', primaryDark: '38 92% 60%', accent: '38 92% 95%' },
-  { name: 'Teal', primary: '175 80% 40%', primaryDark: '175 80% 55%', accent: '175 80% 95%' },
-];
+import { THEME_PRESETS as ALL_THEME_PRESETS } from '@/lib/themes';
 
 // Helper to upload file to storage
 const uploadToStorage = async (file: File, path: string): Promise<string> => {
