@@ -622,43 +622,28 @@ export default function AdminPanel() {
             {/* Theme */}
             {settingsSubTab === 'theme' && (
               <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-                <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4" /> Smart Theme</h3>
-                <p className="text-sm text-muted-foreground">Choose a preset color theme or customize your own.</p>
+                <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4" /> Theme Presets</h3>
+                <p className="text-sm text-muted-foreground">Choose a full theme preset. Each theme controls all colors for both light and dark modes.</p>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {THEME_PRESETS.map(preset => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {ALL_THEME_PRESETS.map(preset => (
                     <button
                       key={preset.name}
                       onClick={() => setSettingsForm(s => ({ ...s, theme_preset: preset.name, custom_primary_hsl: '' }))}
                       className={`p-3 rounded-xl border-2 transition-all text-left ${
-                        settingsForm.theme_preset === preset.name && !settingsForm.custom_primary_hsl
+                        settingsForm.theme_preset === preset.name
                           ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/30'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full" style={{ background: `hsl(${preset.primary})` }} />
-                        <div className="w-4 h-4 rounded-full" style={{ background: `hsl(${preset.primaryDark})` }} />
+                      <div className="flex items-center gap-1.5 mb-2">
+                        {preset.colors.map((color, i) => (
+                          <div key={i} className="w-5 h-5 rounded-full border border-border/30" style={{ background: color }} />
+                        ))}
                       </div>
                       <p className="text-xs font-semibold">{preset.name}</p>
                     </button>
                   ))}
-                </div>
-
-                <div className="pt-2 border-t border-border">
-                  <label className="text-sm font-medium mb-1 block">Custom Primary Color (HSL)</label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      value={settingsForm.custom_primary_hsl}
-                      onChange={e => setSettingsForm(s => ({ ...s, custom_primary_hsl: e.target.value }))}
-                      className="rounded-xl bg-background"
-                      placeholder="e.g. 258 89% 66%"
-                    />
-                    {settingsForm.custom_primary_hsl && (
-                      <div className="w-8 h-8 rounded-lg shrink-0" style={{ background: `hsl(${settingsForm.custom_primary_hsl})` }} />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Leave empty to use the selected preset.</p>
                 </div>
               </div>
             )}
