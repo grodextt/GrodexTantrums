@@ -14,12 +14,13 @@ interface Props {
   mangaId: string;
 }
 
-// Parse @mentions and render as highlighted spans
+// Parse @mentions (hyphenated) and render as highlighted spans
 function renderTextWithMentions(text: string) {
-  const parts = text.split(/(@[\w\s]+?)(?=\s@|\s|$)/g);
+  const parts = text.split(/(@[\w-]+)/g);
   return parts.map((part, i) => {
     if (part.startsWith('@')) {
-      return <span key={i} className="text-primary font-medium">{part}</span>;
+      const displayName = part.slice(1).replace(/-/g, ' ');
+      return <span key={i} className="text-primary font-medium">@{displayName}</span>;
     }
     return part;
   });
@@ -42,18 +43,15 @@ function MentionInput({
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<{ display_name: string }[]>([]);
-  const [mentionQuery, setMentionQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleChange = async (newValue: string) => {
     onChange(newValue);
-    // Check if user is typing @mention
     const cursor = textareaRef.current?.selectionStart || newValue.length;
     const textBeforeCursor = newValue.slice(0, cursor);
-    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+    const atMatch = textBeforeCursor.match(/@([\w-]*)$/);
     if (atMatch) {
-      const query = atMatch[1];
-      setMentionQuery(query);
+      const query = atMatch[1].replace(/-/g, ' ');
       if (query.length >= 1) {
         const { data } = await supabase
           .from('profiles')
@@ -74,7 +72,8 @@ function MentionInput({
     const cursor = textareaRef.current?.selectionStart || value.length;
     const textBeforeCursor = value.slice(0, cursor);
     const textAfterCursor = value.slice(cursor);
-    const newBefore = textBeforeCursor.replace(/@\w*$/, `@${name} `);
+    const hyphenatedName = name.replace(/\s+/g, '-');
+    const newBefore = textBeforeCursor.replace(/@[\w-]*$/, `@${hyphenatedName} `);
     onChange(newBefore + textAfterCursor);
     setShowSuggestions(false);
   };
@@ -117,6 +116,12 @@ function CommentItem({
   onEdit,
   onDelete,
   mangaId,
+  replyTo,
+  replyText,
+  setReplyText,
+  submitReply,
+  setReplyTo,
+  topLevelParentId,
 }: {
   comment: CommentRow;
   isAdmin: boolean;
@@ -128,6 +133,12 @@ function CommentItem({
   onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void;
   mangaId: string;
+  replyTo: string | null;
+  replyText: string;
+  setReplyText: (v: string) => void;
+  submitReply: (parentId: string) => void;
+  setReplyTo: (id: string | null) => void;
+  topLevelParentId?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.text);
@@ -135,12 +146,27 @@ function CommentItem({
   const displayName = comment.profile?.display_name || 'User';
   const initial = displayName[0]?.toUpperCase() || 'U';
   const isOwner = currentUserId === comment.user_id;
+  const canModerate = isOwner || isAdmin;
 
   const handleSaveEdit = () => {
     if (editText.trim() && editText !== comment.text) {
       onEdit(comment.id, editText.trim());
     }
     setEditing(false);
+  };
+
+  // For nested replies, use the top-level parent ID
+  const effectiveParentId = topLevelParentId || comment.id;
+
+  const handleReplyClick = () => {
+    if (topLevelParentId) {
+      // This is a nested reply, prepend @mention of the user being replied to
+      const hyphenatedName = displayName.replace(/\s+/g, '-');
+      setReplyTo(comment.id);
+      setReplyText(`@${hyphenatedName} `);
+    } else {
+      onReply(comment.id);
+    }
   };
 
   return (
@@ -170,7 +196,7 @@ function CommentItem({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {isOwner && !editing && (
+          {canModerate && !editing && (
             <>
               <button onClick={() => { setEditing(true); setEditText(comment.text); }} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground" title="Edit">
                 <Pencil className="w-3.5 h-3.5" />
@@ -227,13 +253,30 @@ function CommentItem({
         </button>
         {isAuthenticated && (
           <button
-            onClick={() => onReply(comment.id)}
+            onClick={handleReplyClick}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <MessageCircle className="w-3.5 h-3.5" /> Reply
           </button>
         )}
       </div>
+
+      {/* Reply input for this comment */}
+      {replyTo === comment.id && (
+        <div className="ml-4 flex gap-2 mt-2">
+          <MentionInput
+            value={replyText}
+            onChange={setReplyText}
+            placeholder="Write a reply... Use @username to mention"
+            className="bg-secondary border-border min-h-[60px] resize-none flex-1"
+            autoFocus
+            mangaId={mangaId}
+          />
+          <Button size="sm" onClick={() => submitReply(effectiveParentId)} disabled={!replyText.trim()} className="self-end">
+            Reply
+          </Button>
+        </div>
+      )}
 
       {/* Replies */}
       {comment.replies && comment.replies.length > 0 && (
@@ -251,6 +294,12 @@ function CommentItem({
               onEdit={onEdit}
               onDelete={onDelete}
               mangaId={mangaId}
+              replyTo={replyTo}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              submitReply={submitReply}
+              setReplyTo={setReplyTo}
+              topLevelParentId={topLevelParentId || comment.id}
             />
           ))}
         </div>
@@ -268,10 +317,14 @@ export default function CommentSection({ mangaId }: Props) {
   const [replyText, setReplyText] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('recent');
 
+  // Extract hyphenated @mentions and convert to space-separated names
+  const extractMentions = (text: string): string[] => {
+    return [...text.matchAll(/@([\w-]+)/g)].map(m => m[1].replace(/-/g, ' '));
+  };
+
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
-    // Extract mentions
-    const mentions = [...newComment.matchAll(/@([\w\s]+?)(?=\s@|\s|$)/g)].map(m => m[1].trim());
+    const mentions = extractMentions(newComment);
     await addComment.mutateAsync({ text: newComment, mentions });
     setNewComment('');
   };
@@ -283,7 +336,7 @@ export default function CommentSection({ mangaId }: Props) {
 
   const submitReply = async (parentId: string) => {
     if (!replyText.trim()) return;
-    const mentions = [...replyText.matchAll(/@([\w\s]+?)(?=\s@|\s|$)/g)].map(m => m[1].trim());
+    const mentions = extractMentions(replyText);
     await addComment.mutateAsync({ text: replyText, parentId, mentions });
     setReplyTo(null);
     setReplyText('');
@@ -358,35 +411,24 @@ export default function CommentSection({ mangaId }: Props) {
       ) : (
         <div className="space-y-3">
           {sortedComments.map(c => (
-            <div key={c.id} className="space-y-2">
-              <CommentItem
-                comment={c}
-                isAdmin={isAdmin}
-                isAuthenticated={isAuthenticated}
-                currentUserId={user?.id}
-                onReply={handleReply}
-                onLike={(id, hasLiked) => toggleLike.mutate({ commentId: id, hasLiked })}
-                onPin={(id, isPinned) => togglePin.mutate({ commentId: id, isPinned })}
-                onEdit={(id, text) => editComment.mutate({ commentId: id, text })}
-                onDelete={(id) => deleteComment.mutate(id)}
-                mangaId={mangaId}
-              />
-              {replyTo === c.id && (
-                <div className="ml-10 flex gap-2">
-                  <MentionInput
-                    value={replyText}
-                    onChange={setReplyText}
-                    placeholder="Write a reply... Use @username to mention"
-                    className="bg-secondary border-border min-h-[60px] resize-none flex-1"
-                    autoFocus
-                    mangaId={mangaId}
-                  />
-                  <Button size="sm" onClick={() => submitReply(c.id)} disabled={!replyText.trim()} className="self-end">
-                    Reply
-                  </Button>
-                </div>
-              )}
-            </div>
+            <CommentItem
+              key={c.id}
+              comment={c}
+              isAdmin={isAdmin}
+              isAuthenticated={isAuthenticated}
+              currentUserId={user?.id}
+              onReply={handleReply}
+              onLike={(id, hasLiked) => toggleLike.mutate({ commentId: id, hasLiked })}
+              onPin={(id, isPinned) => togglePin.mutate({ commentId: id, isPinned })}
+              onEdit={(id, text) => editComment.mutate({ commentId: id, text })}
+              onDelete={(id) => deleteComment.mutate(id)}
+              mangaId={mangaId}
+              replyTo={replyTo}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              submitReply={submitReply}
+              setReplyTo={setReplyTo}
+            />
           ))}
           {comments.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-6">No comments yet. Be the first to comment!</p>

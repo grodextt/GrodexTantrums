@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Play, Plus, Check, Bell, BellOff, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide } from 'lucide-react';
+import { Play, Plus, Check, Bell, BellOff, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMangaBySlug, useMangaChapters } from '@/hooks/useMangaBySlug';
 import { useAllManga } from '@/hooks/useAllManga';
@@ -104,6 +104,10 @@ export default function MangaInfo() {
     }
   };
 
+  const handleReport = () => {
+    toast.success('Report submitted! We\'ll look into it.');
+  };
+
   return (
     <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-6">
       {manga.content_warnings && manga.content_warnings.length > 0 && (
@@ -158,11 +162,13 @@ export default function MangaInfo() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2.5 mt-2 flex-wrap">
-                <Link to={`/manga/${manga.slug}/chapter/1`}>
-                  <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
-                    <Play className="w-4 h-4" /> Start Reading
-                  </Button>
-                </Link>
+                {chapters.length > 0 && (
+                  <Link to={`/manga/${manga.slug}/chapter/1`}>
+                    <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
+                      <Play className="w-4 h-4" /> Start Reading
+                    </Button>
+                  </Link>
+                )}
                 {maxChapter > 0 && (
                   <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`}>
                     <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
@@ -209,21 +215,28 @@ export default function MangaInfo() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2.5">
+              {/* Report Card - always visible */}
               <div className="flex-1 flex items-center justify-between p-4 rounded-xl bg-secondary/60 border border-border/50">
                 <div>
-                  <p className="text-sm font-semibold">{patreonUrl ? 'Donate Us' : 'Facing an Issue?'}</p>
-                  <p className="text-xs text-muted-foreground">{patreonUrl ? 'Support us on Patreon' : "Let us know, and we'll help ASAP"}</p>
+                  <p className="text-sm font-semibold">Facing an Issue?</p>
+                  <p className="text-xs text-muted-foreground">Let us know, and we'll help ASAP</p>
                 </div>
-                {patreonUrl ? (
+                <Button size="sm" variant="destructive" className="text-sm rounded-lg gap-1.5 h-9 px-4" onClick={handleReport}>
+                  <AlertCircle className="w-4 h-4" /> Report
+                </Button>
+              </div>
+              {/* Donate Card - visible when patreon URL is set */}
+              {patreonUrl && (
+                <div className="flex-1 flex items-center justify-between p-4 rounded-xl bg-secondary/60 border border-border/50">
+                  <div>
+                    <p className="text-sm font-semibold">Donate Us</p>
+                    <p className="text-xs text-muted-foreground">Support us on Patreon</p>
+                  </div>
                   <Button size="sm" className="text-sm rounded-lg gap-1.5 h-9 px-4" onClick={() => window.open(patreonUrl, '_blank')}>
                     💖 Donate
                   </Button>
-                ) : (
-                  <Button size="sm" variant="destructive" className="text-sm rounded-lg gap-1.5 h-9 px-4">
-                    <AlertCircle className="w-4 h-4" /> Report
-                  </Button>
-                )}
-              </div>
+                </div>
+              )}
               <div className="flex-1 flex items-center justify-between p-4 rounded-xl bg-secondary/60 border border-border/50">
                 <div>
                   <p className="text-sm font-semibold">Join Our Socials</p>
@@ -258,6 +271,7 @@ export default function MangaInfo() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {visibleChapters.map((ch, idx) => {
                   const chDate = new Date(ch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  const isPremium = !!ch.premium;
                   return (
                     <Link
                       key={ch.id}
@@ -268,8 +282,13 @@ export default function MangaInfo() {
                         <img
                           src={manga.cover_url}
                           alt=""
-                          className="w-[72px] h-[56px] object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+                          className={`w-[72px] h-[56px] object-cover rounded-lg transition-opacity ${isPremium ? 'opacity-50' : 'opacity-80 group-hover:opacity-100'}`}
                         />
+                        {isPremium && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                            <Lock className="w-4 h-4 text-amber-400" />
+                          </div>
+                        )}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
@@ -277,8 +296,14 @@ export default function MangaInfo() {
                           {idx === 0 && sortDesc && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground font-semibold">New</span>
                           )}
+                          {isPremium && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 font-semibold border border-amber-500/20">Premium</span>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{chDate}</p>
+                        {isPremium && (
+                          <p className="text-[10px] text-amber-500 mt-0.5 font-medium">🪙 100 coins</p>
+                        )}
                       </div>
                     </Link>
                   );

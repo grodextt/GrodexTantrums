@@ -117,6 +117,7 @@ export const useComments = (mangaId: string | undefined) => {
       }
 
       // Handle @mentions - create notifications for mentioned users
+      // Mentions come in with spaces (already converted from hyphens)
       if (mentions && mentions.length > 0) {
         const { data: mentionedProfiles } = await supabase
           .from('profiles')
@@ -125,7 +126,7 @@ export const useComments = (mangaId: string | undefined) => {
 
         if (mentionedProfiles) {
           const notifications = mentionedProfiles
-            .filter(p => p.id !== user.id) // Don't notify yourself
+            .filter(p => p.id !== user.id)
             .map(p => ({
               user_id: p.id,
               type: 'comment_reply' as any,
