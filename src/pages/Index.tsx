@@ -12,8 +12,23 @@ import { useAllManga } from '@/hooks/useAllManga';
 
 export default function Index() {
   const { data: allManga = [] } = useAllManga();
-  // Trending: top 6 by views (automatic, not manual toggle)
-  const trending = [...allManga].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 6);
+  
+  // Trending: composite score weighting recent chapter activity + views
+  const trending = [...allManga]
+    .map(m => {
+      const latestChapterTime = m.chapters?.length
+        ? Math.max(...m.chapters.map(ch => new Date(ch.created_at).getTime()))
+        : 0;
+      const daysSinceLastChapter = latestChapterTime
+        ? (Date.now() - latestChapterTime) / (1000 * 60 * 60 * 24)
+        : 999;
+      // Higher score = more trending. Recency matters more.
+      const recencyBoost = Math.max(0, 30 - daysSinceLastChapter) * 100;
+      const score = (m.views || 0) + recencyBoost;
+      return { ...m, _trendingScore: score };
+    })
+    .sort((a, b) => b._trendingScore - a._trendingScore)
+    .slice(0, 6);
   const mangaType = allManga.filter(m => m.type === 'manga');
 
   return (

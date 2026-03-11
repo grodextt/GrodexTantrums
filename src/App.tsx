@@ -42,21 +42,7 @@ const AppLayout = () => {
   const isAdminPanel = location.pathname.startsWith('/admin');
   const hideShell = isChapterReader || isAdminPanel;
 
-  // Apply theme from settings
-  useEffect(() => {
-    const theme = (settings as any)?.theme;
-    if (theme?.primary) {
-      document.documentElement.style.setProperty('--primary', theme.primary);
-      document.documentElement.style.setProperty('--ring', theme.primary);
-    }
-    if (theme?.primaryDark) {
-      const isDark = document.documentElement.classList.contains('dark');
-      if (isDark) {
-        document.documentElement.style.setProperty('--primary', theme.primaryDark);
-        document.documentElement.style.setProperty('--ring', theme.primaryDark);
-      }
-    }
-  }, [settings]);
+  // Theme is now handled by ThemeContext
 
   return (
     <div className="min-h-screen flex flex-col">
