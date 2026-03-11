@@ -9,6 +9,8 @@ import { useMangaBySlug, useMangaChapters } from '@/hooks/useMangaBySlug';
 import CommentSection from '@/components/CommentSection';
 import ChapterListModal from '@/components/ChapterListModal';
 import { useToast } from '@/hooks/use-toast';
+import { useRecordReading } from '@/hooks/useReadingHistory';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ChapterReader() {
   const { slug, chapterId } = useParams<{ slug: string; chapterId: string }>();
