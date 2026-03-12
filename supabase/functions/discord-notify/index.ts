@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     // Fetch manga details
     const { data: manga, error } = await supabase
       .from("manga")
-      .select("*")
+      .select("title, cover_url, status, type")
       .eq("id", mangaId)
       .single();
 
@@ -39,8 +39,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if discord is enabled
-    if (!manga.discord_webhook_url) {
+    // Fetch discord settings from separate table
+    const { data: discordSettings } = await supabase
+      .from("manga_discord_settings")
+      .select("*")
+      .eq("manga_id", mangaId)
+      .maybeSingle();
+
+    if (!discordSettings?.webhook_url) {
       return new Response(JSON.stringify({ message: "Discord not configured for this manga" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -48,11 +54,11 @@ Deno.serve(async (req) => {
     }
 
     // Build chapter URL
-    const siteUrl = "https://chapter-haven-io.lovable.app";
+    const siteUrl = "https://scan-zen-studio.lovable.app";
     const chapterUrl = `${siteUrl}/manga/${mangaSlug}/chapter/${chapterNumber}`;
 
     // Build the notification message from template
-    const template = manga.discord_notification_template || 
+    const template = discordSettings.notification_template || 
       "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}\nRead now: {chapter_url}";
     
     const messageContent = template
@@ -61,13 +67,13 @@ Deno.serve(async (req) => {
       .replace(/{chapter_title}/g, chapterTitle || "")
       .replace(/{chapter_url}/g, chapterUrl);
 
-    // Build role mentions for content field
+    // Build role mentions
     let mentionContent = "";
-    if (manga.discord_primary_role_id) {
-      mentionContent += `<@&${manga.discord_primary_role_id}> `;
+    if (discordSettings.primary_role_id) {
+      mentionContent += `<@&${discordSettings.primary_role_id}> `;
     }
-    if (manga.discord_secondary_role_id) {
-      mentionContent += `<@&${manga.discord_secondary_role_id}> `;
+    if (discordSettings.secondary_role_id) {
+      mentionContent += `<@&${discordSettings.secondary_role_id}> `;
     }
     mentionContent = mentionContent.trim();
 
@@ -75,7 +81,7 @@ Deno.serve(async (req) => {
     const embed = {
       title: `📖 ${manga.title} - Chapter ${chapterNumber}`,
       description: messageContent,
-      color: 0x5865F2, // Discord blurple
+      color: 0x5865F2,
       thumbnail: manga.cover_url ? { url: manga.cover_url } : undefined,
       fields: [
         { name: "Chapter", value: `${chapterNumber}`, inline: true },
@@ -84,7 +90,7 @@ Deno.serve(async (req) => {
       ],
       url: chapterUrl,
       footer: { 
-        text: manga.discord_channel_name ? `📺 ${manga.discord_channel_name} • Chapter Haven` : "Chapter Haven"
+        text: discordSettings.channel_name ? `📺 ${discordSettings.channel_name} • MangaHub v1` : "MangaHub v1"
       },
       timestamp: new Date().toISOString(),
     };
@@ -93,15 +99,13 @@ Deno.serve(async (req) => {
       embeds: [embed],
     };
 
-    // Add role mentions if any
     if (mentionContent) {
       discordPayload.content = mentionContent;
     }
 
     console.log("Sending Discord notification:", JSON.stringify(discordPayload, null, 2));
 
-    // Send to Discord
-    const discordResponse = await fetch(manga.discord_webhook_url, {
+    const discordResponse = await fetch(discordSettings.webhook_url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(discordPayload),

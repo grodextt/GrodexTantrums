@@ -34,7 +34,7 @@ export default function AnnouncementBar() {
         <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg bg-card border border-border/40">
           <Share2 className="w-4 h-4 text-primary shrink-0" />
           <div>
-            <p className="text-sm font-medium text-foreground">Share Kayn Scan</p>
+            <p className="text-sm font-medium text-foreground">Share {settings.general.site_name || 'MangaHub v1'}</p>
             <p className="text-xs text-muted-foreground">to your friends</p>
           </div>
         </div>

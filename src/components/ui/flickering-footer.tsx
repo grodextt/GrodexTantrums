@@ -200,7 +200,7 @@ function useMediaQuery(query: string) {
 export const Component = () => {
   const tablet = useMediaQuery("(max-width: 1024px)");
   const { settings } = useSiteSettings();
-  const footerText = settings.general.footer_text || 'Kayn Scan';
+  const footerText = settings.general.footer_text || 'MangaHub v1';
   const footerTagline = settings.general.footer_tagline || '';
 
   return (

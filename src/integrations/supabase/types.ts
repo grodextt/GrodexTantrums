@@ -179,11 +179,6 @@ export type Database = {
           cover_url: string
           created_at: string
           description: string
-          discord_channel_name: string | null
-          discord_notification_template: string | null
-          discord_primary_role_id: string | null
-          discord_secondary_role_id: string | null
-          discord_webhook_url: string | null
           featured: boolean | null
           genres: string[] | null
           id: string
@@ -209,11 +204,6 @@ export type Database = {
           cover_url?: string
           created_at?: string
           description?: string
-          discord_channel_name?: string | null
-          discord_notification_template?: string | null
-          discord_primary_role_id?: string | null
-          discord_secondary_role_id?: string | null
-          discord_webhook_url?: string | null
           featured?: boolean | null
           genres?: string[] | null
           id?: string
@@ -239,11 +229,6 @@ export type Database = {
           cover_url?: string
           created_at?: string
           description?: string
-          discord_channel_name?: string | null
-          discord_notification_template?: string | null
-          discord_primary_role_id?: string | null
-          discord_secondary_role_id?: string | null
-          discord_webhook_url?: string | null
           featured?: boolean | null
           genres?: string[] | null
           id?: string
@@ -260,6 +245,44 @@ export type Database = {
           views?: number | null
         }
         Relationships: []
+      }
+      manga_discord_settings: {
+        Row: {
+          channel_name: string | null
+          manga_id: string
+          notification_template: string | null
+          primary_role_id: string | null
+          secondary_role_id: string | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          channel_name?: string | null
+          manga_id: string
+          notification_template?: string | null
+          primary_role_id?: string | null
+          secondary_role_id?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          channel_name?: string | null
+          manga_id?: string
+          notification_template?: string | null
+          primary_role_id?: string | null
+          secondary_role_id?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manga_discord_settings_manga_id_fkey"
+            columns: ["manga_id"]
+            isOneToOne: true
+            referencedRelation: "manga"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       manga_subscriptions: {
         Row: {

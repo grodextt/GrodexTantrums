@@ -43,15 +43,15 @@ export interface SiteSettings {
 
 const DEFAULT_SETTINGS: SiteSettings = {
   general: {
-    site_name: 'Kayn Scan',
+    site_name: 'MangaHub v1',
     site_description: 'Read the latest manga, manhwa, and manhua translations.',
-    footer_text: 'Kayn Scan',
+    footer_text: 'MangaHub v1',
     footer_tagline: 'Your gateway to manga',
   },
   announcements: { message: '' },
   upload: { max_size_mb: 10, allowed_formats: 'jpg, png, webp' },
   storage: { provider: 'supabase' },
-  theme: { preset: 'Purple Night' },
+  theme: { preset: 'Sakura' },
 };
 
 export const useSiteSettings = () => {
@@ -75,7 +75,7 @@ export const useSiteSettings = () => {
       }
       return result;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
 
   const updateSettings = useMutation({
