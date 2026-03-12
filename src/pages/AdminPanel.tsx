@@ -269,7 +269,7 @@ export default function AdminPanel() {
         storage_provider: (settings as any).storage?.provider || 'supabase',
         blogger_blog_id: (settings as any).storage?.blogger_blog_id || '',
         blogger_api_key: (settings as any).storage?.blogger_api_key || '',
-        theme_preset: (settings as any).theme?.preset || 'Purple Night',
+        theme_preset: (settings as any).theme?.preset || 'Sakura',
         custom_primary_hsl: (settings as any).theme?.custom_primary_hsl || '',
       });
     }
