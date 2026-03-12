@@ -75,7 +75,7 @@ export const useSiteSettings = () => {
       }
       return result;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
 
   const updateSettings = useMutation({

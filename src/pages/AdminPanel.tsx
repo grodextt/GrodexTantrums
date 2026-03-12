@@ -584,7 +584,7 @@ export default function AdminPanel() {
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium mb-1 block">Footer Text</label>
-                      <Input value={settingsForm.footer_text} onChange={e => setSettingsForm(s => ({ ...s, footer_text: e.target.value }))} className="rounded-xl bg-background" placeholder="e.g. Kayn Scan" />
+                      <Input value={settingsForm.footer_text} onChange={e => setSettingsForm(s => ({ ...s, footer_text: e.target.value }))} className="rounded-xl bg-background" placeholder="e.g. MangaHub v1" />
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-1 block">Footer Tagline</label>
