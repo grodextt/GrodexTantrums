@@ -169,7 +169,6 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
           }
         });
       }
-      });
       setCoverPreview(manga.cover_url);
       setBannerPreview(manga.banner_url || "");
     } else {
