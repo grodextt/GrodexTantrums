@@ -206,7 +206,7 @@ export const Component = () => {
   return (
     <footer id="footer" className="w-full pb-0 mt-16">
       <div className="w-full h-48 md:h-64 relative z-0">
-        <div className="absolute inset-0 w-auto bg-gradient-to-t from-transparent to-background z-10 from-40%" />
+        <div className="absolute inset-0 w-auto bg-gradient-to-t from-transparent to-background z-10 from-20%" />
         <div className="absolute inset-0">
           <FlickeringGrid
             text={footerText}
@@ -215,7 +215,7 @@ export const Component = () => {
             squareSize={2}
             gridGap={tablet ? 2 : 3}
             color="hsl(var(--foreground))"
-            maxOpacity={0.3}
+            maxOpacity={0.45}
             flickerChance={0.1}
           />
         </div>
