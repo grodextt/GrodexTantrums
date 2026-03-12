@@ -215,7 +215,7 @@ export const Component = () => {
             squareSize={2}
             gridGap={tablet ? 2 : 3}
             color="hsl(var(--foreground))"
-            maxOpacity={0.3}
+            maxOpacity={0.45}
             flickerChance={0.1}
           />
         </div>
