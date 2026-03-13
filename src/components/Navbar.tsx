@@ -91,13 +91,18 @@ export default function Navbar() {
 
           {/* Mobile actions */}
           <div className="flex items-center gap-1.5 md:hidden">
-            <NotificationMenu />
+            {isAuthenticated && <NotificationMenu />}
             {isAuthenticated ? (
               <UserMenu />
             ) : (
-              <Button variant="ghost" size="icon" className="rounded-full h-11 w-11 bg-muted/60 hover:bg-muted" onClick={toggleTheme}>
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
+              <>
+                <Button variant="ghost" size="icon" className="rounded-full h-11 w-11 bg-muted/60 hover:bg-muted" onClick={toggleTheme}>
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="rounded-full h-11 w-11 bg-primary/15 hover:bg-primary/25 text-primary" onClick={() => setShowLoginModal(true)}>
+                  <LogIn className="w-4 h-4" />
+                </Button>
+              </>
             )}
             <Button variant="ghost" size="icon" className="rounded-full h-11 w-11 bg-muted/60 hover:bg-muted" onClick={() => setMobileOpen(!mobileOpen)}>
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
