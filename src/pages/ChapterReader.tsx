@@ -35,6 +35,9 @@ export default function ChapterReader() {
   const currencyName = premiumSettings.coin_system.currency_name;
   const coinBalance = useUserCoinBalance();
 
+  const currentChapter = chapters.find(c => c.number === chapterNum);
+  const { isUnlocked, unlock } = useChapterUnlock(currentChapter?.id);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [chapterNum]);
