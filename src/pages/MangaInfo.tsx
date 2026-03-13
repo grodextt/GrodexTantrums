@@ -8,6 +8,7 @@ import { useMangaSubscription } from '@/hooks/useNotifications';
 import { useMangaBookmark } from '@/hooks/useBookmarks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import TypeBadge from '@/components/TypeBadge';
 import TypeFlag from '@/components/TypeFlag';
 import CommentSection from '@/components/CommentSection';
