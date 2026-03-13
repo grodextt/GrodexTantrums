@@ -213,7 +213,40 @@ export default function ChapterReader() {
         <div className="w-full px-2 sm:px-4 py-4 sm:py-8">
           {/* Pages */}
           <div className="space-y-2 sm:space-y-4 mb-6 sm:mb-8">
-            {pageUrls.length > 0 ? (
+            {isLocked ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center space-y-4 max-w-sm">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/15 flex items-center justify-center mx-auto">
+                    <Lock className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <h2 className="text-xl font-bold">Premium Chapter</h2>
+                  <p className="text-sm text-muted-foreground">
+                    This chapter requires {coinPrice} {currencyName} to unlock.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Coins className="w-4 h-4" />
+                    <span>Your balance: <strong className="text-foreground">{coinBalance}</strong> {currencyName}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={handleUnlock}
+                      disabled={unlock.isPending || (!user)}
+                      className="rounded-xl gap-2 h-12 text-base"
+                    >
+                      <Coins className="w-4 h-4" />
+                      {unlock.isPending ? 'Unlocking...' : `Unlock for ${coinPrice} ${currencyName}`}
+                    </Button>
+                    {coinBalance < coinPrice && (
+                      <Button variant="outline" asChild className="rounded-xl gap-2">
+                        <Link to="/coin-shop">
+                          <ShoppingCart className="w-4 h-4" /> Get more {currencyName}
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : pageUrls.length > 0 ? (
               pageUrls.map((page, i) => (
                 <div key={i} className="flex justify-center">
                   <img
