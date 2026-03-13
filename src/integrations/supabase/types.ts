@@ -113,6 +113,8 @@ export type Database = {
       comments: {
         Row: {
           chapter_id: string | null
+          context_id: string | null
+          context_type: string | null
           created_at: string
           id: string
           is_pinned: boolean | null
@@ -124,6 +126,8 @@ export type Database = {
         }
         Insert: {
           chapter_id?: string | null
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string
           id?: string
           is_pinned?: boolean | null
@@ -135,6 +139,8 @@ export type Database = {
         }
         Update: {
           chapter_id?: string | null
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string
           id?: string
           is_pinned?: boolean | null
@@ -313,6 +319,30 @@ export type Database = {
           },
         ]
       }
+      mission_awards: {
+        Row: {
+          amount: number
+          awarded_at: string
+          id: string
+          mission_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          awarded_at?: string
+          id?: string
+          mission_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          awarded_at?: string
+          id?: string
+          mission_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           chapter_id: string | null
@@ -373,21 +403,30 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          coin_balance: number | null
           created_at: string
           display_name: string | null
           id: string
+          token_balance: number | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          coin_balance?: number | null
           created_at?: string
           display_name?: string | null
           id: string
+          token_balance?: number | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          coin_balance?: number | null
           created_at?: string
           display_name?: string | null
           id?: string
+          token_balance?: number | null
         }
         Relationships: []
       }
@@ -451,6 +490,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_checkins: {
+        Row: {
+          checked_in_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           preferences: Json
@@ -498,6 +555,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_token_balance: {
+        Args: { amount: number; user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
