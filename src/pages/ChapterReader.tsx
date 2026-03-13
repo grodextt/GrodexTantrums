@@ -190,6 +190,7 @@ export default function ChapterReader() {
     date: new Date(ch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     pages: ch.pages || undefined,
     premium: ch.premium || undefined,
+    coin_price: ch.coin_price,
   }));
 
   const reactions = [
