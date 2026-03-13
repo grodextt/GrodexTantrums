@@ -12,6 +12,8 @@ export default function UserMenu() {
   const { profile, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { isAdmin } = useIsAdmin();
+  const { settings: premiumSettings } = usePremiumSettings();
+  const currencyName = premiumSettings.coin_system.currency_name;
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
