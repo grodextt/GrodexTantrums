@@ -30,6 +30,7 @@ export default function UserMenu() {
       return { coin_balance: data?.coin_balance ?? 0, token_balance: data?.token_balance ?? 0 };
     },
     enabled: !!user,
+    refetchInterval: 30000,
   });
 
   const coinBalance = balances?.coin_balance ?? 0;
@@ -93,23 +94,23 @@ export default function UserMenu() {
             </Button>
           </div>
 
-          {/* Balance Card */}
+          {/* Balance Card — matching reference screenshot */}
           <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2">
-            <p className="text-[10px] font-semibold text-muted-foreground text-center mb-2 uppercase tracking-wider">Your Balance</p>
+            <p className="text-[11px] font-bold text-muted-foreground text-center mb-2.5 uppercase tracking-widest">Your Balance</p>
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 rounded-lg bg-background/60 p-2">
-                <CurrencyIcon className="w-4 h-4 text-amber-500 shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight">{coinBalance}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{currencyName}</p>
+              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                  <CurrencyIcon className="w-5 h-5 text-amber-500" />
                 </div>
+                <span className="text-lg font-bold text-foreground leading-none">{coinBalance}</span>
+                <span className="text-[10px] text-muted-foreground font-medium">{currencyName}</span>
               </div>
-              <div className="flex items-center gap-2 rounded-lg bg-background/60 p-2">
-                <Ticket className="w-4 h-4 text-primary shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight">{tokenBalance}</p>
-                  <p className="text-[10px] text-muted-foreground">Tickets</p>
+              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                  <Ticket className="w-5 h-5 text-primary" />
                 </div>
+                <span className="text-lg font-bold text-foreground leading-none">{tokenBalance}</span>
+                <span className="text-[10px] text-muted-foreground font-medium">Tickets</span>
               </div>
             </div>
           </div>

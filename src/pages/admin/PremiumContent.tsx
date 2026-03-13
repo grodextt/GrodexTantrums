@@ -159,17 +159,24 @@ export default function PremiumContent() {
 
   // Pricing tiers
   const pricePerUnit = baseAmount > 0 ? basePrice / baseAmount : 0;
-  const TIERS = [50, 100, 200, 500, 1000];
+  const TIERS = [50, 100, 250, 500, 1000];
 
   const isStripeConnected = !!stripePublicKey && !!stripeSecretKey;
   const isPaypalConnected = !!paypalClientId && !!paypalSecret;
   const isUsdtConfigured = !!usdtAddress;
 
+  const CurrencyIcon = ({ className }: { className?: string }) =>
+    currencyIconUrl ? (
+      <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} />
+    ) : (
+      <Coins className={className} />
+    );
+
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold">Premium Content</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage monetization settings.</p>
+        <p className="text-muted-foreground text-sm mt-1">Manage monetisation and premium features.</p>
       </div>
 
       {/* Sub-tabs */}
@@ -190,7 +197,6 @@ export default function PremiumContent() {
       {/* ─── GENERAL TAB ─── */}
       {subTab === 'general' && (
         <div className="space-y-4">
-          {/* Premium Features Toggles */}
           <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
             <h3 className="font-semibold flex items-center gap-2"><Crown className="w-4 h-4" /> Premium Features</h3>
             <div className="space-y-3">
@@ -211,7 +217,6 @@ export default function PremiumContent() {
             </div>
           </div>
 
-          {/* Payment Methods */}
           <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
             <h3 className="font-semibold flex items-center gap-2"><CreditCard className="w-4 h-4" /> Payment Methods</h3>
 
@@ -250,7 +255,6 @@ export default function PremiumContent() {
               })}
             </div>
 
-            {/* Stripe fields */}
             {selectedPayment === 'stripe' && (
               <div className="space-y-3 pt-2 border-t border-border">
                 <div>
@@ -264,7 +268,6 @@ export default function PremiumContent() {
               </div>
             )}
 
-            {/* PayPal fields */}
             {selectedPayment === 'paypal' && (
               <div className="space-y-3 pt-2 border-t border-border">
                 <p className="text-xs text-muted-foreground">Create your PayPal app at developer.paypal.com → My Apps & Credentials</p>
@@ -279,7 +282,6 @@ export default function PremiumContent() {
               </div>
             )}
 
-            {/* USDT fields */}
             {selectedPayment === 'usdt' && (
               <div className="space-y-3 pt-2 border-t border-border">
                 <p className="text-xs text-muted-foreground">Users will send USDT to this address and submit their transaction hash for manual verification.</p>
@@ -312,61 +314,96 @@ export default function PremiumContent() {
       {/* ─── COIN SYSTEM TAB ─── */}
       {subTab === 'coins' && (
         <div className="space-y-4">
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-            <h3 className="font-semibold flex items-center gap-2"><Coins className="w-4 h-4" /> Currency Settings</h3>
-
+          {/* Branding Section */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <div>
-              <label className="text-sm font-medium mb-1 block">Currency Name</label>
-              <Input value={currencyName} onChange={e => setCurrencyName(e.target.value)} className="rounded-xl bg-background w-48" placeholder="Coins" />
-              <p className="text-xs text-muted-foreground mt-1">This name replaces "Coins" everywhere on the site.</p>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><Coins className="w-4 h-4" /> Coin System Branding</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">Customize your site's currency name and icon.</p>
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">Currency Icon</label>
-              <div className="flex items-center gap-3">
-                {currencyIconUrl ? (
-                  <img src={currencyIconUrl} alt="Currency icon" className="w-10 h-10 rounded-lg object-contain bg-muted" />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                    <Coins className="w-5 h-5 text-muted-foreground" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left: Form */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-semibold mb-1.5 block">Currency Name</label>
+                  <Input value={currencyName} onChange={e => setCurrencyName(e.target.value)} className="rounded-xl bg-background" placeholder="Coins" />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold mb-1.5 block">Currency Icon</label>
+                  <div className="flex items-center gap-3">
+                    {currencyIconUrl ? (
+                      <img src={currencyIconUrl} alt="Currency icon" className="w-12 h-12 rounded-xl object-contain bg-muted border border-border/40" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border/40 flex items-center justify-center">
+                        <Coins className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm font-medium">
+                      <Upload className="w-4 h-4" /> {iconUploading ? 'Uploading...' : 'Upload New Icon'}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleIconUpload} disabled={iconUploading} />
+                    </label>
                   </div>
-                )}
-                <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm">
-                  <Upload className="w-4 h-4" /> {iconUploading ? 'Uploading...' : 'Upload Icon'}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleIconUpload} disabled={iconUploading} />
-                </label>
+                  <p className="text-xs text-muted-foreground mt-1.5">Square image (64×64px) recommended.</p>
+                </div>
+              </div>
+
+              {/* Right: Preview */}
+              <div className="flex flex-col items-center justify-center rounded-xl bg-muted/30 border border-border/40 p-6">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/15 flex items-center justify-center mb-3">
+                  <CurrencyIcon className="w-10 h-10 text-amber-500" />
+                </div>
+                <p className="text-sm font-bold mb-2">Preview</p>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background border border-border/40">
+                  <CurrencyIcon className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-semibold">1,000 {currencyName}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-            <h3 className="font-semibold flex items-center gap-2"><Coins className="w-4 h-4" /> Base Currency Rate</h3>
-            <div className="flex items-center gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Amount</label>
-                <Input type="number" value={baseAmount} onChange={e => setBaseAmount(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl bg-background w-28" />
-              </div>
-              <span className="text-muted-foreground mt-5">=</span>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Price (USD)</label>
-                <Input type="number" step="0.01" value={basePrice} onChange={e => setBasePrice(Math.max(0.01, parseFloat(e.target.value) || 0.01))} className="rounded-xl bg-background w-28" />
-              </div>
+          {/* Base Currency Rate */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><CircleDollarSign className="w-4 h-4" /> Base Currency Rate</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">Set the fundamental value of your currency.</p>
             </div>
 
-            {/* Pricing table */}
-            <div className="mt-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Auto-calculated Pricing Preview</p>
-              <div className="bg-muted/30 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-2 gap-0 text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-2 border-b border-border/50">
-                  <span>{currencyName}</span>
-                  <span className="text-right">USD</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left: Input */}
+              <div className="flex items-end gap-3">
+                <div>
+                  <label className="text-sm font-semibold mb-1.5 block">Amount</label>
+                  <Input type="number" value={baseAmount} onChange={e => setBaseAmount(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl bg-background w-32" />
                 </div>
-                {TIERS.map(tier => (
-                  <div key={tier} className="grid grid-cols-2 gap-0 text-sm px-4 py-2 border-b border-border/30 last:border-0">
-                    <span>{tier.toLocaleString()}</span>
-                    <span className="text-right text-muted-foreground">${(tier * pricePerUnit).toFixed(2)}</span>
+                <span className="text-lg text-muted-foreground pb-2">=</span>
+                <div>
+                  <label className="text-sm font-semibold mb-1.5 block">Price (USD)</label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-muted-foreground">$</span>
+                    <Input type="number" step="0.01" value={basePrice} onChange={e => setBasePrice(Math.max(0.01, parseFloat(e.target.value) || 0.01))} className="rounded-xl bg-background w-28" />
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Right: Pricing Preview Table */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2 text-center">Calculated Pricing Preview</p>
+                <div className="bg-muted/30 rounded-xl overflow-hidden border border-border/40">
+                  <div className="grid grid-cols-2 gap-0 text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-2 border-b border-border/40">
+                    <span>Tier</span>
+                    <span className="text-right">Price</span>
+                  </div>
+                  {TIERS.map(tier => (
+                    <div key={tier} className="grid grid-cols-2 gap-0 text-sm px-4 py-2.5 border-b border-border/20 last:border-0">
+                      <span className="flex items-center gap-1.5">
+                        <CurrencyIcon className="w-3.5 h-3.5 text-amber-500" />
+                        {tier.toLocaleString()} {currencyName}
+                      </span>
+                      <span className="text-right font-medium text-emerald-400">${(tier * pricePerUnit).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -380,43 +417,66 @@ export default function PremiumContent() {
       {/* ─── TOKEN SYSTEM TAB ─── */}
       {subTab === 'tokens' && (
         <div className="space-y-4">
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-            <h3 className="font-semibold flex items-center gap-2"><Gift className="w-4 h-4" /> Daily Check-in Reward</h3>
-            <div className="flex items-center gap-3">
+          {/* Daily Check-in */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><Gift className="w-4 h-4" /> Daily Check-in Reward</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">Configure rewards for daily user engagement.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Tokens awarded on final day</label>
-                <Input type="number" value={checkinReward} onChange={e => setCheckinReward(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl bg-background w-28" />
+                <label className="text-sm font-semibold mb-1.5 block">Reward Amount (Tokens)</label>
+                <Input type="number" value={checkinReward} onChange={e => setCheckinReward(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl bg-background" />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Cycle length (days)</label>
-                <Input type="number" value={checkinCycleDays} onChange={e => setCheckinCycleDays(Math.max(2, parseInt(e.target.value) || 4))} className="rounded-xl bg-background w-28" />
+                <label className="text-sm font-semibold mb-1.5 block">Check-in Cycle Length (Days)</label>
+                <Input type="number" value={checkinCycleDays} onChange={e => setCheckinCycleDays(Math.max(2, parseInt(e.target.value) || 4))} className="rounded-xl bg-background" />
               </div>
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2"><MessageSquare className="w-4 h-4" /> Comment Streak Mission</h3>
+          {/* Comment Streak Mission */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2 text-base">
+                <Check className="w-4 h-4 text-emerald-500" /> Comment Streak Mission
+              </h3>
+              <p className="text-sm text-muted-foreground mt-0.5">Reward users for commenting multiple days in a row.</p>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+              <div>
+                <p className="text-sm font-semibold">Enable Comment Streak Mission</p>
+                <p className="text-xs text-muted-foreground">Toggle this mission on or off site-wide.</p>
+              </div>
               <Switch checked={commentStreakEnabled} onCheckedChange={setCommentStreakEnabled} />
             </div>
+
             {commentStreakEnabled && (
-              <div className="flex items-center gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Tokens awarded</label>
-                  <Input type="number" value={commentStreakReward} onChange={e => setCommentStreakReward(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl bg-background w-28" />
+                  <label className="text-sm font-semibold mb-1.5 block">Tokens awarded for streak</label>
+                  <Input type="number" value={commentStreakReward} onChange={e => setCommentStreakReward(Math.max(1, parseInt(e.target.value) || 1))} className="rounded-xl bg-background" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Required streak days</label>
-                  <Input type="number" value={commentStreakDays} onChange={e => setCommentStreakDays(Math.max(1, parseInt(e.target.value) || 3))} className="rounded-xl bg-background w-28" />
+                  <label className="text-sm font-semibold mb-1.5 block">Required streak days</label>
+                  <Input type="number" value={commentStreakDays} onChange={e => setCommentStreakDays(Math.max(1, parseInt(e.target.value) || 3))} className="rounded-xl bg-background" />
                 </div>
               </div>
             )}
           </div>
 
+          {/* Token Value Information */}
           <div className="bg-card border border-border rounded-2xl p-5">
-            <div className="flex items-center gap-2 text-sm">
-              <Info className="w-4 h-4 text-primary shrink-0" />
-              <span className="text-muted-foreground">1 Token = access to 1 premium chapter for 3 days (temporary unlock).</span>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Info className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-1">Token Value Information</h4>
+                <p className="text-sm text-muted-foreground">1 Token = access to 1 premium chapter for 3 days (temporary unlock).</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Tokens are intended as a free alternative to coins, encouraging daily site usage.</p>
+              </div>
             </div>
           </div>
 

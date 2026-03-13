@@ -855,8 +855,17 @@ export default function AdminPanel() {
               </div>
               <Button size="sm" onClick={async () => {
                 if (!userActionModal) return;
-                await supabase.from('profiles').update({ coin_balance: editCoinBalance, token_balance: editTokenBalance }).eq('id', userActionModal.id);
-                toast.success('Balance updated'); fetchUsers();
+                try {
+                  const { error } = await supabase.rpc('admin_set_user_balance', {
+                    p_target_user_id: userActionModal.id,
+                    p_coin_balance: editCoinBalance,
+                    p_token_balance: editTokenBalance,
+                  });
+                  if (error) throw error;
+                  toast.success('Balance updated'); fetchUsers();
+                } catch (err: any) {
+                  toast.error(`Failed to update balance: ${err.message}`);
+                }
               }}>Save Balance</Button>
             </div>
 
