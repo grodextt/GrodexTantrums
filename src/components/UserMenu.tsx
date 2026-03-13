@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, BookOpen, Moon, Sun, Coins, ShoppingCart, Settings, Shield, LogOut, LayoutDashboard } from 'lucide-react';
+import { User, BookOpen, Moon, Sun, Coins, ShoppingCart, Settings, Shield, LogOut, LayoutDashboard, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
