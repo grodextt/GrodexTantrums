@@ -307,7 +307,7 @@ export default function ChapterReader() {
                       <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-muted/50 border border-border/50">
                         <Timer className="w-4 h-4 text-muted-foreground" />
                         <span className="text-lg font-mono font-bold text-foreground tracking-wider">
-                          <CountdownTimer targetDate={freeReleaseAt} />
+                          <CountdownTimer targetDate={freeReleaseAt} onExpired={() => window.location.reload()} />
                         </span>
                       </div>
                     </div>
