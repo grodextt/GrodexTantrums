@@ -92,6 +92,11 @@ export default function ChapterReader() {
     enabled: !!currentChapter?.id,
   });
 
+  // Call auto-free handler on load to flip any expired premium chapters
+  useEffect(() => {
+    supabase.rpc('handle_auto_free_chapters').then(() => {});
+  }, []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [chapterNum]);
