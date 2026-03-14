@@ -306,6 +306,12 @@ export default function MangaInfo() {
                 {visibleChapters.map((ch, idx) => {
                   const chDate = new Date(ch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                   const isPremium = !!ch.premium;
+                  const unlockRecord = getUnlockStatus(ch.id);
+                  const isChapterUnlocked = !!unlockRecord;
+                  const isTicketUnlock = unlockRecord?.unlock_type === 'ticket';
+                  const ticketDaysLeft = isTicketUnlock && unlockRecord?.expires_at
+                    ? Math.max(0, Math.ceil((new Date(unlockRecord.expires_at).getTime() - Date.now()) / 86400000))
+                    : 0;
                   return (
                     <Link
                       key={ch.id}
@@ -316,11 +322,16 @@ export default function MangaInfo() {
                         <img
                           src={manga.cover_url}
                           alt=""
-                          className={`w-[72px] h-[56px] object-cover rounded-lg transition-opacity ${isPremium ? 'opacity-50' : 'opacity-80 group-hover:opacity-100'}`}
+                          className={`w-[72px] h-[56px] object-cover rounded-lg transition-opacity ${isPremium && !isChapterUnlocked ? 'opacity-50' : 'opacity-80 group-hover:opacity-100'}`}
                         />
-                        {isPremium && (
+                        {isPremium && !isChapterUnlocked && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
                             <Lock className="w-4 h-4 text-amber-400" />
+                          </div>
+                        )}
+                        {isPremium && isChapterUnlocked && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                            <Unlock className="w-4 h-4 text-green-400" />
                           </div>
                         )}
                       </div>
@@ -330,13 +341,26 @@ export default function MangaInfo() {
                           {idx === 0 && sortDesc && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground font-semibold">New</span>
                           )}
-                          {isPremium && (
+                          {isPremium && !isChapterUnlocked && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 font-semibold border border-amber-500/20">Premium</span>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{chDate}</p>
-                        {isPremium && (
-                          <p className="text-[10px] text-amber-500 mt-0.5 font-medium">🪙 {ch.coin_price ?? 100} {currencyName}</p>
+                        {isPremium && !isChapterUnlocked && (
+                          <div className="flex items-center gap-1 text-[10px] text-amber-500 mt-0.5 font-medium">
+                            <CurrencyIcon className="w-3 h-3" />
+                            <span>{ch.coin_price ?? 100} {currencyName}</span>
+                          </div>
+                        )}
+                        {isPremium && isChapterUnlocked && (
+                          <div className="flex items-center gap-1.5 text-[10px] text-green-500 mt-0.5 font-medium">
+                            <span>Unlocked</span>
+                            {isTicketUnlock && ticketDaysLeft > 0 && (
+                              <span className="flex items-center gap-0.5 text-muted-foreground">
+                                <Timer className="w-3 h-3" /> {ticketDaysLeft}d
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </Link>
