@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Play, Plus, Check, Bell, BellOff, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide, Lock } from 'lucide-react';
+import { Play, Plus, Check, Bell, BellOff, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide, Lock, Unlock, Coins, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMangaBySlug, useMangaChapters } from '@/hooks/useMangaBySlug';
 import { useAllManga } from '@/hooks/useAllManga';
