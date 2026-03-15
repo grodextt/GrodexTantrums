@@ -41,7 +41,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { action, orderId, coins, amount } = body;
+    const { action, orderId, coins, amount, returnUrl } = body;
 
     // Get PayPal credentials from site_settings
     const { data: settingsRow } = await supabase
@@ -61,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    // PayPal API base URL (use live URL)
+    // PayPal API base URL (live)
     const paypalBase = "https://api-m.paypal.com";
 
     // Get PayPal access token
@@ -83,7 +83,8 @@ serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     if (action === "create-order") {
-      // Create PayPal order
+      const baseReturnUrl = returnUrl || "https://scan-zen-studio.lovable.app/coin-shop";
+      
       const orderRes = await fetch(`${paypalBase}/v2/checkout/orders`, {
         method: "POST",
         headers: {
@@ -101,12 +102,23 @@ serve(async (req) => {
               description: `${coins} coins purchase`,
             },
           ],
+          application_context: {
+            brand_name: "ScanZen Studio",
+            landing_page: "NO_PREFERENCE",
+            user_action: "PAY_NOW",
+            return_url: `${baseReturnUrl}?paypal_order_id={ORDER_ID}&status=success`,
+            cancel_url: `${baseReturnUrl}?status=cancelled`,
+          },
         }),
       });
       const orderData = await orderRes.json();
+      
       if (orderData.id) {
+        // Find the approve link from PayPal's response
+        const approveLink = orderData.links?.find((l: any) => l.rel === "approve")?.href;
+        
         return new Response(
-          JSON.stringify({ orderId: orderData.id }),
+          JSON.stringify({ orderId: orderData.id, approveUrl: approveLink }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } else {
@@ -118,7 +130,6 @@ serve(async (req) => {
     }
 
     if (action === "capture-order") {
-      // Capture the order
       const captureRes = await fetch(
         `${paypalBase}/v2/checkout/orders/${orderId}/capture`,
         {
@@ -132,13 +143,7 @@ serve(async (req) => {
       const captureData = await captureRes.json();
 
       if (captureData.status === "COMPLETED") {
-        // Credit coins to user
-        await supabase.rpc("secure_increment_tokens", {
-          p_user_id: user.id,
-          p_amount: 0, // We're updating coins, not tokens
-        });
-
-        // Update coin_balance directly using service role
+        // Credit coins using service role (atomic increment)
         const { data: profile } = await supabase
           .from("profiles")
           .select("coin_balance")
