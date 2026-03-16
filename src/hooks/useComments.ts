@@ -52,10 +52,10 @@ export const useComments = (mangaId: string | undefined, contextType?: 'manga' |
       const userIds = [...new Set((data || []).map(c => c.user_id))];
       let profilesMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
       if (userIds.length > 0) {
-        const { data: profiles } = await supabase
+        const { data: profiles } = await (supabase
           .from('profiles_public' as any)
           .select('id, display_name, avatar_url')
-          .in('id', userIds);
+          .in('id', userIds)) as any;
         (profiles || []).forEach(p => { profilesMap[p.id] = p; });
       }
 
