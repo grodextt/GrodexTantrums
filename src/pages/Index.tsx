@@ -9,6 +9,7 @@ import EditorChoice from '@/components/EditorChoice';
 import CompletedSeries from '@/components/CompletedSeries';
 import TypeBadge from '@/components/TypeBadge';
 import { useAllManga } from '@/hooks/useAllManga';
+import { optimizedImageUrl } from '@/lib/utils';
 
 export default function Index() {
   const { data: allManga = [] } = useAllManga();
