@@ -32,19 +32,19 @@ export default function Latest() {
 
   return (
     <div className="container py-8 space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <Clock className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold">Latest Updates</h1>
         </div>
-        <div className="bg-secondary/60 rounded-full px-1 py-1 flex items-center gap-1">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-1 bg-secondary/60 rounded-2xl sm:rounded-full px-1.5 py-1.5 sm:px-1 sm:py-1">
           {FILTER_TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-xl sm:rounded-full text-sm font-medium transition-all duration-200 ${
                 activeTab === tab
-                  ? 'text-foreground'
+                  ? 'text-foreground bg-background/60'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
