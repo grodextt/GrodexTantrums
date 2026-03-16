@@ -124,7 +124,6 @@ export default function CoinShop() {
 
   const handlePurchase = async () => {
     if (!selected || !user) return;
-    const totalCoins = selected.coins + (selected.bonus || 0);
     const returnUrl = window.location.origin + '/coin-shop';
 
     if (paymentMethod === 'stripe') {
@@ -133,7 +132,7 @@ export default function CoinShop() {
         const { data, error } = await supabase.functions.invoke('stripe-checkout', {
           body: {
             action: 'create-checkout',
-            coins: totalCoins,
+            coins: selected.coins,
             amount: selected.price,
             returnUrl,
           },
@@ -155,7 +154,7 @@ export default function CoinShop() {
         const { data: createData, error: createError } = await supabase.functions.invoke('paypal-purchase', {
           body: {
             action: 'create-order',
-            coins: totalCoins,
+            coins: selected.coins,
             amount: selected.price,
             returnUrl,
           },
@@ -185,7 +184,7 @@ export default function CoinShop() {
         const { data, error } = await supabase.functions.invoke('nowpayments', {
           body: {
             action: 'create-payment',
-            coins: totalCoins,
+            coins: selected.coins,
             amount: selected.price,
           },
         });
