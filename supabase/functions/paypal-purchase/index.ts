@@ -18,7 +18,7 @@ async function getValidCoinPackages(supabase: any): Promise<{ coins: number; pri
   const baseAmount = settings?.base_amount || 50;
   const basePrice = settings?.base_price || 0.99;
 
-  const multipliers = [1, 2, 5, 10, 20];
+  const multipliers = [1, 3, 7, 15, 32, 100];
   return multipliers.map(m => ({
     coins: baseAmount * m,
     price: parseFloat((basePrice * m).toFixed(2)),
