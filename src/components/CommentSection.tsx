@@ -47,7 +47,7 @@ function MentionInput({
     if (atMatch) {
       const query = atMatch[1].replace(/-/g, ' ');
       if (query.length >= 1) {
-        const { data } = await supabase.from('profiles').select('display_name').ilike('display_name', `%${query}%`).limit(5);
+        const { data } = await (supabase.from('profiles_public' as any).select('display_name').ilike('display_name', `%${query}%`).limit(5)) as any;
         setSuggestions((data || []).filter(p => p.display_name));
         setShowSuggestions(true);
       } else {

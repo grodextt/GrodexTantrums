@@ -92,10 +92,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "chapter_unlocks_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chapter_unlocks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_unlocks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -222,6 +236,13 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters_public"
             referencedColumns: ["id"]
           },
           {
@@ -458,6 +479,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "notifications_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notifications_manga_id_fkey"
             columns: ["manga_id"]
             isOneToOne: false
@@ -533,6 +561,13 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reading_history_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters_public"
             referencedColumns: ["id"]
           },
           {
@@ -618,7 +653,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      chapters_public: {
+        Row: {
+          auto_free_days: number | null
+          coin_price: number | null
+          created_at: string | null
+          free_release_at: string | null
+          id: string | null
+          manga_id: string | null
+          number: number | null
+          premium: boolean | null
+          title: string | null
+        }
+        Insert: {
+          auto_free_days?: number | null
+          coin_price?: number | null
+          created_at?: string | null
+          free_release_at?: string | null
+          id?: string | null
+          manga_id?: string | null
+          number?: number | null
+          premium?: boolean | null
+          title?: string | null
+        }
+        Update: {
+          auto_free_days?: number | null
+          coin_price?: number | null
+          created_at?: string | null
+          free_release_at?: string | null
+          id?: string | null
+          manga_id?: string | null
+          number?: number | null
+          premium?: boolean | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_manga_id_fkey"
+            columns: ["manga_id"]
+            isOneToOne: false
+            referencedRelation: "manga"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_set_user_balance: {

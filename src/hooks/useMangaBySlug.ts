@@ -27,11 +27,11 @@ export const useMangaChapters = (mangaId: string | undefined) => {
     queryKey: ["manga-chapters", mangaId],
     queryFn: async () => {
       if (!mangaId) return [];
-      const { data, error } = await supabase
-        .from("chapters")
+      const { data, error } = await (supabase
+        .from("chapters_public" as any)
         .select("id, number, title, created_at, manga_id, premium, coin_price, auto_free_days, free_release_at")
         .eq("manga_id", mangaId)
-        .order("number", { ascending: false });
+        .order("number", { ascending: false })) as any;
 
       if (error) throw error;
       return data as Chapter[];
