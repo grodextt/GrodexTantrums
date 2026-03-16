@@ -56,7 +56,7 @@ export default function HeroCarousel() {
       onMouseLeave={() => setAutoplayPaused(false)}
     >
       {/* Embla viewport */}
-      <div ref={emblaRef} className="overflow-hidden">
+      <div ref={emblaRef} className="overflow-hidden contain-layout">
         <div className="flex">
           {items.map(manga => (
             <div

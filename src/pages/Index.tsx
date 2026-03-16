@@ -77,16 +77,24 @@ export default function Index() {
       <AnnouncementBar />
 
         {/* Pinned Carousel */}
-        <PinnedCarousel />
+        <div className="content-defer">
+          <PinnedCarousel />
+        </div>
 
         {/* Latest Updates */}
-        <LatestUpdates />
+        <div className="content-defer">
+          <LatestUpdates />
+        </div>
 
         {/* Editor's Choice */}
-        <EditorChoice />
+        <div className="content-defer">
+          <EditorChoice />
+        </div>
 
         {/* Completed Series */}
-        <CompletedSeries />
+        <div className="content-defer">
+          <CompletedSeries />
+        </div>
 
         {/* Manga */}
         <section>

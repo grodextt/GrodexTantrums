@@ -44,7 +44,7 @@ export default function PinnedCarousel() {
         </div>
       </div>
 
-      <div className="relative group/carousel">
+      <div className="relative group/carousel contain-layout">
         <button
           onClick={() => scroll('left')}
           className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors opacity-0 group-hover/carousel:opacity-100">
