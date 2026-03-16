@@ -8,6 +8,29 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+async function getValidCoinPackages(supabase: any): Promise<{ coins: number; price: number }[]> {
+  const { data: settingsRow } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "coin_system")
+    .single();
+
+  const settings = settingsRow?.value as any;
+  const baseAmount = settings?.base_amount || 50;
+  const basePrice = settings?.base_price || 0.99;
+
+  // Generate valid packages: 1x, 2x, 5x, 10x, 20x multipliers
+  const multipliers = [1, 2, 5, 10, 20];
+  return multipliers.map(m => ({
+    coins: baseAmount * m,
+    price: parseFloat((basePrice * m).toFixed(2)),
+  }));
+}
+
+function findMatchingPackage(packages: { coins: number; price: number }[], coins: number, amount: number) {
+  return packages.find(p => p.coins === coins && Math.abs(p.price - amount) < 0.01);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -52,6 +75,17 @@ serve(async (req) => {
 
     if (action === "create-checkout") {
       const { coins, amount, returnUrl } = body;
+
+      // Validate coins/amount against server-side packages
+      const validPackages = await getValidCoinPackages(supabase);
+      const matched = findMatchingPackage(validPackages, coins, amount);
+      if (!matched) {
+        return new Response(
+          JSON.stringify({ error: "Invalid coin package", valid_packages: validPackages }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const baseUrl = returnUrl || "https://scan-zen-studio.lovable.app/coin-shop";
 
       // Find or create Stripe customer
@@ -74,10 +108,10 @@ serve(async (req) => {
             price_data: {
               currency: "usd",
               product_data: {
-                name: `${coins} Coins`,
-                description: `Purchase ${coins} coins for your account`,
+                name: `${matched.coins} Coins`,
+                description: `Purchase ${matched.coins} coins for your account`,
               },
-              unit_amount: Math.round(amount * 100), // cents
+              unit_amount: Math.round(matched.price * 100), // cents — use server-validated price
             },
             quantity: 1,
           },
@@ -87,7 +121,7 @@ serve(async (req) => {
         cancel_url: `${baseUrl}?status=cancelled`,
         metadata: {
           user_id: user.id,
-          coins: coins.toString(),
+          coins: matched.coins.toString(),
         },
       });
 

@@ -7,6 +7,28 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+async function getValidCoinPackages(supabase: any): Promise<{ coins: number; price: number }[]> {
+  const { data: settingsRow } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "coin_system")
+    .single();
+
+  const settings = settingsRow?.value as any;
+  const baseAmount = settings?.base_amount || 50;
+  const basePrice = settings?.base_price || 0.99;
+
+  const multipliers = [1, 2, 5, 10, 20];
+  return multipliers.map(m => ({
+    coins: baseAmount * m,
+    price: parseFloat((basePrice * m).toFixed(2)),
+  }));
+}
+
+function findMatchingPackage(packages: { coins: number; price: number }[], coins: number, amount: number) {
+  return packages.find(p => p.coins === coins && Math.abs(p.price - amount) < 0.01);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -83,6 +105,16 @@ serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     if (action === "create-order") {
+      // Validate coins/amount against server-side packages
+      const validPackages = await getValidCoinPackages(supabase);
+      const matched = findMatchingPackage(validPackages, coins, amount);
+      if (!matched) {
+        return new Response(
+          JSON.stringify({ error: "Invalid coin package", valid_packages: validPackages }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const baseReturnUrl = returnUrl || "https://scan-zen-studio.lovable.app/coin-shop";
       
       const orderRes = await fetch(`${paypalBase}/v2/checkout/orders`, {
@@ -97,9 +129,10 @@ serve(async (req) => {
             {
               amount: {
                 currency_code: "USD",
-                value: amount.toFixed(2),
+                value: matched.price.toFixed(2), // Use server-validated price
               },
-              description: `${coins} coins purchase`,
+              description: `${matched.coins} coins purchase`,
+              custom_id: `${user.id}_${matched.coins}`, // Store coins in custom_id for capture verification
             },
           ],
           application_context: {
@@ -114,7 +147,6 @@ serve(async (req) => {
       const orderData = await orderRes.json();
       
       if (orderData.id) {
-        // Find the approve link from PayPal's response
         const approveLink = orderData.links?.find((l: any) => l.rel === "approve")?.href;
         
         return new Response(
@@ -143,7 +175,45 @@ serve(async (req) => {
       const captureData = await captureRes.json();
 
       if (captureData.status === "COMPLETED") {
-        // Credit coins using service role (atomic increment)
+        // Extract coins from the order's custom_id (set server-side at creation), NOT from client body
+        const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id
+          || captureData.purchase_units?.[0]?.custom_id;
+        
+        if (!customId) {
+          return new Response(
+            JSON.stringify({ error: "Missing order metadata" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const parts = customId.split("_");
+        const orderUserId = parts[0];
+        const orderCoins = parseInt(parts[1] || "0");
+
+        // Verify the capturing user matches the order creator
+        if (orderUserId !== user.id || orderCoins <= 0) {
+          return new Response(
+            JSON.stringify({ error: "Order mismatch or invalid coins" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Prevent double-processing
+        const processKey = `paypal_order_${orderId}`;
+        const { data: existing } = await supabase
+          .from("site_settings")
+          .select("key")
+          .eq("key", processKey)
+          .single();
+
+        if (existing) {
+          return new Response(
+            JSON.stringify({ success: true, coins_added: orderCoins, already_processed: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Credit coins
         const { data: profile } = await supabase
           .from("profiles")
           .select("coin_balance")
@@ -153,11 +223,18 @@ serve(async (req) => {
         const currentBalance = profile?.coin_balance ?? 0;
         await supabase
           .from("profiles")
-          .update({ coin_balance: currentBalance + coins })
+          .update({ coin_balance: currentBalance + orderCoins })
           .eq("id", user.id);
 
+        // Mark as processed
+        await supabase.from("site_settings").upsert({
+          key: processKey,
+          value: { processed: true, coins: orderCoins, user_id: user.id },
+          updated_at: new Date().toISOString(),
+        });
+
         return new Response(
-          JSON.stringify({ success: true, coins_added: coins }),
+          JSON.stringify({ success: true, coins_added: orderCoins }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } else {

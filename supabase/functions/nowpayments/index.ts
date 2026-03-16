@@ -10,6 +10,28 @@ const corsHeaders = {
 
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 
+async function getValidCoinPackages(supabase: any): Promise<{ coins: number; price: number }[]> {
+  const { data: settingsRow } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "coin_system")
+    .single();
+
+  const settings = settingsRow?.value as any;
+  const baseAmount = settings?.base_amount || 50;
+  const basePrice = settings?.base_price || 0.99;
+
+  const multipliers = [1, 2, 5, 10, 20];
+  return multipliers.map(m => ({
+    coins: baseAmount * m,
+    price: parseFloat((basePrice * m).toFixed(2)),
+  }));
+}
+
+function findMatchingPackage(packages: { coins: number; price: number }[], coins: number, amount: number) {
+  return packages.find(p => p.coins === coins && Math.abs(p.price - amount) < 0.01);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,40 +47,47 @@ serve(async (req) => {
 
     // Webhook endpoint (no auth required - verified by signature)
     if (path === "webhook") {
-      const body = await req.json();
+      // Fail closed: require IPN secret to be configured
       const ipnSecret = Deno.env.get("NOWPAYMENTS_IPN_SECRET");
-      
-      if (ipnSecret) {
-        const sig = req.headers.get("x-nowpayments-sig");
-        // Sort keys and create HMAC
-        const sortedBody = Object.keys(body).sort().reduce((obj: any, key: string) => {
-          obj[key] = body[key];
-          return obj;
-        }, {});
-        
-        const encoder = new TextEncoder();
-        const key = await crypto.subtle.importKey(
-          "raw",
-          encoder.encode(ipnSecret),
-          { name: "HMAC", hash: "SHA-512" },
-          false,
-          ["sign"]
-        );
-        const signature = await crypto.subtle.sign(
-          "HMAC",
-          key,
-          encoder.encode(JSON.stringify(sortedBody))
-        );
-        const computedSig = Array.from(new Uint8Array(signature))
-          .map(b => b.toString(16).padStart(2, "0"))
-          .join("");
+      if (!ipnSecret) {
+        console.error("NOWPAYMENTS_IPN_SECRET not configured — rejecting webhook");
+        return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-        if (sig !== computedSig) {
-          return new Response(JSON.stringify({ error: "Invalid signature" }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+      const body = await req.json();
+
+      // Always validate signature
+      const sig = req.headers.get("x-nowpayments-sig");
+      const sortedBody = Object.keys(body).sort().reduce((obj: any, key: string) => {
+        obj[key] = body[key];
+        return obj;
+      }, {});
+      
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(ipnSecret),
+        { name: "HMAC", hash: "SHA-512" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign(
+        "HMAC",
+        key,
+        encoder.encode(JSON.stringify(sortedBody))
+      );
+      const computedSig = Array.from(new Uint8Array(signature))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      if (sig !== computedSig) {
+        return new Response(JSON.stringify({ error: "Invalid signature" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       // Process payment
@@ -70,6 +99,17 @@ serve(async (req) => {
           const coins = parseInt(parts[1] || "0");
 
           if (userId && coins > 0) {
+            // Validate coins against server-side packages
+            const validPackages = await getValidCoinPackages(supabase);
+            const isValidCoinAmount = validPackages.some(p => p.coins === coins);
+            if (!isValidCoinAmount) {
+              console.error("Invalid coin amount in webhook order_id:", coins);
+              return new Response(JSON.stringify({ error: "Invalid coin amount" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+
             // Prevent double-processing
             const processKey = `nowpay_${body.payment_id}`;
             const { data: existing } = await supabase
@@ -139,7 +179,18 @@ serve(async (req) => {
 
     if (action === "create-payment") {
       const { coins, amount } = reqBody;
-      const orderId = `${user.id}_${coins}_${Date.now()}`;
+
+      // Validate coins/amount against server-side packages
+      const validPackages = await getValidCoinPackages(supabase);
+      const matched = findMatchingPackage(validPackages, coins, amount);
+      if (!matched) {
+        return new Response(
+          JSON.stringify({ error: "Invalid coin package", valid_packages: validPackages }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const orderId = `${user.id}_${matched.coins}_${Date.now()}`;
       
       // Get the webhook URL
       const webhookUrl = `${supabaseUrl}/functions/v1/nowpayments/webhook`;
@@ -151,11 +202,11 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          price_amount: amount,
+          price_amount: matched.price, // Use server-validated price
           price_currency: "usd",
           pay_currency: "usdttrc20",
           order_id: orderId,
-          order_description: `${coins} coins purchase`,
+          order_description: `${matched.coins} coins purchase`,
           ipn_callback_url: webhookUrl,
         }),
       });
