@@ -46,24 +46,24 @@ export default function CoinShop() {
   // Handle return from PayPal/Stripe
   useEffect(() => {
     const status = searchParams.get('status');
-    const paypalOrderId = searchParams.get('paypal_order_id');
+    const paypalToken = searchParams.get('token');
+    const paypalPayerId = searchParams.get('PayerID');
     const stripeSessionId = searchParams.get('stripe_session_id');
 
     if (status === 'cancelled') {
-      toast.info('Payment was cancelled');
+      toast.info('Payment was cancelled.');
       setSearchParams({}, { replace: true });
       return;
     }
 
-    if (status === 'success' && paypalOrderId) {
-      // Capture PayPal order
+    if (paypalToken && paypalPayerId) {
+      // PayPal redirected back after approval — capture the order
       (async () => {
         setProcessing(true);
         try {
           const { data, error } = await supabase.functions.invoke('paypal-purchase', {
-            body: { action: 'capture-order', orderId: paypalOrderId, coins: 0 },
+            body: { action: 'capture-order', orderId: paypalToken },
           });
-          // Note: coins from metadata would be better, but for now the edge function reads from order
           if (error || !data?.success) {
             if (data?.already_processed) {
               toast.info('This payment was already processed');
@@ -71,7 +71,7 @@ export default function CoinShop() {
               toast.error(data?.error || 'Payment capture failed');
             }
           } else {
-            toast.success(`${data.coins_added} ${currencyName} added to your balance!`);
+            toast.success(`Purchase successful! ${data.coins_added} ${currencyName} added to your balance.`);
             queryClient.invalidateQueries({ queryKey: ['coin-balance'] });
           }
         } catch {
@@ -80,6 +80,7 @@ export default function CoinShop() {
         setProcessing(false);
         setSearchParams({}, { replace: true });
       })();
+      return;
     }
 
     if (status === 'success' && stripeSessionId) {
