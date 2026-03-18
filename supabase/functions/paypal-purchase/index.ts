@@ -137,7 +137,7 @@ serve(async (req) => {
             brand_name: "ScanZen Studio",
             landing_page: "NO_PREFERENCE",
             user_action: "PAY_NOW",
-            return_url: `${baseReturnUrl}?paypal_order_id={ORDER_ID}&status=success`,
+            return_url: `${baseReturnUrl}?status=success`,
             cancel_url: `${baseReturnUrl}?status=cancelled`,
           },
         }),
