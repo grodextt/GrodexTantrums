@@ -69,6 +69,7 @@ export default function ChapterReader() {
   });
   const recordReading = useRecordReading();
   const { user } = useAuth();
+  useTrackView(manga?.id);
   const { settings: premiumSettings } = usePremiumSettings();
   const currencyName = premiumSettings.coin_system.currency_name;
   const currencyIconUrl = premiumSettings.coin_system.currency_icon_url;

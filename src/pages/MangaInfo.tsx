@@ -39,6 +39,7 @@ export default function MangaInfo() {
   const { data: manga, isLoading } = useMangaBySlug(slug || '');
   const { data: chapters = [] } = useMangaChapters(manga?.id);
   const { isAuthenticated, user, setShowLoginModal } = useAuth();
+  useTrackView(manga?.id);
   const { isSubscribed, toggleSubscription } = useMangaSubscription(manga?.id);
   const { isBookmarked, toggleBookmark } = useMangaBookmark(manga?.id);
   const { settings } = useSiteSettings();
