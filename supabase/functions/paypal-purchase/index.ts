@@ -7,26 +7,47 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-async function getValidCoinPackages(supabase: any): Promise<{ coins: number; price: number }[]> {
-  const { data: settingsRow } = await supabase
-    .from("site_settings")
-    .select("value")
-    .eq("key", "coin_system")
-    .single();
+const USD_TO_INR: Record<string, string> = {
+  "0.99": "84",
+  "2.97": "250",
+  "6.93": "582",
+  "14.85": "1247",
+  "31.68": "2661",
+  "99.00": "8316",
+};
 
-  const settings = settingsRow?.value as any;
-  const baseAmount = settings?.base_amount || 50;
-  const basePrice = settings?.base_price || 0.99;
-
-  const multipliers = [1, 3, 7, 15, 32, 100];
-  return multipliers.map(m => ({
-    coins: baseAmount * m,
-    price: parseFloat((basePrice * m).toFixed(2)),
-  }));
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 }
 
-function findMatchingPackage(packages: { coins: number; price: number }[], coins: number, amount: number) {
-  return packages.find(p => p.coins === coins && Math.abs(p.price - amount) < 0.01);
+async function getPayPalCredentials(supabase: any) {
+  const { data } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "premium_general")
+    .single();
+  const s = data?.value as any;
+  return {
+    clientId: s?.payment_paypal_client_id,
+    clientSecret: s?.payment_paypal_secret,
+    isSandbox: s?.payment_paypal_sandbox ?? false,
+  };
+}
+
+async function getAccessToken(clientId: string, clientSecret: string, base: string) {
+  const res = await fetch(`${base}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
+  const data = await res.json();
+  return data.access_token as string | undefined;
 }
 
 serve(async (req) => {
@@ -39,81 +60,37 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Authenticate user
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!authHeader) return json({ error: "Unauthorized" }, 401);
 
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
     const { data: { user }, error: authError } = await anonClient.auth.getUser(
       authHeader.replace("Bearer ", "")
     );
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (authError || !user) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json();
-    const { action, orderId, coins, amount, returnUrl } = body;
+    const { action } = body;
 
-    // Get PayPal credentials from site_settings
-    const { data: settingsRow } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", "premium_general")
-      .single();
-
-    const settings = settingsRow?.value as any;
-    const clientId = settings?.payment_paypal_client_id;
-    const clientSecret = settings?.payment_paypal_secret;
-    const isSandbox = settings?.payment_paypal_sandbox ?? false;
-
+    const { clientId, clientSecret, isSandbox } = await getPayPalCredentials(supabase);
     if (!clientId || !clientSecret) {
-      return new Response(
-        JSON.stringify({ error: "PayPal not configured. Add your PayPal credentials in Admin Panel → Premium Content." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return json({ error: "PayPal not configured. Add credentials in Admin Panel → Premium Content." }, 400);
     }
 
-    // Use sandbox or live API based on admin setting
-    const paypalBase = isSandbox
-      ? "https://api-m.sandbox.paypal.com"
-      : "https://api-m.paypal.com";
+    const paypalBase = isSandbox ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
+    const accessToken = await getAccessToken(clientId, clientSecret, paypalBase);
+    if (!accessToken) return json({ error: "Failed to authenticate with PayPal" }, 500);
 
-    // Get PayPal access token
-    const tokenRes = await fetch(`${paypalBase}/v1/oauth2/token`, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: "grant_type=client_credentials",
-    });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) {
-      return new Response(
-        JSON.stringify({ error: "Failed to authenticate with PayPal", details: tokenData }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    const accessToken = tokenData.access_token;
-
+    // ── CREATE ORDER ──
     if (action === "create-order") {
-      const validPackages = await getValidCoinPackages(supabase);
-      const matched = findMatchingPackage(validPackages, coins, amount);
-      if (!matched) {
-        return new Response(
-          JSON.stringify({ error: "Invalid coin package", valid_packages: validPackages }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      const { amount, coins } = body; // amount is USD price string like "0.99"
+      const usdKey = parseFloat(amount).toFixed(2);
+      const inrValue = USD_TO_INR[usdKey];
 
-      const baseReturnUrl = returnUrl || "https://scan-zen-studio.lovable.app/coin-shop";
+      if (!inrValue || !coins || coins <= 0) {
+        return json({ error: "Invalid package", received: { amount, coins } }, 400);
+      }
 
       const orderRes = await fetch(`${paypalBase}/v2/checkout/orders`, {
         method: "POST",
@@ -123,129 +100,91 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           intent: "CAPTURE",
-          purchase_units: [
-            {
-              amount: {
-                currency_code: "USD",
-                value: matched.price.toFixed(2),
+          purchase_units: [{
+            amount: { currency_code: "INR", value: inrValue },
+            custom_id: `${user.id}_${coins}`,
+          }],
+          payment_source: {
+            paypal: {
+              experience_context: {
+                payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
+                user_action: "PAY_NOW",
               },
-              description: `${matched.coins} coins purchase`,
-              custom_id: `${user.id}_${matched.coins}`,
             },
-          ],
-          application_context: {
-            brand_name: "ScanZen Studio",
-            landing_page: "NO_PREFERENCE",
-            user_action: "PAY_NOW",
-            return_url: `${baseReturnUrl}?status=success`,
-            cancel_url: `${baseReturnUrl}?status=cancelled`,
           },
         }),
       });
       const orderData = await orderRes.json();
 
       if (orderData.id) {
-        const approveLink = orderData.links?.find((l: any) => l.rel === "approve")?.href;
-
-        return new Response(
-          JSON.stringify({ orderId: orderData.id, approveUrl: approveLink }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } else {
-        return new Response(
-          JSON.stringify({ error: "Failed to create PayPal order", details: orderData }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return json({ orderId: orderData.id });
       }
+      return json({ error: "Failed to create PayPal order", details: orderData }, 500);
     }
 
+    // ── CAPTURE ORDER ──
     if (action === "capture-order") {
-      const captureRes = await fetch(
-        `${paypalBase}/v2/checkout/orders/${orderId}/capture`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const { orderId } = body;
+      if (!orderId) return json({ error: "Missing orderId" }, 400);
+
+      // Idempotency check
+      const processKey = `paypal_order_${orderId}`;
+      const { data: existing } = await supabase
+        .from("site_settings")
+        .select("key")
+        .eq("key", processKey)
+        .single();
+      if (existing) {
+        return json({ success: true, already_processed: true });
+      }
+
+      const captureRes = await fetch(`${paypalBase}/v2/checkout/orders/${orderId}/capture`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       const captureData = await captureRes.json();
 
-      if (captureData.status === "COMPLETED") {
-        const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id
-          || captureData.purchase_units?.[0]?.custom_id;
-
-        if (!customId) {
-          return new Response(
-            JSON.stringify({ error: "Missing order metadata" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        const parts = customId.split("_");
-        const orderUserId = parts[0];
-        const orderCoins = parseInt(parts[1] || "0");
-
-        if (orderUserId !== user.id || orderCoins <= 0) {
-          return new Response(
-            JSON.stringify({ error: "Order mismatch or invalid coins" }),
-            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        const processKey = `paypal_order_${orderId}`;
-        const { data: existing } = await supabase
-          .from("site_settings")
-          .select("key")
-          .eq("key", processKey)
-          .single();
-
-        if (existing) {
-          return new Response(
-            JSON.stringify({ success: true, coins_added: orderCoins, already_processed: true }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("coin_balance")
-          .eq("id", user.id)
-          .single();
-
-        const currentBalance = profile?.coin_balance ?? 0;
-        await supabase
-          .from("profiles")
-          .update({ coin_balance: currentBalance + orderCoins })
-          .eq("id", user.id);
-
-        await supabase.from("site_settings").upsert({
-          key: processKey,
-          value: { processed: true, coins: orderCoins, user_id: user.id },
-          updated_at: new Date().toISOString(),
-        });
-
-        return new Response(
-          JSON.stringify({ success: true, coins_added: orderCoins }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      } else {
-        return new Response(
-          JSON.stringify({ error: "Payment not completed", status: captureData.status }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (captureData.status !== "COMPLETED") {
+        return json({ error: "Payment not completed", status: captureData.status }, 400);
       }
+
+      const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id;
+      if (!customId) return json({ error: "Missing order metadata" }, 400);
+
+      const [orderUserId, coinStr] = customId.split("_");
+      const orderCoins = parseInt(coinStr || "0");
+
+      if (!orderUserId || orderCoins <= 0) {
+        return json({ error: "Invalid custom_id format" }, 400);
+      }
+
+      // Credit coins
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("coin_balance")
+        .eq("id", orderUserId)
+        .single();
+
+      await supabase
+        .from("profiles")
+        .update({ coin_balance: (profile?.coin_balance ?? 0) + orderCoins })
+        .eq("id", orderUserId);
+
+      // Mark processed
+      await supabase.from("site_settings").upsert({
+        key: processKey,
+        value: { processed: true, coins: orderCoins, user_id: orderUserId },
+        updated_at: new Date().toISOString(),
+      });
+
+      return json({ success: true, coins_added: orderCoins });
     }
 
-    return new Response(
-      JSON.stringify({ error: "Invalid action" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({ error: "Invalid action" }, 400);
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json({ error: err.message }, 500);
   }
 });
