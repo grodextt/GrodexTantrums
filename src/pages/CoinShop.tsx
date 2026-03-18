@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Coins, ShoppingCart, CreditCard, Wallet, CircleDollarSign, Sparkles, Check, Loader2, Copy, Clock, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
@@ -15,11 +15,31 @@ const PAYMENT_METHODS = [
   { id: 'usdt', label: 'USDT', icon: CircleDollarSign },
 ] as const;
 
+// Fixed USD → INR display mapping
+const USD_INR_MAP: Record<string, string> = {
+  "0.99": "₹84",
+  "2.97": "₹250",
+  "6.93": "₹582",
+  "14.85": "₹1,247",
+  "31.68": "₹2,661",
+  "99.00": "₹8,316",
+};
+
+declare global {
+  interface Window {
+    paypal?: any;
+  }
+}
+
 export default function CoinShop() {
   const [selectedPkg, setSelectedPkg] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>('stripe');
   const [processing, setProcessing] = useState(false);
   const [usdtPayment, setUsdtPayment] = useState<any>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalLoading, setPaypalLoading] = useState(false);
+  const paypalContainerRef = useRef<HTMLDivElement>(null);
+  const paypalButtonsRendered = useRef(false);
   const { settings } = usePremiumSettings();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -43,43 +63,14 @@ export default function CoinShop() {
 
   const coinBalance = profile?.coin_balance ?? 0;
 
-  // Handle return from PayPal/Stripe
+  // Handle Stripe return
   useEffect(() => {
     const status = searchParams.get('status');
-    const paypalToken = searchParams.get('token');
-    const paypalPayerId = searchParams.get('PayerID');
     const stripeSessionId = searchParams.get('stripe_session_id');
 
     if (status === 'cancelled') {
       toast.info('Payment was cancelled.');
       setSearchParams({}, { replace: true });
-      return;
-    }
-
-    if (paypalToken && paypalPayerId) {
-      // PayPal redirected back after approval — capture the order
-      (async () => {
-        setProcessing(true);
-        try {
-          const { data, error } = await supabase.functions.invoke('paypal-purchase', {
-            body: { action: 'capture-order', orderId: paypalToken },
-          });
-          if (error || !data?.success) {
-            if (data?.already_processed) {
-              toast.info('This payment was already processed');
-            } else {
-              toast.error(data?.error || 'Payment capture failed');
-            }
-          } else {
-            toast.success(`Purchase successful! ${data.coins_added} ${currencyName} added to your balance.`);
-            queryClient.invalidateQueries({ queryKey: ['coin-balance'] });
-          }
-        } catch {
-          toast.error('Could not verify payment');
-        }
-        setProcessing(false);
-        setSearchParams({}, { replace: true });
-      })();
       return;
     }
 
@@ -106,15 +97,119 @@ export default function CoinShop() {
   }, []);
 
   const COIN_PACKAGES = useMemo(() => [
-    { id: 1, coins: baseAmount, price: basePrice, label: 'Starter' },
-    { id: 2, coins: Math.round(baseAmount * 3), price: +(pricePerUnit * baseAmount * 3).toFixed(2), label: 'Popular', popular: true },
-    { id: 3, coins: Math.round(baseAmount * 7), price: +(pricePerUnit * baseAmount * 7).toFixed(2), label: 'Value', bonus: Math.round(baseAmount) },
-    { id: 4, coins: Math.round(baseAmount * 15), price: +(pricePerUnit * baseAmount * 15).toFixed(2), label: 'Premium', bonus: Math.round(baseAmount * 3) },
-    { id: 5, coins: Math.round(baseAmount * 32), price: +(pricePerUnit * baseAmount * 32).toFixed(2), label: 'Mega', bonus: Math.round(baseAmount * 8) },
-    { id: 6, coins: Math.round(baseAmount * 100), price: +(pricePerUnit * baseAmount * 100).toFixed(2), label: 'Ultimate', bonus: Math.round(baseAmount * 30) },
-  ], [baseAmount, basePrice, pricePerUnit]);
+    { id: 1, coins: baseAmount, price: +(basePrice).toFixed(2), label: 'Starter' },
+    { id: 2, coins: Math.round(baseAmount * 3), price: +(basePrice * 3).toFixed(2), label: 'Popular', popular: true },
+    { id: 3, coins: Math.round(baseAmount * 7), price: +(basePrice * 7).toFixed(2), label: 'Value', bonus: Math.round(baseAmount) },
+    { id: 4, coins: Math.round(baseAmount * 15), price: +(basePrice * 15).toFixed(2), label: 'Premium', bonus: Math.round(baseAmount * 3) },
+    { id: 5, coins: Math.round(baseAmount * 32), price: +(basePrice * 32).toFixed(2), label: 'Mega', bonus: Math.round(baseAmount * 8) },
+    { id: 6, coins: Math.round(baseAmount * 100), price: +(basePrice * 100).toFixed(2), label: 'Ultimate', bonus: Math.round(baseAmount * 30) },
+  ], [baseAmount, basePrice]);
 
   const selected = COIN_PACKAGES.find(p => p.id === selectedPkg);
+
+  // ── PayPal JS SDK loader ──
+  const { data: paypalClientId } = useQuery({
+    queryKey: ['paypal-client-id'],
+    queryFn: async () => {
+      // Read from premium_general via edge function or settings
+      // Since premium_general is admin-only, we fetch client ID via a lightweight approach
+      // The client ID is public (publishable), so we can read it from settings if available
+      // However RLS blocks non-admin reads of premium_general, so we invoke the edge function
+      const { data } = await supabase.functions.invoke('paypal-purchase', {
+        body: { action: 'get-client-id' },
+      });
+      return data?.clientId as string | undefined;
+    },
+    enabled: paymentMethod === 'paypal',
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Load PayPal SDK script when method is paypal and we have client ID
+  useEffect(() => {
+    if (paymentMethod !== 'paypal' || !paypalClientId) return;
+
+    // Already loaded with same client ID
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+
+    // Remove any old script
+    const oldScript = document.getElementById('paypal-sdk-script');
+    if (oldScript) oldScript.remove();
+
+    setPaypalLoading(true);
+    const script = document.createElement('script');
+    script.id = 'paypal-sdk-script';
+    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=INR&components=buttons`;
+    script.async = true;
+    script.onload = () => {
+      setPaypalReady(true);
+      setPaypalLoading(false);
+    };
+    script.onerror = () => {
+      toast.error('Failed to load PayPal SDK');
+      setPaypalLoading(false);
+    };
+    document.head.appendChild(script);
+  }, [paymentMethod, paypalClientId]);
+
+  // Render PayPal buttons when SDK ready + package selected
+  useEffect(() => {
+    if (
+      paymentMethod !== 'paypal' ||
+      !paypalReady ||
+      !window.paypal ||
+      !selected ||
+      !user ||
+      !paypalContainerRef.current
+    ) return;
+
+    // Clear previous buttons
+    paypalContainerRef.current.innerHTML = '';
+    paypalButtonsRendered.current = false;
+
+    const selectedCoins = selected.coins;
+    const selectedPrice = selected.price;
+
+    window.paypal.Buttons({
+      style: { layout: 'vertical', shape: 'rect', label: 'pay', height: 45 },
+      createOrder: async () => {
+        const { data, error } = await supabase.functions.invoke('paypal-purchase', {
+          body: { action: 'create-order', amount: selectedPrice, coins: selectedCoins },
+        });
+        if (error || !data?.orderId) {
+          throw new Error(data?.error || 'Failed to create order');
+        }
+        return data.orderId;
+      },
+      onApprove: async (data: any) => {
+        setProcessing(true);
+        try {
+          const { data: captureData, error } = await supabase.functions.invoke('paypal-purchase', {
+            body: { action: 'capture-order', orderId: data.orderID },
+          });
+          if (error || !captureData?.success) {
+            toast.error(captureData?.error || 'Payment capture failed');
+          } else {
+            toast.success(`${captureData.coins_added} ${currencyName} added to your balance!`);
+            queryClient.invalidateQueries({ queryKey: ['coin-balance'] });
+          }
+        } catch {
+          toast.error('Could not verify payment');
+        }
+        setProcessing(false);
+      },
+      onCancel: () => {
+        toast.info('Payment cancelled.');
+      },
+      onError: (err: any) => {
+        console.error('PayPal error:', err);
+        toast.error('Payment failed. Please try again.');
+      },
+    }).render(paypalContainerRef.current);
+    paypalButtonsRendered.current = true;
+  }, [paymentMethod, paypalReady, selected?.id, user?.id]);
 
   const CurrencyIcon = ({ className }: { className?: string }) =>
     currencyIconUrl ? (
@@ -143,38 +238,7 @@ export default function CoinShop() {
           setProcessing(false);
           return;
         }
-        // Redirect to Stripe Checkout
         window.location.href = data.url;
-      } catch (err: any) {
-        toast.error(err.message || 'Payment failed');
-        setProcessing(false);
-      }
-    } else if (paymentMethod === 'paypal') {
-      setProcessing(true);
-      try {
-        const { data: createData, error: createError } = await supabase.functions.invoke('paypal-purchase', {
-          body: {
-            action: 'create-order',
-            coins: selected.coins,
-            amount: selected.price,
-            returnUrl,
-          },
-        });
-
-        if (createError || !createData?.orderId) {
-          toast.error(createData?.error || 'Failed to create PayPal order');
-          setProcessing(false);
-          return;
-        }
-
-        // Use the approve URL from PayPal's response (proper redirect flow)
-        const approveUrl = createData.approveUrl;
-        if (approveUrl) {
-          window.location.href = approveUrl;
-        } else {
-          // Fallback to popup
-          window.location.href = `https://www.paypal.com/checkoutnow?token=${createData.orderId}`;
-        }
       } catch (err: any) {
         toast.error(err.message || 'Payment failed');
         setProcessing(false);
@@ -203,6 +267,7 @@ export default function CoinShop() {
         setProcessing(false);
       }
     }
+    // PayPal is handled by the SDK buttons — no action here
   };
 
   return (
@@ -231,6 +296,7 @@ export default function CoinShop() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {COIN_PACKAGES.map((pkg) => {
             const isSelected = selectedPkg === pkg.id;
+            const inrLabel = USD_INR_MAP[pkg.price.toFixed(2)];
             return (
               <button
                 key={pkg.id}
@@ -262,7 +328,12 @@ export default function CoinShop() {
                 )}
                 <div className="flex items-baseline justify-between">
                   <span className="text-[10px] sm:text-xs text-muted-foreground">{pkg.label}</span>
-                  <span className="text-base sm:text-lg font-bold text-foreground">${pkg.price}</span>
+                  <div className="text-right">
+                    <span className="text-base sm:text-lg font-bold text-foreground">${pkg.price}</span>
+                    {inrLabel && (
+                      <p className="text-[10px] text-muted-foreground">≈ {inrLabel}</p>
+                    )}
+                  </div>
                 </div>
               </button>
             );
@@ -303,34 +374,64 @@ export default function CoinShop() {
         </div>
       </section>
 
-      {/* Purchase */}
-      <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Purchase area */}
+      <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-6">
         {selected ? (
           <>
-            <div className="flex items-center gap-3">
-              <CurrencyIcon className="w-6 h-6 text-coin-gold" />
-              <div>
-                <p className="font-semibold text-foreground">
-                  {selected.coins.toLocaleString()} {currencyName}
-                  {selected.bonus ? ` + ${selected.bonus} Bonus` : ''}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  via {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}
-                </p>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <CurrencyIcon className="w-6 h-6 text-coin-gold" />
+                <div>
+                  <p className="font-semibold text-foreground">
+                    {selected.coins.toLocaleString()} {currencyName}
+                    {selected.bonus ? ` + ${selected.bonus} Bonus` : ''}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    via {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}
+                  </p>
+                </div>
               </div>
-            </div>
-            <Button
-              className="rounded-xl px-6 sm:px-8 gap-2 text-sm sm:text-base h-11 sm:h-12 w-full sm:w-auto"
-              onClick={handlePurchase}
-              disabled={processing || !user}
-            >
-              {processing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ShoppingCart className="w-4 h-4" />
+
+              {/* Show buy button for non-PayPal methods */}
+              {paymentMethod !== 'paypal' && (
+                <Button
+                  className="rounded-xl px-6 sm:px-8 gap-2 text-sm sm:text-base h-11 sm:h-12 w-full sm:w-auto"
+                  onClick={handlePurchase}
+                  disabled={processing || !user}
+                >
+                  {processing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="w-4 h-4" />
+                  )}
+                  {processing ? 'Processing...' : `Buy for $${selected.price}`}
+                </Button>
               )}
-              {processing ? 'Processing...' : `Buy for $${selected.price}`}
-            </Button>
+            </div>
+
+            {/* PayPal Buttons container */}
+            {paymentMethod === 'paypal' && (
+              <div className="mt-2">
+                {paypalLoading && (
+                  <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Loading PayPal...</span>
+                  </div>
+                )}
+                {processing && (
+                  <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Processing payment...</span>
+                  </div>
+                )}
+                <div ref={paypalContainerRef} className={processing ? 'opacity-50 pointer-events-none' : ''} />
+                {!paypalLoading && !paypalReady && paymentMethod === 'paypal' && !paypalClientId && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    PayPal is not configured. Contact the site admin.
+                  </p>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <p className="text-sm text-muted-foreground w-full text-center">Select a package above to proceed</p>
