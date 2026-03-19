@@ -83,11 +83,10 @@ serve(async (req) => {
 
     // ── CREATE ORDER ──
     if (action === "create-order") {
-      const { amount, coins } = body; // amount is USD price string like "0.99"
-      const usdKey = parseFloat(amount).toFixed(2);
-      const inrValue = USD_TO_INR[usdKey];
+      const { amount, coins } = body;
+      const usdValue = parseFloat(amount).toFixed(2);
 
-      if (!inrValue || !coins || coins <= 0) {
+      if (!usdValue || isNaN(parseFloat(usdValue)) || !coins || coins <= 0) {
         return json({ error: "Invalid package", received: { amount, coins } }, 400);
       }
 
