@@ -7,7 +7,7 @@ Project memory for MangaHub v1 manga reader platform
 - Footer text + tagline are dynamic from DB
 - Navbar site name + logo are dynamic from DB
 - Theme presets applied via ThemeContext from settings (full CSS variable override)
-- Default theme preset: Sakura
+- Default theme preset: Obsidian
 
 ## Auth
 - Supports Discord, Google, and Email login
@@ -64,4 +64,6 @@ Project memory for MangaHub v1 manga reader platform
 ## Deployment
 - Canonical published URL: scan-zen-studio.lovable.app
 - Auth redirect URLs must match canonical domain
-- CSS defaults match Sakura theme to prevent flash on load
+- CSS defaults match Obsidian theme to prevent flash on load
+- App shows loading gate (dark div) until site settings fetch completes
+- index.html body has inline dark background style to prevent white flash before JS loads

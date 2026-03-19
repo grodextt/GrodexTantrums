@@ -43,15 +43,15 @@ export interface SiteSettings {
 
 const DEFAULT_SETTINGS: SiteSettings = {
   general: {
-    site_name: 'MangaHub v1',
-    site_description: 'Read the latest manga, manhwa, and manhua translations.',
-    footer_text: 'MangaHub v1',
-    footer_tagline: 'Your gateway to manga',
+    site_name: '',
+    site_description: '',
+    footer_text: '',
+    footer_tagline: '',
   },
   announcements: { message: '' },
   upload: { max_size_mb: 10, allowed_formats: 'jpg, png, webp' },
   storage: { provider: 'supabase' },
-  theme: { preset: 'Sakura' },
+  theme: { preset: 'Obsidian' },
 };
 
 export const useSiteSettings = () => {

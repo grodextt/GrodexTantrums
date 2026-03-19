@@ -27,7 +27,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Apply theme preset when settings or theme mode changes
   useEffect(() => {
-    const presetName = (settings as any)?.theme?.preset || 'Sakura';
+    const presetName = (settings as any)?.theme?.preset || 'Obsidian';
     const preset = getThemeByName(presetName);
     if (preset) {
       applyTheme(preset, theme === 'dark');

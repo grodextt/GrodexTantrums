@@ -19,7 +19,7 @@ export default function LoginModal() {
   const [displayName, setDisplayName] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
 
-  const siteName = settings?.general?.site_name || 'MangaHub v1';
+  const siteName = settings?.general?.site_name || '';
 
   const handleLogin = async (provider: 'discord' | 'google') => {
     setLoggingIn(provider);
