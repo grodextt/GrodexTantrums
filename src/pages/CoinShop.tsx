@@ -287,7 +287,6 @@ export default function CoinShop() {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {COIN_PACKAGES.map((pkg) => {
             const isSelected = selectedPkg === pkg.id;
-            const inrLabel = USD_INR_MAP[pkg.price.toFixed(2)];
             return (
               <button
                 key={pkg.id}
@@ -319,12 +318,7 @@ export default function CoinShop() {
                 )}
                 <div className="flex items-baseline justify-between">
                   <span className="text-[10px] sm:text-xs text-muted-foreground">{pkg.label}</span>
-                  <div className="text-right">
-                    <span className="text-base sm:text-lg font-bold text-foreground">${pkg.price}</span>
-                    {inrLabel && (
-                      <p className="text-[10px] text-muted-foreground">≈ {inrLabel}</p>
-                    )}
-                  </div>
+                  <span className="text-base sm:text-lg font-bold text-foreground">${pkg.price}</span>
                 </div>
               </button>
             );
