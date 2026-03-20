@@ -47,7 +47,7 @@ export const ContentWarningDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Go Back</AlertDialogCancel>
-          <AlertDialogAction>I Understand, Continue</AlertDialogAction>
+          <AlertDialogAction onClick={() => onOpenChange(false)}>I Understand, Continue</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
