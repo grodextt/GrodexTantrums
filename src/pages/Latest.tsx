@@ -28,7 +28,14 @@ export default function Latest() {
       if (activeTab === 'All Series') return true;
       return m.type === activeTab;
     })
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    .sort((a, b) => {
+      const latestA = a.chapters?.[0]?.created_at;
+      const latestB = b.chapters?.[0]?.created_at;
+      if (!latestA && !latestB) return 0;
+      if (!latestA) return 1;
+      if (!latestB) return -1;
+      return new Date(latestB).getTime() - new Date(latestA).getTime();
+    });
 
   return (
     <div className="container py-8 space-y-6">
