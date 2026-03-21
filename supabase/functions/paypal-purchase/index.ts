@@ -102,14 +102,6 @@ serve(async (req) => {
             amount: { currency_code: "USD", value: usdValue },
             custom_id: `${user.id}_${coins}`,
           }],
-          payment_source: {
-            paypal: {
-              experience_context: {
-                payment_method_preference: "IMMEDIATE_PAYMENT_REQUIRED",
-                user_action: "PAY_NOW",
-              },
-            },
-          },
         }),
       });
       const orderData = await orderRes.json();
