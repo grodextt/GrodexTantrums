@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Pin, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { formatViews, optimizedImageUrl } from '@/lib/utils';
 import { usePinnedManga } from '@/hooks/usePinnedManga';
 import TypeBadge from './TypeBadge';
@@ -20,7 +20,7 @@ export default function PinnedCarousel() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Pin className="w-5 h-5 text-primary" />
+            <Icon icon="ph:push-pin-bold" className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold">Pinned Series</h2>
           </div>
         </div>
@@ -39,7 +39,7 @@ export default function PinnedCarousel() {
     <section>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Pin className="w-5 h-5 text-primary" />
+          <Icon icon="ph:push-pin-bold" className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-bold">Pinned Series</h2>
         </div>
       </div>
@@ -48,12 +48,12 @@ export default function PinnedCarousel() {
         <button
           onClick={() => scroll('left')}
           className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors opacity-0 group-hover/carousel:opacity-100">
-          <ChevronLeft className="w-4 h-4" />
+          <Icon icon="ph:caret-left-bold" className="w-4 h-4" />
         </button>
         <button
           onClick={() => scroll('right')}
           className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors opacity-0 group-hover/carousel:opacity-100">
-          <ChevronRight className="w-4 h-4" />
+          <Icon icon="ph:caret-right-bold" className="w-4 h-4" />
         </button>
 
         <div
@@ -79,10 +79,9 @@ export default function PinnedCarousel() {
                   <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-1">{manga.title}</h3>
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-0.5">
-                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                      <Icon icon="ph:star-fill" className="w-3 h-3 text-yellow-500" />
                       {manga.rating || 0}
                     </span>
-                    <span>{formatViews(manga.views || 0)}</span>
                   </div>
                 </div>
               </div>

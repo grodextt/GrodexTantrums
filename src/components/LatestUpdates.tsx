@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Grid3X3, Check } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useAllManga, MangaWithChapters } from '@/hooks/useAllManga';
 import LatestCard from './LatestCard';
 
 const FILTER_TABS = ['All Series', 'manga', 'manhwa', 'manhua'] as const;
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
-  'All Series': <Grid3X3 className="w-3.5 h-3.5" />,
-  'manga': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇯🇵</span>,
-  'manhwa': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇰🇷</span>,
-  'manhua': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇨🇳</span>,
+  'All Series': <Icon icon="ph:squares-four-bold" className="w-4 h-4" />,
+  'manga': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0 overflow-hidden"><Icon icon="emojione:flag-for-japan" className="w-3.5 h-3.5" /></span>,
+  'manhwa': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0 overflow-hidden"><Icon icon="emojione:flag-for-south-korea" className="w-3.5 h-3.5" /></span>,
+  'manhua': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0 overflow-hidden"><Icon icon="emojione:flag-for-china" className="w-3.5 h-3.5" /></span>,
 };
 
 const TAB_LABELS: Record<string, string> = {
@@ -59,7 +59,7 @@ export default function LatestUpdates() {
             >
               {TAB_ICONS[tab]}
               <span>{TAB_LABELS[tab]}</span>
-              {activeTab === tab && <Check className="w-3.5 h-3.5 ml-0.5" />}
+              {activeTab === tab && <Icon icon="ph:check-bold" className="w-3.5 h-3.5 ml-0.5" />}
             </button>
           ))}
         </div>

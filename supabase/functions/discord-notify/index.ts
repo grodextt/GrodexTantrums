@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     }
 
     // Build chapter URL
-    const siteUrl = "https://scan-zen-studio.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "http://localhost:8080";
     const chapterUrl = `${siteUrl}/manga/${mangaSlug}/chapter/${chapterNumber}`;
 
     // Build the notification message from template

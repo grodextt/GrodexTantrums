@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { BookOpen, Search, X, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -73,14 +73,14 @@ export default function Series() {
   return (
     <div className="container py-8 space-y-6">
       <div className="flex items-center gap-2">
-        <BookOpen className="w-6 h-6 text-primary" />
+        <Icon icon="ph:book-open-bold" className="w-6 h-6 text-primary" />
         <h1 className="text-2xl font-bold">Series</h1>
       </div>
 
       {/* Filters */}
       <div className="space-y-4 p-4 rounded-xl bg-card border border-border">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Icon icon="ph:magnifying-glass-bold" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search series..."
             value={search}
@@ -129,7 +129,7 @@ export default function Series() {
             className="flex items-center gap-1 text-xs text-muted-foreground mb-2 uppercase tracking-wider font-semibold hover:text-foreground transition-colors"
           >
             Genres {selectedGenres.length > 0 && `(${selectedGenres.length})`}
-            {genresExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {genresExpanded ? <Icon icon="ph:caret-up-bold" className="w-3 h-3" /> : <Icon icon="ph:caret-down-bold" className="w-3 h-3" />}
           </button>
           {genresExpanded && (
             <div className="flex gap-2 flex-wrap">
@@ -160,7 +160,7 @@ export default function Series() {
               setSelectedStatus('');
             }}
           >
-            <X className="w-3 h-3" /> Clear Filters
+            <Icon icon="ph:x-bold" className="w-3 h-3" /> Clear Filters
           </Button>
         )}
       </div>
@@ -172,13 +172,13 @@ export default function Series() {
             <p className="text-sm text-muted-foreground">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</p>
             {activeFilters.map((f, i) => (
               <Badge key={i} variant="secondary" className="gap-1 text-xs cursor-pointer hover:bg-destructive/20" onClick={f.clear}>
-                {f.label} <X className="w-3 h-3" />
+                {f.label} <Icon icon="ph:x-bold" className="w-3 h-3" />
               </Badge>
             ))}
           </div>
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
-              <ArrowUpDown className="w-3 h-3 mr-1" />
+              <Icon icon="ph:arrows-down-up-bold" className="w-3 h-3 mr-1" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -198,7 +198,7 @@ export default function Series() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
+            <Icon icon="ph:magnifying-glass-bold" className="w-12 h-12 text-muted-foreground/30 mb-4" />
             <h3 className="text-lg font-semibold text-muted-foreground">No series found</h3>
             <p className="text-sm text-muted-foreground/60 mt-1">Try adjusting your filters or search term.</p>
             {hasFilters && (
@@ -208,7 +208,7 @@ export default function Series() {
                 className="mt-4 gap-2"
                 onClick={() => { setSearch(''); setSelectedGenres([]); setSelectedType(''); setSelectedStatus(''); }}
               >
-                <X className="w-3 h-3" /> Clear all filters
+                <Icon icon="ph:x-bold" className="w-3 h-3" /> Clear all filters
               </Button>
             )}
           </div>

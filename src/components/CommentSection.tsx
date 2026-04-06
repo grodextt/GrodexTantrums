@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { ThumbsUp, MessageCircle, LogIn, Pin, Shield, Send, Pencil, Trash2, X, Check, Flame, Ticket } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +8,8 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useUserRole } from '@/hooks/useUserRole';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 type SortMode = 'popular' | 'recent';
@@ -85,10 +86,10 @@ function MentionInput({
 }
 
 function CommentItem({
-  comment, isAdmin, isAuthenticated, currentUserId, onReply, onLike, onPin, onEdit, onDelete, mangaId,
+  comment, isAdmin, isStaff, isAuthenticated, currentUserId, onReply, onLike, onPin, onEdit, onDelete, mangaId,
   replyTo, replyText, setReplyText, submitReply, setReplyTo, topLevelParentId,
 }: {
-  comment: CommentRow; isAdmin: boolean; isAuthenticated: boolean; currentUserId?: string;
+  comment: CommentRow; isAdmin: boolean; isStaff: boolean; isAuthenticated: boolean; currentUserId?: string;
   onReply: (id: string) => void; onLike: (id: string, hasLiked: boolean) => void;
   onPin: (id: string, isPinned: boolean) => void; onEdit: (id: string, text: string) => void;
   onDelete: (id: string) => void; mangaId: string; replyTo: string | null; replyText: string;
@@ -101,7 +102,7 @@ function CommentItem({
   const displayName = comment.profile?.display_name || 'User';
   const initial = displayName[0]?.toUpperCase() || 'U';
   const isOwner = currentUserId === comment.user_id;
-  const canModerate = isOwner || isAdmin;
+  const canModerate = isOwner || isAdmin || isStaff;
   const effectiveParentId = topLevelParentId || comment.id;
 
   const handleSaveEdit = () => {
@@ -133,12 +134,12 @@ function CommentItem({
           <span className="text-sm font-medium">{displayName}</span>
           {comment.is_admin && (
             <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20">
-              <Shield className="w-2.5 h-2.5" /> Admin
+              <Icon icon="ph:shield-bold" className="w-2.5 h-2.5" /> Admin
             </span>
           )}
           {comment.is_pinned && (
             <span className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600">
-              <Pin className="w-2.5 h-2.5" /> Pinned
+              <Icon icon="ph:push-pin-bold" className="w-2.5 h-2.5" /> Pinned
             </span>
           )}
           <span className="text-xs text-muted-foreground">
@@ -149,27 +150,27 @@ function CommentItem({
           {canModerate && !editing && (
             <>
               <button onClick={() => { setEditing(true); setEditText(comment.text); }} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground" title="Edit">
-                <Pencil className="w-3.5 h-3.5" />
+                <Icon icon="ph:pencil-simple-bold" className="w-3.5 h-3.5" />
               </button>
               {confirmDelete ? (
                 <div className="flex items-center gap-1">
                   <button onClick={() => onDelete(comment.id)} className="p-1 rounded bg-destructive/10 text-destructive" title="Confirm delete">
-                    <Check className="w-3.5 h-3.5" />
+                    <Icon icon="ph:check-bold" className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={() => setConfirmDelete(false)} className="p-1 rounded hover:bg-muted text-muted-foreground" title="Cancel">
-                    <X className="w-3.5 h-3.5" />
+                    <Icon icon="ph:x-bold" className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
                 <button onClick={() => setConfirmDelete(true)} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground" title="Delete">
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Icon icon="ph:trash-bold" className="w-3.5 h-3.5" />
                 </button>
               )}
             </>
           )}
-          {isAdmin && (
+          {(isAdmin || isStaff) && (
             <button onClick={() => onPin(comment.id, comment.is_pinned)} className={`p-1 rounded hover:bg-muted transition-colors ${comment.is_pinned ? 'text-amber-500' : 'text-muted-foreground'}`} title={comment.is_pinned ? 'Unpin' : 'Pin'}>
-              <Pin className="w-3.5 h-3.5" />
+              <Icon icon="ph:push-pin-bold" className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -189,12 +190,12 @@ function CommentItem({
 
       <div className="flex items-center gap-3">
         <button onClick={() => onLike(comment.id, !!comment.user_has_liked)} className={`flex items-center gap-1.5 text-xs transition-colors ${comment.user_has_liked ? 'text-primary font-medium' : 'text-muted-foreground hover:text-primary'}`}>
-          <ThumbsUp className={`w-3.5 h-3.5 ${comment.user_has_liked ? 'fill-primary' : ''}`} />
+          <Icon icon={comment.user_has_liked ? 'ph:thumbs-up-fill' : 'ph:thumbs-up-bold'} className="w-3.5 h-3.5" />
           {comment.likes_count}
         </button>
         {isAuthenticated && (
           <button onClick={handleReplyClick} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            <MessageCircle className="w-3.5 h-3.5" /> Reply
+            <Icon icon="ph:chat-circle-dots-bold" className="w-3.5 h-3.5" /> Reply
           </button>
         )}
       </div>
@@ -210,7 +211,7 @@ function CommentItem({
         <div className="ml-6 space-y-2 pt-1 border-l-2 border-border/50 pl-3">
           {comment.replies.map(reply => (
             <CommentItem
-              key={reply.id} comment={reply} isAdmin={isAdmin} isAuthenticated={isAuthenticated}
+              key={reply.id} comment={reply} isAdmin={isAdmin} isStaff={isStaff} isAuthenticated={isAuthenticated}
               currentUserId={currentUserId} onReply={onReply} onLike={onLike} onPin={onPin}
               onEdit={onEdit} onDelete={onDelete} mangaId={mangaId} replyTo={replyTo}
               replyText={replyText} setReplyText={setReplyText} submitReply={submitReply}
@@ -227,12 +228,13 @@ function StreakWidget() {
   const { user, isAuthenticated } = useAuth();
   const { settings } = usePremiumSettings();
   const streakDays = settings.token_settings.comment_streak_days;
+  const streakEnabled = settings.token_settings.comment_streak_enabled;
 
   const { data: profile } = useQuery({
     queryKey: ['streak-profile', user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from('profiles').select('consecutive_comment_days, token_balance').eq('id', user.id).single();
+      const { data } = await supabase.from('profiles').select('consecutive_comment_days, token_balance, last_comment_at').eq('id', user.id).single();
       return data;
     },
     enabled: !!user,
@@ -243,9 +245,9 @@ function StreakWidget() {
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      const midnight = new Date(now);
-      midnight.setUTCHours(24, 0, 0, 0);
-      const diff = midnight.getTime() - now.getTime();
+      const nextDay = new Date(now);
+      nextDay.setUTCHours(24, 0, 0, 0);
+      const diff = nextDay.getTime() - now.getTime();
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       setTimeLeft(`${h}h ${m}m`);
@@ -255,38 +257,48 @@ function StreakWidget() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!isAuthenticated || !profile) return null;
+  if (!isAuthenticated || !profile || !streakEnabled) return null;
 
   const streak = profile.consecutive_comment_days ?? 0;
   const tokenBalance = profile.token_balance ?? 0;
-  const daysUntilReward = Math.max(0, streakDays - (streak % streakDays));
+  const lastComment = profile.last_comment_at ? new Date(profile.last_comment_at) : null;
+  const commentedToday = lastComment && lastComment.getUTCDate() === new Date().getUTCDate() && lastComment.getUTCMonth() === new Date().getUTCMonth();
+  
+  const progressInCycle = streak % streakDays === 0 && streak > 0 ? streakDays : streak % streakDays;
+  const isRewardDay = progressInCycle === streakDays && commentedToday;
+  const daysRemaining = streakDays - progressInCycle;
 
   return (
-    <div className="rounded-xl bg-secondary/60 border border-border/50 p-3 mb-3 flex items-center gap-3 flex-wrap">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-amber-500/15 flex items-center justify-center">
-          <Flame className="w-4 h-4 text-amber-500" />
+    <div className="rounded-xl bg-secondary/80 border border-border/50 p-4 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${commentedToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
+          <Icon icon={commentedToday ? "ph:check-circle-fill" : "ph:flame-fill"} className={`w-6 h-6 ${commentedToday ? 'text-emerald-500' : 'text-amber-500'}`} />
         </div>
         <div>
-          <span className="text-sm font-bold">{streak} Day Streak</span>
-          <p className="text-[10px] text-muted-foreground">
-            {daysUntilReward > 0
-              ? `Comment today to continue · ${daysUntilReward} days until ticket reward`
-              : 'Streak reward earned!'}
+          <div className="flex items-center gap-2 mb-0.5">
+             <span className="font-extrabold text-foreground text-sm sm:text-base">{streak} Day Streak</span>
+             {tokenBalance > 0 && (
+               <div className="text-[10px] font-bold bg-emerald-500/15 text-emerald-500 px-2 py-0.5 rounded-sm uppercase tracking-wider border border-emerald-500/20">
+                 {tokenBalance} Tickets
+               </div>
+             )}
+          </div>
+          <p className="text-xs text-muted-foreground font-medium">
+            {commentedToday 
+              ? isRewardDay ? 'Reward earned for today! Come back tomorrow.' : 'Goal for today reached! See you tomorrow.'
+              : `Comment today to reach Day ${streak + 1} · ${daysRemaining} days left for reward`}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 ml-auto">
-        <Link to="/earn" className="text-[10px] font-semibold bg-green-500/15 text-green-500 px-2 py-0.5 rounded-full hover:bg-green-500/25 transition-colors">
-          {tokenBalance} tokens available!
-        </Link>
-        <span className="text-[10px] text-muted-foreground">Resets in {timeLeft}</span>
-      </div>
-      {/* Streak dots */}
-      <div className="flex gap-1 ml-auto">
-        {Array.from({ length: streakDays }, (_, i) => (
-          <div key={i} className={`w-3 h-3 rounded-full ${i < (streak % streakDays || (streak > 0 && streak % streakDays === 0 ? streakDays : 0)) ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
-        ))}
+      <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: streakDays }, (_, i) => (
+            <div key={i} className={`w-3.5 h-3.5 rounded-full ring-2 ring-offset-2 ring-transparent transition-all ${i < progressInCycle ? 'bg-emerald-500' : 'bg-muted-foreground/20'}`} />
+          ))}
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 flex items-center gap-1">
+          <Icon icon="ph:clock-bold" className="w-3 h-3" /> Resets in {timeLeft}
+        </span>
       </div>
     </div>
   );
@@ -294,7 +306,8 @@ function StreakWidget() {
 
 export default function CommentSection({ mangaId, contextType = 'manga', contextId }: Props) {
   const { isAuthenticated, user, setShowLoginModal } = useAuth();
-  const { isAdmin } = useIsAdmin();
+  const { isAdmin, isMod, isStaff } = useUserRole();
+  const queryClient = useQueryClient();
   const effectiveContextId = contextId || mangaId;
   const { comments, isLoading, addComment, toggleLike, togglePin, editComment, deleteComment } = useComments(mangaId, contextType, effectiveContextId);
   const [newComment, setNewComment] = useState('');
@@ -306,10 +319,18 @@ export default function CommentSection({ mangaId, contextType = 'manga', context
     return [...text.matchAll(/@([\w-]+)/g)].map(m => m[1].replace(/-/g, ' '));
   };
 
+  const invalidateStreak = () => {
+    // Slight delay to ensure DB triggers are fully committed
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['streak-profile'] });
+    }, 300);
+  };
+
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
     const mentions = extractMentions(newComment);
     await addComment.mutateAsync({ text: newComment, mentions });
+    invalidateStreak();
     setNewComment('');
   };
 
@@ -322,6 +343,7 @@ export default function CommentSection({ mangaId, contextType = 'manga', context
     if (!replyText.trim()) return;
     const mentions = extractMentions(replyText);
     await addComment.mutateAsync({ text: replyText, parentId, mentions });
+    invalidateStreak();
     setReplyTo(null);
     setReplyText('');
   };
@@ -341,7 +363,7 @@ export default function CommentSection({ mangaId, contextType = 'manga', context
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-primary" />
+          <Icon icon="ph:chat-circle-dots-bold" className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-lg">Comments</h3>
           <span className="text-sm text-muted-foreground">({totalCount})</span>
         </div>
@@ -363,13 +385,13 @@ export default function CommentSection({ mangaId, contextType = 'manga', context
           <MentionInput value={newComment} onChange={setNewComment} placeholder="Write a comment... Use @username to mention someone" className="bg-secondary border-border min-h-[80px] resize-none" mangaId={mangaId} />
           <div className="flex justify-end">
             <Button size="sm" onClick={handleSubmit} disabled={!newComment.trim() || addComment.isPending} className="gap-1.5">
-              <Send className="w-3.5 h-3.5" /> Post
+              <Icon icon="ph:paper-plane-right-bold" className="w-3.5 h-3.5" /> Post
             </Button>
           </div>
         </div>
       ) : (
         <button onClick={() => setShowLoginModal(true)} className="w-full p-4 rounded-lg border border-dashed border-border bg-secondary/50 flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors">
-          <LogIn className="w-4 h-4" />
+          <Icon icon="ph:sign-in-bold" className="w-4 h-4" />
           <span className="text-sm">Sign in to leave a comment</span>
         </button>
       )}
@@ -379,7 +401,7 @@ export default function CommentSection({ mangaId, contextType = 'manga', context
       ) : (
         <div className="space-y-3">
           {sortedComments.map(c => (
-            <CommentItem key={c.id} comment={c} isAdmin={isAdmin} isAuthenticated={isAuthenticated}
+            <CommentItem key={c.id} comment={c} isAdmin={isAdmin} isStaff={isStaff} isAuthenticated={isAuthenticated}
               currentUserId={user?.id} onReply={handleReply}
               onLike={(id, hasLiked) => toggleLike.mutate({ commentId: id, hasLiked })}
               onPin={(id, isPinned) => togglePin.mutate({ commentId: id, isPinned })}

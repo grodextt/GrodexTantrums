@@ -11,6 +11,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import ScrollToTop from "@/components/ScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
+import SEOHead from "@/components/SEOHead";
 import Index from "./pages/Index";
 
 const MangaInfo = lazy(() => import("./pages/MangaInfo"));
@@ -49,6 +51,7 @@ const AppLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOHead />
       <ScrollToTopOnNavigate />
       {!hideShell && <Navbar />}
       <main className="flex-1">
@@ -79,15 +82,17 @@ const AppLayout = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <ThemeProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppLayout />
-          </BrowserRouter>
-        </ThemeProvider>
-      </AuthProvider>
+      <HelmetProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppLayout />
+            </BrowserRouter>
+          </ThemeProvider>
+        </AuthProvider>
+      </HelmetProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

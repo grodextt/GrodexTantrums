@@ -119,6 +119,7 @@ export type Database = {
           auto_free_days: number | null
           coin_price: number | null
           created_at: string
+          created_by: string | null
           free_release_at: string | null
           id: string
           manga_id: string
@@ -131,6 +132,7 @@ export type Database = {
           auto_free_days?: number | null
           coin_price?: number | null
           created_at?: string
+          created_by?: string | null
           free_release_at?: string | null
           id?: string
           manga_id: string
@@ -143,6 +145,7 @@ export type Database = {
           auto_free_days?: number | null
           coin_price?: number | null
           created_at?: string
+          created_by?: string | null
           free_release_at?: string | null
           id?: string
           manga_id?: string
@@ -271,6 +274,7 @@ export type Database = {
           content_warnings: string[] | null
           cover_url: string
           created_at: string
+          created_by: string | null
           description: string
           featured: boolean | null
           genres: string[] | null
@@ -296,6 +300,7 @@ export type Database = {
           content_warnings?: string[] | null
           cover_url?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           featured?: boolean | null
           genres?: string[] | null
@@ -321,6 +326,7 @@ export type Database = {
           content_warnings?: string[] | null
           cover_url?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           featured?: boolean | null
           genres?: string[] | null
@@ -774,6 +780,7 @@ export type Database = {
         Args: { amount: number; user_id: string }
         Returns: undefined
       }
+      is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_ip_blocked: { Args: { p_ip: string }; Returns: boolean }
       secure_increment_tokens: {
         Args: { p_amount: number; p_user_id: string }

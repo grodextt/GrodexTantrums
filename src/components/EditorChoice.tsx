@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { optimizedImageUrl } from '@/lib/utils';
 import { useFeaturedManga } from '@/hooks/useFeaturedManga';
@@ -23,7 +23,7 @@ export default function EditorChoice() {
     return (
       <section>
         <div className="flex items-center gap-2 mb-4">
-          <Award className="text-primary h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
+          <Icon icon="ph:medal-bold" className="text-primary h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
           <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl">Editor's Choice</h2>
         </div>
         <div className="relative rounded-xl bg-card border border-border/40 overflow-hidden min-h-[350px] animate-pulse" />
@@ -38,7 +38,7 @@ export default function EditorChoice() {
   return (
     <section>
       <div className="flex items-center gap-2 mb-4">
-        <Award className="text-primary h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
+        <Icon icon="ph:medal-bold" className="text-primary h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
         <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl">Editor's Choice</h2>
       </div>
 
@@ -67,10 +67,10 @@ export default function EditorChoice() {
             {/* Arrows + Dots row */}
             <div className="flex items-center gap-3">
               <button onClick={prev} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors shrink-0">
-                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Icon icon="ph:caret-left-bold" className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <button onClick={next} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors shrink-0">
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Icon icon="ph:caret-right-bold" className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <div className="flex items-center gap-1.5 ml-2">
                 {featured.map((_, i) => (
@@ -97,7 +97,7 @@ export default function EditorChoice() {
                 className="absolute bottom-4 right-4"
               >
                 <Button size="sm" className="gap-2 rounded-lg">
-                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <Icon icon="ph:play-bold" className="w-3.5 h-3.5 fill-current" />
                   Start Reading
                 </Button>
               </Link>
@@ -110,7 +110,7 @@ export default function EditorChoice() {
               <img src={optimizedImageUrl(manga.cover_url, 500)} alt={manga.title} className="w-full h-full object-cover" />
               <Link to={`/manga/${manga.slug}`} className="absolute bottom-4 right-4">
                 <Button size="sm" className="gap-2 rounded-lg">
-                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <Icon icon="ph:play-bold" className="w-3.5 h-3.5 fill-current" />
                   Start Reading
                 </Button>
               </Link>

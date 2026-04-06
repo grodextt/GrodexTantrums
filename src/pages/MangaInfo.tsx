@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Play, Plus, Check, Bell, BellOff, Share2, AlertCircle, ChevronDown, ArrowDownNarrowWide, Lock, Unlock, Coins, Timer } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { useMangaBySlug, useMangaChapters } from '@/hooks/useMangaBySlug';
 import { useAllManga } from '@/hooks/useAllManga';
@@ -9,6 +9,7 @@ import { useMangaBookmark } from '@/hooks/useBookmarks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
+import { useTrendingManga } from '@/hooks/useTrendingManga';
 import TypeBadge from '@/components/TypeBadge';
 import TypeFlag from '@/components/TypeFlag';
 import CommentSection from '@/components/CommentSection';
@@ -17,6 +18,7 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTrackView } from '@/hooks/useTrackView';
+import { formatDistanceToNow } from 'date-fns';
 
 const GENRE_EMOJI: Record<string, string> = {
   Action: '⚔️', Fantasy: '🔮', Adventure: '🧭', Drama: '🎲', Romance: '❤️',
@@ -44,11 +46,19 @@ export default function MangaInfo() {
   const { isBookmarked, toggleBookmark } = useMangaBookmark(manga?.id);
   const { settings } = useSiteSettings();
   const { settings: premiumSettings } = usePremiumSettings();
-  const currencyName = premiumSettings.coin_system.currency_name;
-  const currencyIconUrl = premiumSettings.coin_system.currency_icon_url;
+  const {
+    currency_name: currencyName,
+    currency_icon_url: currencyIconUrl,
+    badge_bg_color = '#E8D47E',
+    badge_text_color = '#A57C1B',
+    badge_padding_x = 12,
+    badge_padding_y = 3,
+    badge_icon_size = 14,
+    badge_font_size = 13,
+    badge_font_weight = 900,
+  } = premiumSettings.coin_system;
   const { data: allManga = [] } = useAllManga();
-  // Trending sidebar: top 8 by views (automatic)
-  const trending = [...allManga].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 8);
+  const { data: trending = [] } = useTrendingManga(8);
 
   // Fetch user's chapter unlocks for this manga
   const { data: userUnlocks = [] } = useQuery({
@@ -71,13 +81,14 @@ export default function MangaInfo() {
     return unlock;
   };
 
-  const CurrencyIcon = ({ className }: { className?: string }) =>
+  const CurrencyIcon = ({ className, size, style }: { className?: string; size?: number; style?: React.CSSProperties }) =>
     currencyIconUrl ? (
-      <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} />
+      <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} style={{ ...style, ...(size ? { width: size, height: size } : {}) }} />
     ) : (
-      <Coins className={className} />
+      <Icon icon="ph:coins-bold" className={className} style={{ ...style, ...(size ? { width: size, height: size } : {}) }} />
     );
   const [expanded, setExpanded] = useState(false);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [reactions, setReactions] = useState<Record<string, number>>(
     Object.fromEntries(REACTIONS.map(r => [r.label, 0]))
   );
@@ -87,7 +98,9 @@ export default function MangaInfo() {
 
   // Social links from settings
   const discordUrl = (settings.general as any)?.discord_url || 'https://discord.gg';
-  const patreonUrl = (settings.general as any)?.patreon_url || '';
+  const donationUrl = (settings.general as any)?.donation_url || '';
+  const donationName = (settings.general as any)?.donation_name || 'Patreon';
+  const donationIconUrl = (settings.general as any)?.donation_icon_url || '';
   const siteName = settings.general.site_name;
 
   useEffect(() => {
@@ -192,8 +205,30 @@ export default function MangaInfo() {
               </div>
 
               {/* Description */}
-              <div className="bg-secondary/60 rounded-lg p-4 text-base leading-relaxed text-foreground border border-border/50 break-words">
-                {manga.description}
+              <div className="bg-secondary/60 rounded-lg p-4 text-base leading-relaxed text-foreground border border-border/50 break-words relative">
+                <div className={`${!isDescExpanded ? 'line-clamp-4' : ''}`}>
+                  {manga.description}
+                </div>
+                {!isDescExpanded && (manga.description?.length || 0) > 200 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-secondary via-secondary/80 to-transparent flex items-end justify-center pb-2 rounded-b-lg pointer-events-none">
+                    <button
+                      onClick={() => setIsDescExpanded(true)}
+                      className="pointer-events-auto flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-background border border-border/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      <Icon icon="ph:caret-down-bold" className="w-3.5 h-3.5" /> Expand
+                    </button>
+                  </div>
+                )}
+                {isDescExpanded && (
+                  <div className="flex justify-center mt-3">
+                    <button
+                      onClick={() => setIsDescExpanded(false)}
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-background border border-border/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      <Icon icon="ph:caret-up-bold" className="w-3.5 h-3.5" /> Collapse
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -201,14 +236,14 @@ export default function MangaInfo() {
                 {chapters.length > 0 && (
                   <Link to={`/manga/${manga.slug}/chapter/1`}>
                     <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
-                      <Play className="w-4 h-4" /> Start Reading
+                      <Icon icon="ph:play-bold" className="w-4 h-4" /> Start Reading
                     </Button>
                   </Link>
                 )}
                 {maxChapter > 0 && (
                   <Link to={`/manga/${manga.slug}/chapter/${maxChapter}`}>
                     <Button variant="secondary" className="gap-2 rounded-lg bg-muted/60 border border-border/40 hover:bg-muted h-11 px-5 text-sm font-semibold text-foreground">
-                      <Play className="w-4 h-4" /> New Chapter
+                      <Icon icon="ph:play-bold" className="w-4 h-4" /> New Chapter
                     </Button>
                   </Link>
                 )}
@@ -221,7 +256,7 @@ export default function MangaInfo() {
                     toast.success(isBookmarked ? 'Removed from library' : 'Added to library');
                   }}
                 >
-                  {isBookmarked ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  {isBookmarked ? <Icon icon="ph:check-bold" className="w-4 h-4" /> : <Icon icon="ph:plus-bold" className="w-4 h-4" />}
                   {isBookmarked ? 'In Library' : 'Add to Library'}
                 </Button>
                 <Button
@@ -233,7 +268,7 @@ export default function MangaInfo() {
                     toast.success(isSubscribed ? 'Notifications disabled' : 'Notifications enabled');
                   }}
                 >
-                  {isSubscribed ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                  {isSubscribed ? <Icon icon="ph:bell-slash-bold" className="w-4 h-4" /> : <Icon icon="ph:bell-bold" className="w-4 h-4" />}
                 </Button>
               </div>
             </div>
@@ -247,7 +282,7 @@ export default function MangaInfo() {
                 <p className="text-sm text-muted-foreground">to your friends</p>
               </div>
               <Button size="icon" className="rounded-full bg-teal-500 hover:bg-teal-600 h-11 w-11 shadow-md" onClick={handleShare}>
-                <Share2 className="w-5 h-5" />
+                <Icon icon="ph:share-network-bold" className="w-5 h-5" />
               </Button>
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -258,18 +293,23 @@ export default function MangaInfo() {
                   <p className="text-xs text-muted-foreground">Let us know, and we'll help ASAP</p>
                 </div>
                 <Button size="sm" variant="destructive" className="text-sm rounded-lg gap-1.5 h-9 px-4" onClick={handleReport}>
-                  <AlertCircle className="w-4 h-4" /> Report
+                  <Icon icon="ph:warning-circle-bold" className="w-4 h-4" /> Report
                 </Button>
               </div>
-              {/* Donate Card - visible when patreon URL is set */}
-              {patreonUrl && (
+              {/* Donate Card - visible when donation URL is set */}
+              {donationUrl && (
                 <div className="flex-1 flex items-center justify-between p-4 rounded-xl bg-secondary/60 border border-border/50">
                   <div>
-                    <p className="text-sm font-semibold">Donate Us</p>
-                    <p className="text-xs text-muted-foreground">Support us on Patreon</p>
+                    <p className="text-sm font-semibold">Support Us</p>
+                    <p className="text-xs text-muted-foreground">on {donationName}</p>
                   </div>
-                  <Button size="sm" className="text-sm rounded-lg gap-1.5 h-9 px-4" onClick={() => window.open(patreonUrl, '_blank')}>
-                    💖 Donate
+                  <Button size="sm" className="text-sm rounded-lg gap-1.5 h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white" onClick={() => window.open(donationUrl, '_blank')}>
+                    {donationIconUrl.includes('http') ? (
+                      <img src={donationIconUrl} alt={donationName} className="w-4 h-4 object-contain" />
+                    ) : (
+                      <Icon icon={donationIconUrl || 'ph:heart-bold'} className="w-4 h-4" />
+                    )}
+                    {donationName}
                   </Button>
                 </div>
               )}
@@ -298,7 +338,7 @@ export default function MangaInfo() {
                 onClick={() => setSortDesc(!sortDesc)}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ArrowDownNarrowWide className="w-4 h-4" />
+                <Icon icon="ph:sort-descending-bold" className="w-4 h-4" />
                 {sortDesc ? '9→1' : '1→9'}
               </button>
             </div>
@@ -306,67 +346,87 @@ export default function MangaInfo() {
             <div className="relative">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {visibleChapters.map((ch, idx) => {
-                  const chDate = new Date(ch.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                  const isPremium = !!ch.premium;
+                  const chDate = formatDistanceToNow(new Date(ch.created_at), { addSuffix: true });
+                  const isFreeRelease = ch.free_release_at ? new Date(ch.free_release_at).getTime() <= Date.now() : false;
+                  const isPremium = !!ch.premium && !isFreeRelease && premiumSettings.premium_config.enable_coins;
                   const unlockRecord = getUnlockStatus(ch.id);
                   const isChapterUnlocked = !!unlockRecord;
-                  const isTicketUnlock = unlockRecord?.unlock_type === 'ticket';
-                  const ticketDaysLeft = isTicketUnlock && unlockRecord?.expires_at
-                    ? Math.max(0, Math.ceil((new Date(unlockRecord.expires_at).getTime() - Date.now()) / 86400000))
-                    : 0;
-                  return (
-                    <Link
-                      key={ch.id}
-                      to={`/manga/${manga.slug}/chapter/${ch.number}`}
-                      className="group flex items-center gap-3 p-3 rounded-xl bg-secondary/50 border border-border/40 hover:bg-secondary hover:border-border transition-all"
-                    >
-                      <div className="relative shrink-0">
-                        <img
-                          src={manga.cover_url}
-                          alt=""
-                          className={`w-[72px] h-[56px] object-cover rounded-lg transition-opacity ${isPremium && !isChapterUnlocked ? 'opacity-50' : 'opacity-80 group-hover:opacity-100'}`}
-                        />
-                        {isPremium && !isChapterUnlocked && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
-                            <Lock className="w-4 h-4 text-amber-400" />
-                          </div>
-                        )}
-                        {isPremium && isChapterUnlocked && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-                            <Unlock className="w-4 h-4 text-green-400" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium truncate">Chapter {ch.number}</p>
-                          {idx === 0 && sortDesc && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary text-primary-foreground font-semibold">New</span>
-                          )}
+                  const isNew = (Date.now() - new Date(ch.created_at).getTime()) < 24 * 60 * 60 * 1000;
+                    return (
+                      <Link
+                        key={ch.id}
+                        to={`/manga/${manga.slug}/chapter/${ch.number}`}
+                        className="group flex items-center gap-4 p-3 rounded-[20px] bg-card border border-border/40 hover:bg-secondary hover:border-primary/30 hover:shadow-md transition-all h-[104px]"
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative shrink-0 h-full aspect-[4/3]">
+                          <img
+                            src={manga.cover_url}
+                            alt=""
+                            className={`w-full h-full object-cover rounded-xl shadow-sm transition-all duration-300 ${isPremium && !isChapterUnlocked ? 'opacity-40 grayscale-[0.5]' : 'group-hover:scale-105'}`}
+                          />
                           {isPremium && !isChapterUnlocked && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 font-semibold border border-amber-500/20">Premium</span>
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl backdrop-blur-[1px]">
+                              <Icon icon="ph:lock-key-fill" className="w-6 h-6 text-white drop-shadow-md" />
+                            </div>
+                          )}
+                          {isPremium && isChapterUnlocked && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/10 rounded-xl">
+                              <Icon icon="ph:lock-key-open-fill" className="w-5 h-5 text-emerald-500 drop-shadow-lg" />
+                            </div>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">{chDate}</p>
-                        {isPremium && !isChapterUnlocked && (
-                          <div className="flex items-center gap-1 text-[10px] text-amber-500 mt-0.5 font-medium">
-                            <CurrencyIcon className="w-3 h-3" />
-                            <span>{ch.coin_price ?? 100} {currencyName}</span>
-                          </div>
-                        )}
-                        {isPremium && isChapterUnlocked && (
-                          <div className="flex items-center gap-1.5 text-[10px] text-green-500 mt-0.5 font-medium">
-                            <span>Unlocked</span>
-                            {isTicketUnlock && ticketDaysLeft > 0 && (
-                              <span className="flex items-center gap-0.5 text-muted-foreground">
-                                <Timer className="w-3 h-3" /> {ticketDaysLeft}d
+
+                        {/* Details */}
+                        <div className="flex flex-col flex-1 min-w-0 justify-center gap-0.5">
+                          {/* Row 1: Title & New Badge */}
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-[15px] font-bold truncate group-hover:text-primary transition-colors">
+                              Chapter {ch.number}
+                            </h3>
+                            {isNew && (
+                              <span className="px-1.5 py-0.5 rounded-[6px] bg-zinc-500/20 text-zinc-400 dark:bg-zinc-600 dark:text-zinc-200 text-[10px] font-bold uppercase tracking-wider animate-[pulse_2s_ease-in-out_infinite]">
+                                New
                               </span>
                             )}
                           </div>
-                        )}
-                      </div>
-                    </Link>
-                  );
+
+                          {/* Row 2: Release Time */}
+                          <p className="text-[13px] font-medium text-muted-foreground/70 mb-1">
+                            {chDate}
+                          </p>
+
+                          {/* Row 3: Pricing */}
+                          {isPremium && !isChapterUnlocked ? (
+                            <div className="flex shrink-0">
+                              <div
+                                className="flex items-center gap-1.5 shadow-sm transition-transform group-hover:scale-105 w-fit rounded-[10px]"
+                                style={{
+                                  backgroundColor: badge_bg_color,
+                                  padding: `${badge_padding_y}px ${badge_padding_x}px`
+                                }}
+                              >
+                                <CurrencyIcon size={badge_icon_size} className="text-current" style={{ color: badge_text_color }} />
+                                <span style={{ color: badge_text_color, fontSize: `${badge_font_size}px`, fontWeight: badge_font_weight, letterSpacing: '-0.025em' }}>
+                                  {ch.coin_price ?? 100}
+                                </span>
+                              </div>
+                            </div>
+                          ) : isPremium && isChapterUnlocked ? (
+                            <div className="flex items-center gap-1.5 text-[11px] text-emerald-500 font-bold uppercase tracking-wider w-fit bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                              <Icon icon="ph:check-circle-fill" className="w-3.5 h-3.5" />
+                              <span>Unlocked</span>
+                            </div>
+                          ) : (
+                            <div className="flex shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center justify-center w-8 h-6 rounded-lg bg-primary/10 text-primary">
+                                <Icon icon="ph:arrow-right-bold" className="w-4 h-4" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    );
                 })}
               </div>
 
@@ -376,7 +436,7 @@ export default function MangaInfo() {
                     onClick={() => setExpanded(true)}
                     className="pointer-events-auto flex items-center gap-1.5 px-5 py-2 rounded-lg bg-secondary border border-border/50 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
                   >
-                    <ChevronDown className="w-4 h-4" /> Expand
+                    <Icon icon="ph:caret-down-bold" className="w-4 h-4" /> Expand
                   </button>
                 </div>
               )}
@@ -409,28 +469,42 @@ export default function MangaInfo() {
         </div>
 
         {/* Trending Sidebar */}
-        <aside className="hidden xl:block w-full xl:w-[380px] shrink-0 space-y-2.5">
-          <h3 className="text-lg font-bold mb-3">🔥 Trending</h3>
-          {trending.map((m, i) => (
-            <Link
-              key={m.id}
-              to={`/manga/${m.slug}`}
-              className="flex items-center gap-3.5 p-3.5 rounded-xl transition-colors group bg-secondary/40 border border-border/30 hover:bg-secondary/70"
-            >
-              <img src={m.cover_url} alt="" className="w-14 h-[76px] object-cover rounded-lg shrink-0" />
-              <span className="text-2xl font-bold text-muted-foreground/40 shrink-0 w-7 text-center">{i + 1}</span>
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{m.title}</p>
-                <p className="text-xs text-destructive/80 truncate">{m.genres?.slice(0, 3).join(', ')}</p>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium capitalize">{m.type}</span>
-                  {m.status === 'completed' && (
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-md bg-destructive text-destructive-foreground font-semibold">Completed</span>
-                  )}
+        <aside className="hidden xl:block w-full xl:w-[380px] shrink-0 space-y-4">
+          <div className="flex items-center gap-2 px-1 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Icon icon="ph:fire-simple-fill" className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold tracking-tight">Trending</h3>
+          </div>
+          <div className="space-y-3">
+            {trending.map((m, i) => (
+              <Link
+                key={m.id}
+                to={`/manga/${m.slug}`}
+                className="flex items-center gap-4 p-3 rounded-2xl transition-all group bg-card border border-border/50 hover:bg-secondary/80 hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5"
+              >
+                <div className="relative shrink-0">
+                  <img src={m.cover_url} alt="" className="w-16 h-[88px] object-cover rounded-xl shadow-sm group-hover:shadow-md transition-shadow" />
+                  <div className="absolute -top-2 -left-2 w-7 h-7 rounded-lg bg-background border border-border flex items-center justify-center text-sm font-bold shadow-sm group-hover:border-primary/50 group-hover:text-primary transition-colors">
+                    {i + 1}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <p className="text-sm font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors italic">{m.title}</p>
+                  <div className="flex items-center gap-2 text-[10px] font-medium text-muted-foreground/80">
+                    <span className="flex items-center gap-1"><Icon icon="ph:book-open-bold" className="w-3 h-3" /> {m.type}</span>
+                    <span className="w-1 h-1 rounded-full bg-border" />
+                    <span className="flex items-center gap-1 text-primary"><Icon icon="ph:tag-bold" className="w-3 h-3" /> {m.genres?.[0] || 'Unknown'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${m.status === 'ongoing' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                      {m.status}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </aside>
       </div>
     </div>

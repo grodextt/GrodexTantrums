@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import HeroCarousel from '@/components/HeroCarousel';
 import MangaCard from '@/components/MangaCard';
 import AnnouncementBar from '@/components/AnnouncementBar';
 import PinnedCarousel from '@/components/PinnedCarousel';
 import LatestUpdates from '@/components/LatestUpdates';
 import EditorChoice from '@/components/EditorChoice';
-import CompletedSeries from '@/components/CompletedSeries';
 import TypeBadge from '@/components/TypeBadge';
 import { useAllManga } from '@/hooks/useAllManga';
 import { useTrendingManga } from '@/hooks/useTrendingManga';
@@ -28,7 +27,10 @@ export default function Index() {
 
       {/* Trending */}
       <section>
-        <h2 className="text-2xl font-extrabold mb-4">Trending</h2>
+        <h2 className="text-2xl font-extrabold mb-4 flex items-center gap-2">
+          <Icon icon="ph:trend-up-bold" className="w-6 h-6 text-primary" />
+          Trending
+        </h2>
         <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
           {trending.map((m, i) => (
             <Link
@@ -75,26 +77,6 @@ export default function Index() {
         <div className="content-defer">
           <EditorChoice />
         </div>
-
-        {/* Completed Series */}
-        <div className="content-defer">
-          <CompletedSeries />
-        </div>
-
-        {/* Manga */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Manga</h2>
-            <Link to="/series?type=manga" className="flex items-center gap-1 text-sm text-primary hover:underline">
-              View all <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {mangaType.slice(0, 6).map(m => (
-              <MangaCard key={m.id} manga={m} />
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );

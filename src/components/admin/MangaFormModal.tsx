@@ -32,7 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCreateManga, useUpdateManga } from "@/hooks/useManga";
 import { Tables } from "@/integrations/supabase/types";
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 type Manga = Tables<"manga">;
 
@@ -263,7 +263,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{manga ? "Edit Manga" : "Add New Manga"}</DialogTitle>
         </DialogHeader>
@@ -470,9 +470,12 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <FormLabel>Banner Image (optional)</FormLabel>
-                  <Input type="file" accept="image/*" onChange={handleBannerChange} />
+                <div className="space-y-2 opacity-50 relative pointer-events-none">
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Banner Image (optional)</FormLabel>
+                    <span className="bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase">Under Dev</span>
+                  </div>
+                  <Input type="file" accept="image/*" disabled={true} onChange={handleBannerChange} />
                   {bannerPreview && (
                     <img src={bannerPreview} alt="Banner preview" className="w-full h-32 object-cover rounded" />
                   )}
@@ -759,7 +762,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading && <Icon icon="ph:spinner-gap-bold" className="mr-2 h-4 w-4 animate-spin" />}
                 {manga ? "Update" : "Create"}
               </Button>
             </div>

@@ -1,5 +1,5 @@
+import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
-import { Coins } from 'lucide-react';
 import { MangaWithChapters } from '@/hooks/useAllManga';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import TypeBadge from './TypeBadge';
@@ -39,7 +39,7 @@ function CurrencyIcon({ iconUrl, className }: { iconUrl: string; className?: str
   return iconUrl ? (
     <img src={iconUrl} alt="" className={`${className} object-contain`} />
   ) : (
-    <Coins className={className} />
+    <Icon icon="ph:coins-bold" className={className} />
   );
 }
 
@@ -48,10 +48,10 @@ function ChapterRow({ ch, slug, currencyIconUrl }: { ch: { id: string; number: n
     <Link
       key={ch.id}
       to={`/manga/${slug}/chapter/${ch.number}`}
-      className="flex items-center justify-between text-xs py-1 hover:bg-muted/30 rounded px-1 -mx-1 transition-colors"
+      className="flex items-center justify-between text-xs py-1.5 hover:bg-muted/40 rounded-lg px-2 transition-colors"
     >
       <span className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground truncate">
-        <span className="truncate">Chapter {ch.number}</span>
+        <span className="truncate font-medium">Chapter {ch.number}</span>
         {ch.premium && <CurrencyIcon iconUrl={currencyIconUrl} className="w-3 h-3 text-amber-400 shrink-0" />}
         {isNewChapter(ch.created_at) && <NewBadge />}
       </span>
@@ -74,7 +74,7 @@ export default function LatestCard({ manga }: LatestCardProps) {
   return (
     <div className="flex gap-3 pr-3 rounded-lg border border-border/40 bg-card/60 hover:bg-card/80 transition-colors group overflow-hidden">
       <Link to={`/manga/${manga.slug}`} className="shrink-0 self-stretch">
-        <div className="relative w-[110px] h-full min-h-[140px] overflow-hidden">
+        <div className="relative w-[140px] h-full min-h-[170px] overflow-hidden">
           <img
             src={manga.cover_url}
             alt={manga.title}
@@ -93,7 +93,7 @@ export default function LatestCard({ manga }: LatestCardProps) {
           </h3>
         </Link>
 
-        <div className="mt-2 flex flex-col gap-1">
+        <div className="mt-2 flex flex-col gap-0.5">
           {chapters.length === 0 && (
             <span className="text-xs text-muted-foreground italic">No chapters yet</span>
           )}

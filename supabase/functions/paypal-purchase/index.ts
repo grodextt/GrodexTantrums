@@ -26,6 +26,7 @@ async function getPayPalCredentials(supabase: any) {
     clientId: s?.payment_paypal_client_id,
     clientSecret: s?.payment_paypal_secret,
     isSandbox: s?.payment_paypal_sandbox ?? false,
+    merchantId: s?.payment_paypal_merchant_id || "",
   };
 }
 
@@ -52,7 +53,17 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Authenticate user
+    const body = await req.json();
+    const { action } = body;
+
+    // Return client ID (publishable) - ALLOW ANONYMOUS
+    if (action === "get-client-id") {
+      const { clientId } = await getPayPalCredentials(supabase);
+      if (!clientId) return json({ error: "PayPal not configured" }, 400);
+      return json({ clientId });
+    }
+
+    // Authenticate user for all other actions
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Unauthorized" }, 401);
 
@@ -62,17 +73,7 @@ serve(async (req) => {
     );
     if (authError || !user) return json({ error: "Unauthorized" }, 401);
 
-    const body = await req.json();
-    const { action } = body;
-
-    // Return client ID (publishable) without needing PayPal auth
-    if (action === "get-client-id") {
-      const { clientId } = await getPayPalCredentials(supabase);
-      if (!clientId) return json({ error: "PayPal not configured" }, 400);
-      return json({ clientId });
-    }
-
-    const { clientId, clientSecret, isSandbox } = await getPayPalCredentials(supabase);
+    const { clientId, clientSecret, isSandbox, merchantId } = await getPayPalCredentials(supabase);
     if (!clientId || !clientSecret) {
       return json({ error: "PayPal not configured. Add credentials in Admin Panel → Premium Content." }, 400);
     }
@@ -84,11 +85,20 @@ serve(async (req) => {
     // ── CREATE ORDER ──
     if (action === "create-order") {
       const { amount, coins } = body;
-      const usdValue = parseFloat(amount).toFixed(2);
+      const usdAmount = parseFloat(amount);
 
-      if (!usdValue || isNaN(parseFloat(usdValue)) || !coins || coins <= 0) {
+      if (!usdAmount || isNaN(usdAmount) || !coins || coins <= 0) {
         return json({ error: "Invalid package", received: { amount, coins } }, 400);
       }
+
+      // Indian PayPal merchants receive USD (auto-converted to INR by PayPal)
+      // Do NOT set payee.merchant_id — it causes UNSUPPORTED_PAYEE_CURRENCY
+      const usdValue = usdAmount.toFixed(2);
+
+      const purchaseUnit: any = {
+        amount: { currency_code: "USD", value: usdValue },
+        custom_id: `${user.id}_${coins}`,
+      };
 
       const orderRes = await fetch(`${paypalBase}/v2/checkout/orders`, {
         method: "POST",
@@ -98,10 +108,13 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           intent: "CAPTURE",
-          purchase_units: [{
-            amount: { currency_code: "USD", value: usdValue },
-            custom_id: `${user.id}_${coins}`,
-          }],
+          purchase_units: [purchaseUnit],
+          application_context: {
+            brand_name: "MangaZ",
+            landing_page: "LOGIN",
+            user_action: "PAY_NOW",
+            shipping_preference: "NO_SHIPPING",
+          },
         }),
       });
       const orderData = await orderRes.json();

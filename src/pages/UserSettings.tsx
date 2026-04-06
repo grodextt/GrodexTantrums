@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Settings, Camera, User, Bell, Moon, Sun, Monitor, Save, LogIn } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -137,12 +137,12 @@ export default function UserSettings() {
     return (
       <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-20 flex flex-col items-center gap-4 text-center">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <LogIn className="w-7 h-7 text-primary" />
+          <Icon icon="ph:sign-in-bold" className="w-7 h-7 text-primary" />
         </div>
         <h1 className="text-xl font-bold text-foreground">Sign in to access settings</h1>
         <p className="text-sm text-muted-foreground max-w-sm">You need to be logged in to manage your profile and preferences.</p>
         <Button onClick={() => setShowLoginModal(true)} className="gap-2">
-          <LogIn className="w-4 h-4" /> Sign In
+          <Icon icon="ph:sign-in-bold" className="w-4 h-4" /> Sign In
         </Button>
       </div>
     );
@@ -153,15 +153,15 @@ export default function UserSettings() {
   return (
     <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-10 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-8">
-        <Settings className="w-7 h-7 text-primary" />
+        <Icon icon="ph:gear-bold" className="w-7 h-7 text-primary" />
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-secondary/60">
-          <TabsTrigger value="profile" className="gap-1.5 text-xs"><User className="w-3.5 h-3.5" />Profile</TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-1.5 text-xs"><Bell className="w-3.5 h-3.5" />Notifications</TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-1.5 text-xs"><Monitor className="w-3.5 h-3.5" />Preferences</TabsTrigger>
+          <TabsTrigger value="profile" className="gap-1.5 text-xs"><Icon icon="ph:user-bold" className="w-3.5 h-3.5" />Profile</TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-1.5 text-xs"><Icon icon="ph:bell-bold" className="w-3.5 h-3.5" />Notifications</TabsTrigger>
+          <TabsTrigger value="preferences" className="gap-1.5 text-xs"><Icon icon="ph:desktop-bold" className="w-3.5 h-3.5" />Preferences</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}
@@ -184,7 +184,7 @@ export default function UserSettings() {
                     <span className="text-2xl font-bold text-primary">{avatarInitial}</span>
                   )}
                   <div className="absolute inset-0 bg-background/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera className="w-5 h-5 text-foreground" />
+                    <Icon icon="ph:camera-bold" className="w-5 h-5 text-foreground" />
                   </div>
                 </button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
@@ -228,7 +228,7 @@ export default function UserSettings() {
               </div>
 
               <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
-                <Save className="w-4 h-4" />
+                <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" />
                 {saving ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardContent>
@@ -257,7 +257,7 @@ export default function UserSettings() {
                 </div>
               ))}
               <Button onClick={handleSaveProfile} disabled={saving} className="gap-2 mt-4">
-                <Save className="w-4 h-4" />
+                <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" />
                 {saving ? 'Saving...' : 'Save Preferences'}
               </Button>
             </CardContent>
@@ -277,8 +277,8 @@ export default function UserSettings() {
                 <p className="text-sm font-medium text-foreground">Theme</p>
                 <RadioGroup value={themeMode} onValueChange={handleThemeChange} className="flex gap-3">
                   {[
-                    { value: 'light', label: 'Light', icon: Sun },
-                    { value: 'dark', label: 'Dark', icon: Moon },
+                    { value: 'light', label: 'Light', icon: 'ph:sun-bold' },
+                    { value: 'dark', label: 'Dark', icon: 'ph:moon-bold' },
                   ].map((t) => (
                     <label
                       key={t.value}
@@ -289,7 +289,7 @@ export default function UserSettings() {
                       }`}
                     >
                       <RadioGroupItem value={t.value} className="sr-only" />
-                      <t.icon className="w-4 h-4" />
+                      <Icon icon={t.icon} className="w-4 h-4" />
                       <span className="text-sm font-medium">{t.label}</span>
                     </label>
                   ))}
@@ -317,7 +317,7 @@ export default function UserSettings() {
               </div>
 
               <Button onClick={handleSaveProfile} disabled={saving} className="gap-2">
-                <Save className="w-4 h-4" />
+                <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" />
                 {saving ? 'Saving...' : 'Save Preferences'}
               </Button>
             </CardContent>

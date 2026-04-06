@@ -1,5 +1,5 @@
+import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
-import { Star, Eye } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { formatViews, optimizedImageUrl } from '@/lib/utils';
 import TypeBadge from './TypeBadge';
@@ -43,12 +43,8 @@ export default function MangaCard({ manga, rank, showChapters }: Props) {
           <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-1">{manga.title}</h3>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+              <Icon icon="ph:star-fill" className="w-3 h-3 text-yellow-500" />
               <span>{manga.rating}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye className="w-3 h-3" />
-              <span>{formatViews(manga.views)}</span>
             </div>
           </div>
           {showChapters && manga.chapters && manga.chapters.length > 0 && (

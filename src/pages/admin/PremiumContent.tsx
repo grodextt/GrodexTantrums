@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  Crown, Settings, Coins, Ticket, CreditCard, Wallet, CircleDollarSign,
-  Check, Upload, Save, Info, MessageSquare, Gift, Image, ChevronDown, ChevronUp,
-  ExternalLink, AlertTriangle, BookOpen, Key, Globe, Shield
-} from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -15,10 +11,10 @@ import { toast } from 'sonner';
 type SubTab = 'general' | 'coins' | 'tokens' | 'subscriptions';
 
 const SUB_TABS: { id: SubTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'general', label: 'General', icon: <Settings className="w-3.5 h-3.5" /> },
-  { id: 'coins', label: 'Coin System', icon: <Coins className="w-3.5 h-3.5" /> },
-  { id: 'tokens', label: 'Token System', icon: <Ticket className="w-3.5 h-3.5" /> },
-  { id: 'subscriptions', label: 'Subscription System', icon: <Crown className="w-3.5 h-3.5" /> },
+  { id: 'general', label: 'General', icon: <Icon icon="ph:gear-bold" className="w-3.5 h-3.5" /> },
+  { id: 'coins', label: 'Coin System', icon: <Icon icon="ph:coins-bold" className="w-3.5 h-3.5" /> },
+  { id: 'tokens', label: 'Token System', icon: <Icon icon="ph:ticket-bold" className="w-3.5 h-3.5" /> },
+  { id: 'subscriptions', label: 'Subscription System', icon: <Icon icon="ph:crown-bold" className="w-3.5 h-3.5" /> },
 ];
 
 export default function PremiumContent() {
@@ -49,9 +45,15 @@ export default function PremiumContent() {
   const [nowpaymentsApiKey, setNowpaymentsApiKey] = useState('');
   const [nowpaymentsIpnSecret, setNowpaymentsIpnSecret] = useState('');
 
+  // Razorpay
+  const [enableRazorpay, setEnableRazorpay] = useState(false);
+  const [razorpayKeyId, setRazorpayKeyId] = useState('');
+  const [razorpaySecret, setRazorpaySecret] = useState('');
+
   // Tutorial expansion
   const [stripeTutorialOpen, setStripeTutorialOpen] = useState(false);
   const [paypalTutorialOpen, setPaypalTutorialOpen] = useState(false);
+  const [razorpayTutorialOpen, setRazorpayTutorialOpen] = useState(false);
   const [usdtTutorialOpen, setUsdtTutorialOpen] = useState(false);
 
   // Coin system form
@@ -60,6 +62,14 @@ export default function PremiumContent() {
   const [baseAmount, setBaseAmount] = useState(50);
   const [basePrice, setBasePrice] = useState(0.99);
   const [iconUploading, setIconUploading] = useState(false);
+  const [badgeBgColor, setBadgeBgColor] = useState('#E8D47E');
+  const [badgeTextColor, setBadgeTextColor] = useState('#A57C1B');
+  const [badgePaddingX, setBadgePaddingX] = useState(12);
+  const [badgePaddingY, setBadgePaddingY] = useState(3);
+  const [badgeIconSize, setBadgeIconSize] = useState(14);
+  const [badgeFontSize, setBadgeFontSize] = useState(13);
+  const [badgeFontWeight, setBadgeFontWeight] = useState<string | number>(900);
+  const [coinPackages, setCoinPackages] = useState<any[]>([]);
 
   // Token system form
   const [checkinReward, setCheckinReward] = useState(1);
@@ -71,27 +81,41 @@ export default function PremiumContent() {
   // Load settings
   useEffect(() => {
     if (settings) {
-      const g = settings.premium_general;
-      setEnableCoins(g.enable_coins);
-      setEnableSubs(g.enable_subscriptions);
-      setStripePublicKey(g.payment_stripe_public_key);
-      setStripeSecretKey(g.payment_stripe_secret_key);
-      setPaypalClientId(g.payment_paypal_client_id);
-      setPaypalSecret(g.payment_paypal_secret);
-      setUsdtAddress(g.payment_usdt_address);
-      setUsdtNetwork(g.payment_usdt_network);
-      setEnableStripe((g as any).enable_stripe ?? (!!g.payment_stripe_public_key && !!g.payment_stripe_secret_key));
-      setEnablePaypal((g as any).enable_paypal ?? (!!g.payment_paypal_client_id && !!g.payment_paypal_secret));
-      setEnableUsdt((g as any).enable_usdt ?? !!g.payment_usdt_address);
-      setPaypalSandbox((g as any).payment_paypal_sandbox ?? false);
-      setNowpaymentsApiKey((g as any).payment_nowpayments_api_key ?? '');
-      setNowpaymentsIpnSecret((g as any).payment_nowpayments_ipn_secret ?? '');
+      const config = settings.premium_config;
+      const general = settings.premium_general;
+      
+      setEnableCoins(config.enable_coins);
+      setEnableSubs(config.enable_subscriptions);
+      setEnableStripe(config.enable_stripe);
+      setEnablePaypal(config.enable_paypal);
+      setEnableRazorpay(config.enable_razorpay);
+      setEnableUsdt(config.enable_usdt);
+
+      setStripePublicKey(general.payment_stripe_public_key);
+      setStripeSecretKey(general.payment_stripe_secret_key);
+      setPaypalClientId(general.payment_paypal_client_id);
+      setPaypalSecret(general.payment_paypal_secret);
+      setUsdtAddress(general.payment_usdt_address);
+      setUsdtNetwork(general.payment_usdt_network);
+      setPaypalSandbox(general.payment_paypal_sandbox ?? false);
+      setRazorpayKeyId(general.payment_razorpay_key_id ?? '');
+      setRazorpaySecret(general.payment_razorpay_key_secret ?? '');
+      setNowpaymentsApiKey(general.payment_nowpayments_api_key ?? '');
+      setNowpaymentsIpnSecret(general.payment_nowpayments_ipn_secret ?? '');
 
       const c = settings.coin_system;
       setCurrencyName(c.currency_name);
       setCurrencyIconUrl(c.currency_icon_url);
       setBaseAmount(c.base_amount);
       setBasePrice(c.base_price);
+      setBadgeBgColor(c.badge_bg_color || '#E8D47E');
+      setBadgeTextColor(c.badge_text_color || '#A57C1B');
+      setBadgePaddingX(c.badge_padding_x ?? 12);
+      setBadgePaddingY(c.badge_padding_y ?? 3);
+      setBadgeIconSize(c.badge_icon_size ?? 14);
+      setBadgeFontSize(c.badge_font_size ?? 13);
+      setBadgeFontWeight(c.badge_font_weight ?? 900);
+      setCoinPackages(c.packages || []);
 
       const t = settings.token_settings;
       setCheckinReward(t.checkin_reward);
@@ -102,27 +126,60 @@ export default function PremiumContent() {
     }
   }, [settings]);
 
+  // Recalculate dynamic package prices when baseAmount or basePrice changes
+  useEffect(() => {
+    if (baseAmount <= 0 || basePrice <= 0 || coinPackages.length === 0) return;
+    
+    let changed = false;
+    const syncedPackages = coinPackages.map(pkg => {
+      if (pkg.manuallyEdited) return pkg; // Skip manually edited ones
+      
+      const multiplier = pkg.coins / baseAmount;
+      const expectedPrice = parseFloat((multiplier * basePrice).toFixed(2));
+      
+      if (pkg.price !== expectedPrice) {
+        changed = true;
+        return { ...pkg, price: expectedPrice };
+      }
+      return pkg;
+    });
+
+    if (changed) {
+      setCoinPackages(syncedPackages);
+    }
+  }, [baseAmount, basePrice]);
+
   const saveGeneral = async () => {
     try {
-      await updatePremiumSettings.mutateAsync({
-        key: 'premium_general',
-        value: {
-          enable_coins: enableCoins,
-          enable_subscriptions: enableSubs,
-          enable_stripe: enableStripe,
-          enable_paypal: enablePaypal,
-          enable_usdt: enableUsdt,
-          payment_stripe_public_key: stripePublicKey,
-          payment_stripe_secret_key: stripeSecretKey,
-          payment_paypal_client_id: paypalClientId,
-          payment_paypal_secret: paypalSecret,
-          payment_paypal_sandbox: paypalSandbox,
-          payment_usdt_address: usdtAddress,
-          payment_usdt_network: usdtNetwork,
-          payment_nowpayments_api_key: nowpaymentsApiKey,
-          payment_nowpayments_ipn_secret: nowpaymentsIpnSecret,
-        },
-      });
+      await Promise.all([
+        updatePremiumSettings.mutateAsync({
+          key: 'premium_config',
+          value: {
+            enable_coins: enableCoins,
+            enable_subscriptions: enableSubs,
+            enable_stripe: enableStripe,
+            enable_paypal: enablePaypal,
+            enable_razorpay: enableRazorpay,
+            enable_usdt: enableUsdt,
+          },
+        }),
+        updatePremiumSettings.mutateAsync({
+          key: 'premium_general',
+          value: {
+            payment_stripe_public_key: stripePublicKey,
+            payment_stripe_secret_key: stripeSecretKey,
+            payment_paypal_client_id: paypalClientId,
+            payment_paypal_secret: paypalSecret,
+            payment_paypal_sandbox: paypalSandbox,
+            payment_razorpay_key_id: razorpayKeyId,
+            payment_razorpay_key_secret: razorpaySecret,
+            payment_usdt_address: usdtAddress,
+            payment_usdt_network: usdtNetwork,
+            payment_nowpayments_api_key: nowpaymentsApiKey,
+            payment_nowpayments_ipn_secret: nowpaymentsIpnSecret,
+          },
+        })
+      ]);
       toast.success('General settings saved');
     } catch {
       toast.error('Failed to save settings');
@@ -138,6 +195,14 @@ export default function PremiumContent() {
           currency_icon_url: currencyIconUrl,
           base_amount: baseAmount,
           base_price: basePrice,
+          badge_bg_color: badgeBgColor,
+          badge_text_color: badgeTextColor,
+          badge_padding_x: badgePaddingX,
+          badge_padding_y: badgePaddingY,
+          badge_icon_size: badgeIconSize,
+          badge_font_size: badgeFontSize,
+          badge_font_weight: badgeFontWeight,
+          packages: coinPackages,
         },
       });
       toast.success('Coin system settings saved');
@@ -189,14 +254,14 @@ export default function PremiumContent() {
     currencyIconUrl ? (
       <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} />
     ) : (
-      <Coins className={className} />
+      <Icon icon="ph:coins-bold" className={className} />
     );
 
   const TutorialToggle = ({ open, onToggle, label }: { open: boolean; onToggle: () => void; label: string }) => (
     <button onClick={onToggle} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium mt-2 transition-colors">
-      <BookOpen className="w-3.5 h-3.5" />
+      <Icon icon="ph:book-open-bold" className="w-3.5 h-3.5" />
       {label}
-      {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+      {open ? <Icon icon="ph:caret-up-bold" className="w-3 h-3" /> : <Icon icon="ph:caret-down-bold" className="w-3 h-3" />}
     </button>
   );
 
@@ -233,7 +298,7 @@ export default function PremiumContent() {
         <div className="space-y-4">
           {/* Premium Features toggles */}
           <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-            <h3 className="font-semibold flex items-center gap-2"><Crown className="w-4 h-4" /> Premium Features</h3>
+            <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:crown-bold" className="w-4 h-4" /> Premium Features</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                 <div>
@@ -252,12 +317,59 @@ export default function PremiumContent() {
             </div>
           </div>
 
+          {/* ─── RAZORPAY ─── */}
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                  <Icon icon="ph:credit-card-bold" className="w-4.5 h-4.5 text-indigo-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm">Razorpay</h3>
+                  <p className="text-xs text-muted-foreground">Accept cards & local payments in India</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <StatusBadge configured={!!razorpayKeyId && !!razorpaySecret} enabled={enableRazorpay} />
+                <Switch checked={enableRazorpay} onCheckedChange={setEnableRazorpay} />
+              </div>
+            </div>
+
+            {enableRazorpay && (
+              <div className="space-y-3 pt-3 border-t border-border">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Key ID</label>
+                  <Input value={razorpayKeyId} onChange={e => setRazorpayKeyId(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="rzp_live_..." />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Key Secret</label>
+                  <Input type="password" value={razorpaySecret} onChange={e => setRazorpaySecret(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="••••••••••••" />
+                </div>
+
+                <TutorialToggle open={razorpayTutorialOpen} onToggle={() => setRazorpayTutorialOpen(!razorpayTutorialOpen)} label="How to get Razorpay keys" />
+                {razorpayTutorialOpen && (
+                  <div className="bg-muted/30 rounded-xl p-4 space-y-2 text-sm text-muted-foreground border border-border/40">
+                    <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Setup Guide</p>
+                    <ol className="list-decimal list-inside space-y-1.5 text-xs">
+                      <li>Go to <a href="https://dashboard.razorpay.com" target="_blank" rel="noopener" className="text-primary underline">dashboard.razorpay.com</a> and sign up.</li>
+                      <li>Complete the KYC process and activate your account.</li>
+                      <li>Navigate to <strong>Settings → API Keys</strong>.</li>
+                      <li>Click <strong>"Generate Key"</strong> or use existing keys (starts with <code className="bg-muted px-1 rounded">rzp_live_</code> or <code className="bg-muted px-1 rounded">rzp_test_</code>).</li>
+                      <li>Copy the <strong>Key ID</strong> and <strong>Key Secret</strong>.</li>
+                      <li>Paste them above and click <strong>Save</strong>.</li>
+                    </ol>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* ─── STRIPE ─── */}
           <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <CreditCard className="w-4.5 h-4.5 text-primary" />
+                  <Icon icon="ph:credit-card-bold" className="w-4.5 h-4.5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">Stripe (Card Payments)</h3>
@@ -294,7 +406,7 @@ export default function PremiumContent() {
                       <li>Paste both keys above and click <strong>Save</strong>.</li>
                     </ol>
                     <div className="flex items-start gap-2 p-2 bg-amber-500/10 rounded-lg mt-2">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                      <Icon icon="ph:warning-bold" className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
                       <p className="text-xs text-amber-600 dark:text-amber-400">For testing, use <code className="bg-muted px-1 rounded">pk_test_</code> and <code className="bg-muted px-1 rounded">sk_test_</code> keys from Stripe's test mode. Switch to live keys when ready for real payments.</p>
                     </div>
                   </div>
@@ -308,7 +420,7 @@ export default function PremiumContent() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <Wallet className="w-4.5 h-4.5 text-blue-500" />
+                  <Icon icon="ph:wallet-bold" className="w-4.5 h-4.5 text-blue-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">PayPal</h3>
@@ -354,7 +466,7 @@ export default function PremiumContent() {
                       <li>For live payments: toggle to <strong>Live</strong> mode and use live credentials. Disable "Sandbox Mode" above.</li>
                     </ol>
                     <div className="flex items-start gap-2 p-2 bg-blue-500/10 rounded-lg mt-2">
-                      <Info className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <Icon icon="ph:info-bold" className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
                       <p className="text-xs text-blue-600 dark:text-blue-400">PayPal sandbox lets you test with fake money. Create sandbox buyer/seller accounts at developer.paypal.com → Sandbox → Accounts.</p>
                     </div>
                   </div>
@@ -368,7 +480,7 @@ export default function PremiumContent() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <CircleDollarSign className="w-4.5 h-4.5 text-emerald-500" />
+                  <Icon icon="ph:currency-circle-dollar-bold" className="w-4.5 h-4.5 text-emerald-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">USDT (Crypto via NOWPayments)</h3>
@@ -427,7 +539,7 @@ export default function PremiumContent() {
                       <li>Paste the API Key and IPN Secret above and click <strong>Save</strong>.</li>
                     </ol>
                     <div className="flex items-start gap-2 p-2 bg-emerald-500/10 rounded-lg mt-2">
-                      <Shield className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                      <Icon icon="ph:shield-bold" className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
                       <p className="text-xs text-emerald-600 dark:text-emerald-400">The IPN Secret is critical for security — it verifies that webhook callbacks are actually from NOWPayments and not forged.</p>
                     </div>
                   </div>
@@ -437,7 +549,7 @@ export default function PremiumContent() {
           </div>
 
           <Button className="rounded-xl gap-2" onClick={saveGeneral} disabled={updatePremiumSettings.isPending}>
-            <Save className="w-4 h-4" /> Save General Settings
+            <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" /> Save General Settings
           </Button>
         </div>
       )}
@@ -447,7 +559,7 @@ export default function PremiumContent() {
         <div className="space-y-4">
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <div>
-              <h3 className="font-semibold flex items-center gap-2 text-base"><Coins className="w-4 h-4" /> Coin System Branding</h3>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><Icon icon="ph:coins-bold" className="w-4 h-4" /> Coin System Branding</h3>
               <p className="text-sm text-muted-foreground mt-0.5">Customize your site's currency name and icon.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -463,11 +575,11 @@ export default function PremiumContent() {
                       <img src={currencyIconUrl} alt="Currency icon" className="w-12 h-12 rounded-xl object-contain bg-muted border border-border/40" />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border/40 flex items-center justify-center">
-                        <Coins className="w-6 h-6 text-muted-foreground" />
+                        <Icon icon="ph:coins-bold" className="w-6 h-6 text-muted-foreground" />
                       </div>
                     )}
                     <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm font-medium">
-                      <Upload className="w-4 h-4" /> {iconUploading ? 'Uploading...' : 'Upload New Icon'}
+                      <Icon icon="ph:upload-simple-bold" className="w-4 h-4" /> {iconUploading ? 'Uploading...' : 'Upload New Icon'}
                       <input type="file" accept="image/*" className="hidden" onChange={handleIconUpload} disabled={iconUploading} />
                     </label>
                   </div>
@@ -489,7 +601,7 @@ export default function PremiumContent() {
 
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <div>
-              <h3 className="font-semibold flex items-center gap-2 text-base"><CircleDollarSign className="w-4 h-4" /> Base Currency Rate</h3>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><Icon icon="ph:currency-circle-dollar-bold" className="w-4 h-4" /> Base Currency Rate</h3>
               <p className="text-sm text-muted-foreground mt-0.5">Set the fundamental value of your currency.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -511,25 +623,184 @@ export default function PremiumContent() {
                 <p className="text-xs font-semibold text-muted-foreground mb-2 text-center">Calculated Pricing Preview</p>
                 <div className="bg-muted/30 rounded-xl overflow-hidden border border-border/40">
                   <div className="grid grid-cols-2 gap-0 text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-4 py-2 border-b border-border/40">
-                    <span>Tier</span>
+                    <span>Package</span>
                     <span className="text-right">Price</span>
                   </div>
-                  {TIERS.map(tier => (
-                    <div key={tier} className="grid grid-cols-2 gap-0 text-sm px-4 py-2.5 border-b border-border/20 last:border-0">
-                      <span className="flex items-center gap-1.5">
-                        <CurrencyIcon className="w-3.5 h-3.5 text-amber-500" />
-                        {tier.toLocaleString()} {currencyName}
-                      </span>
-                      <span className="text-right font-medium text-emerald-400">${(tier * pricePerUnit).toFixed(2)}</span>
-                    </div>
-                  ))}
+                  {coinPackages.length === 0 ? (
+                    <div className="text-xs text-center text-muted-foreground py-4">No packages</div>
+                  ) : (
+                    coinPackages.map(pkg => (
+                      <div key={pkg.id} className="grid grid-cols-2 gap-0 text-sm px-4 py-2.5 border-b border-border/20 last:border-0 relative group">
+                        <span className="flex items-center gap-1.5 truncate">
+                          <CurrencyIcon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <span className="truncate">{pkg.label || 'Unnamed'}</span>
+                          <span className="text-xs text-muted-foreground ml-1 shrink-0">({pkg.coins.toLocaleString()})</span>
+                        </span>
+                        <span className="text-right font-medium text-emerald-400">
+                          ${pkg.price.toFixed(2)}
+                          {pkg.manuallyEdited && <span className="absolute right-1 top-1 text-[8px] uppercase font-bold text-amber-500/50" title="Manually Edited">M</span>}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Badge Designer */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+            <div>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><Icon icon="ph:paint-brush-bold" className="w-4 h-4" /> Pricing Badge Design</h3>
+              <p className="text-sm text-muted-foreground mt-0.5">Customize the appearance of the premium chapter pricing badge.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold mb-1.5 block">Background Color</label>
+                    <div className="flex gap-2">
+                       <input type="color" value={badgeBgColor} onChange={e => setBadgeBgColor(e.target.value)} className="w-9 h-9 p-0 border-0 rounded cursor-pointer bg-transparent" />
+                       <Input value={badgeBgColor} onChange={e => setBadgeBgColor(e.target.value)} className="rounded-xl flex-1 uppercase font-mono text-xs bg-background" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold mb-1.5 block">Text Color</label>
+                    <div className="flex gap-2">
+                       <input type="color" value={badgeTextColor} onChange={e => setBadgeTextColor(e.target.value)} className="w-9 h-9 p-0 border-0 rounded cursor-pointer bg-transparent" />
+                       <Input value={badgeTextColor} onChange={e => setBadgeTextColor(e.target.value)} className="rounded-xl flex-1 uppercase font-mono text-xs bg-background" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="text-xs font-semibold mb-2 flex justify-between">
+                      <span>Horiz. Padding</span>
+                      <span className="text-muted-foreground font-mono">{badgePaddingX}px</span>
+                    </label>
+                    <input type="range" min="4" max="24" value={badgePaddingX} onChange={e => setBadgePaddingX(Number(e.target.value))} className="w-full accent-primary" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold mb-2 flex justify-between">
+                      <span>Vert. Padding</span>
+                      <span className="text-muted-foreground font-mono">{badgePaddingY}px</span>
+                    </label>
+                    <input type="range" min="0" max="16" value={badgePaddingY} onChange={e => setBadgePaddingY(Number(e.target.value))} className="w-full accent-primary" />
+                  </div>
+                </div>
+                
+                <div className="pt-2">
+                  <label className="text-xs font-semibold mb-2 flex justify-between">
+                   <span>Icon Size</span>
+                   <span className="text-muted-foreground font-mono">{badgeIconSize}px</span>
+                  </label>
+                  <input type="range" min="8" max="24" value={badgeIconSize} onChange={e => setBadgeIconSize(Number(e.target.value))} className="w-full accent-primary" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="text-xs font-semibold mb-2 flex justify-between">
+                      <span>Font Size</span>
+                      <span className="text-muted-foreground font-mono">{badgeFontSize}px</span>
+                    </label>
+                    <input type="range" min="10" max="24" value={badgeFontSize} onChange={e => setBadgeFontSize(Number(e.target.value))} className="w-full accent-primary" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold mb-2 flex justify-between">
+                      <span>Font Weight</span>
+                      <span className="text-muted-foreground font-mono">{badgeFontWeight}</span>
+                    </label>
+                    <select 
+                      value={badgeFontWeight} 
+                      onChange={e => setBadgeFontWeight(e.target.value)}
+                      className="w-full h-8 px-2 text-xs rounded-lg bg-background border border-border mt-1"
+                    >
+                      <option value="400">Normal (400)</option>
+                      <option value="600">Semi Bold (600)</option>
+                      <option value="700">Bold (700)</option>
+                      <option value="800">Extra Bold (800)</option>
+                      <option value="900">Black (900)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-secondary/50 border border-border/40 p-6 relative overflow-hidden">
+                 <p className="text-sm font-bold mb-4 z-10 drop-shadow-sm">Live Preview</p>
+                 <div
+                   className="flex items-center gap-1.5 shadow-sm rounded-[10px] transition-all z-10"
+                   style={{
+                     backgroundColor: badgeBgColor,
+                     padding: `${badgePaddingY}px ${badgePaddingX}px`
+                   }}
+                 >
+                   {currencyIconUrl ? (
+                     <img src={currencyIconUrl} alt="icon" style={{ width: badgeIconSize, height: badgeIconSize }} className="object-contain" />
+                   ) : (
+                     <Icon icon="ph:coins-fill" style={{ width: badgeIconSize, height: badgeIconSize, color: badgeTextColor }} />
+                   )}
+                   <span style={{ color: badgeTextColor, fontSize: `${badgeFontSize}px`, fontWeight: badgeFontWeight, letterSpacing: '-0.025em' }}>
+                     100
+                   </span>
+                 </div>
+                 <p className="text-[10px] text-muted-foreground mt-6 text-center max-w-[200px] z-10">This badge appears on locked premium chapters in the Manga Info page.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic Packages */}
+          <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2 text-base"><Icon icon="ph:package-bold" className="w-4 h-4" /> Coin Packages</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">Manage the tier options users see in the Coin Shop.</p>
+              </div>
+              <Button onClick={() => setCoinPackages([...coinPackages, { id: Date.now().toString(), label: 'New Package', coins: 100, price: 0.99, bonus: 0, popular: false }])} size="sm" className="gap-1.5 h-8 rounded-lg">
+                 <Icon icon="ph:plus-bold" /> Add Package
+              </Button>
+            </div>
+            
+            {coinPackages.length === 0 ? (
+               <div className="p-8 text-center text-muted-foreground text-sm border-2 border-dashed border-border rounded-xl">No custom packages defined. The shop will use the fallback base calculated tiers.</div>
+            ) : (
+               <div className="space-y-3">
+                 {coinPackages.map((pkg, idx) => (
+                   <div key={pkg.id} className="flex flex-wrap items-center gap-3 p-4 bg-muted/20 border border-border/50 rounded-xl transition-all">
+                      <div className="flex-1 min-w-[200px] grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div>
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Label</label>
+                          <Input value={pkg.label} onChange={(e) => { const n = [...coinPackages]; n[idx].label = e.target.value; setCoinPackages(n); }} className="h-8 text-xs bg-background rounded-lg mt-1" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Coins</label>
+                          <Input type="number" min="1" value={pkg.coins} onChange={(e) => { const n = [...coinPackages]; n[idx].coins = Number(e.target.value); setCoinPackages(n); }} className="h-8 text-xs bg-background rounded-lg mt-1" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Bonus</label>
+                          <Input type="number" min="0" value={pkg.bonus} onChange={(e) => { const n = [...coinPackages]; n[idx].bonus = Number(e.target.value); setCoinPackages(n); }} className="h-8 text-xs bg-background rounded-lg mt-1" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground">Price ($)</label>
+                          <Input type="number" step="0.01" min="0.01" value={pkg.price} onChange={(e) => { const n = [...coinPackages]; n[idx].price = Number(e.target.value); n[idx].manuallyEdited = true; setCoinPackages(n); }} className="h-8 text-xs bg-background rounded-lg mt-1" />
+                        </div>
+                        <div className="flex items-center gap-2 md:pt-6">
+                           <Switch checked={pkg.popular} onCheckedChange={(val) => { const n = [...coinPackages]; n[idx].popular = val; setCoinPackages(n); }} />
+                           <span className="text-xs font-semibold">Popular Tag</span>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => setCoinPackages(coinPackages.filter((_, i) => i !== idx))} className="text-destructive hover:bg-destructive/10 shrink-0 h-8 w-8">
+                         <Icon icon="ph:trash-bold" className="w-4 h-4" />
+                      </Button>
+                   </div>
+                 ))}
+               </div>
+            )}
+          </div>
+
           <Button className="rounded-xl gap-2" onClick={saveCoinSystem} disabled={updatePremiumSettings.isPending}>
-            <Save className="w-4 h-4" /> Save Coin Settings
+            <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" /> Save Coin Settings
           </Button>
         </div>
       )}
@@ -539,7 +810,7 @@ export default function PremiumContent() {
         <div className="space-y-4">
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <div>
-              <h3 className="font-semibold flex items-center gap-2 text-base"><Gift className="w-4 h-4" /> Daily Check-in Reward</h3>
+              <h3 className="font-semibold flex items-center gap-2 text-base"><Icon icon="ph:gift-bold" className="w-4 h-4" /> Daily Check-in Reward</h3>
               <p className="text-sm text-muted-foreground mt-0.5">Configure rewards for daily user engagement.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -557,7 +828,7 @@ export default function PremiumContent() {
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <div>
               <h3 className="font-semibold flex items-center gap-2 text-base">
-                <Check className="w-4 h-4 text-emerald-500" /> Comment Streak Mission
+                <Icon icon="ph:check-bold" className="w-4 h-4 text-emerald-500" /> Comment Streak Mission
               </h3>
               <p className="text-sm text-muted-foreground mt-0.5">Reward users for commenting multiple days in a row.</p>
             </div>
@@ -585,7 +856,7 @@ export default function PremiumContent() {
           <div className="bg-card border border-border rounded-2xl p-5">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Info className="w-5 h-5 text-primary" />
+                <Icon icon="ph:info-bold" className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h4 className="text-sm font-semibold mb-1">Token Value Information</h4>
@@ -596,7 +867,7 @@ export default function PremiumContent() {
           </div>
 
           <Button className="rounded-xl gap-2" onClick={saveTokenSystem} disabled={updatePremiumSettings.isPending}>
-            <Save className="w-4 h-4" /> Save Token Settings
+            <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" /> Save Token Settings
           </Button>
         </div>
       )}
@@ -604,7 +875,7 @@ export default function PremiumContent() {
       {/* ─── SUBSCRIPTION SYSTEM TAB ─── */}
       {subTab === 'subscriptions' && (
         <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center">
-          <Crown className="w-12 h-12 text-primary/30 mb-4" />
+          <Icon icon="ph:crown-bold" className="w-12 h-12 text-primary/30 mb-4" />
           <h3 className="text-lg font-bold text-foreground mb-2">Subscription System</h3>
           <p className="text-muted-foreground text-sm">Coming soon.</p>
         </div>

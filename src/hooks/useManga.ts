@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-type Manga = Tables<"manga">;
-type MangaInsert = TablesInsert<"manga">;
-type MangaUpdate = TablesUpdate<"manga">;
-type Chapter = Tables<"chapters">;
-type ChapterInsert = TablesInsert<"chapters">;
+type Manga = Tables<"manga"> & { created_by?: string };
+type MangaInsert = TablesInsert<"manga"> & { created_by?: string };
+type MangaUpdate = TablesUpdate<"manga"> & { created_by?: string };
+type Chapter = Tables<"chapters"> & { created_by?: string };
+type ChapterInsert = TablesInsert<"chapters"> & { created_by?: string };
 
 // Helper function to upload file to storage
 const uploadFile = async (
@@ -15,10 +16,55 @@ const uploadFile = async (
   path: string,
   bucket: string = "manga-assets"
 ): Promise<string> => {
+  // Check storage settings from DB
+  const { data: storageRow } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'storage')
+    .single();
+  
+  const storage = storageRow?.value as any;
+  const isBlogger = storage?.provider === 'blogger';
+
+  if (isBlogger) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', path);
+
+    const { data: uploadData, error: uploadError } = await supabase.functions.invoke('blogger-upload', {
+      body: formData,
+    });
+
+    if (uploadError) {
+      // Try to extract specific error message from the response if it's a function error
+      let errorMessage = uploadError.message;
+      if (uploadError instanceof Error && 'context' in uploadError) {
+        try {
+          const context = (uploadError as any).context;
+          if (context && typeof context.json === 'function') {
+            const errorBody = await context.json();
+            errorMessage = errorBody.error || errorBody.message || errorMessage;
+            if (errorBody.details) {
+              errorMessage += `: ${JSON.stringify(errorBody.details)}`;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse error body", e);
+        }
+      }
+      throw new Error(`Blogger upload failed: ${errorMessage}`);
+    }
+    
+    if (!uploadData?.url) throw new Error('Blogger upload failed: No URL returned');
+
+    return uploadData.url;
+  }
+
+  // Default to Supabase Storage
   const fileExt = file.name.split(".").pop();
   const fileName = `${path}.${fileExt}`;
 
-  const { error: uploadError, data } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from(bucket)
     .upload(fileName, file, { upsert: true });
 
@@ -80,6 +126,7 @@ export const useAdminChapters = (mangaId: string | null) => {
 // Create new manga
 export const useCreateManga = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -106,7 +153,7 @@ export const useCreateManga = () => {
 
       const { data, error } = await supabase
         .from("manga")
-        .insert({ ...manga, cover_url, banner_url })
+        .insert({ ...manga, cover_url, banner_url, created_by: user.id })
         .select()
         .single();
 
@@ -221,6 +268,7 @@ export const useDeleteManga = () => {
 // Create new chapter
 export const useCreateChapter = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -246,7 +294,7 @@ export const useCreateChapter = () => {
 
       const { data, error } = await supabase
         .from("chapters")
-        .insert({ ...chapter, pages })
+        .insert({ ...chapter, pages, created_by: user.id })
         .select()
         .single();
 

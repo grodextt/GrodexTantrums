@@ -2,21 +2,55 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface PremiumGeneralSettings {
-  enable_coins: boolean;
-  enable_subscriptions: boolean;
+  // Sensitive keys (Private)
   payment_stripe_public_key: string;
   payment_stripe_secret_key: string;
   payment_paypal_client_id: string;
   payment_paypal_secret: string;
+  payment_razorpay_key_id: string;
+  payment_razorpay_key_secret: string;
   payment_usdt_address: string;
   payment_usdt_network: 'TRC20' | 'ERC20';
+  payment_nowpayments_api_key?: string;
+  payment_nowpayments_ipn_secret?: string;
+  payment_paypal_sandbox?: boolean;
+}
+
+export interface PremiumConfig {
+  // Public toggles
+  enable_coins: boolean;
+  enable_subscriptions: boolean;
+  enable_stripe: boolean;
+  enable_paypal: boolean;
+  enable_razorpay: boolean;
+  enable_usdt: boolean;
+}
+
+export interface CoinPackage {
+  id: string;
+  coins: number;
+  bonus: number;
+  price: number;
+  label: string;
+  popular: boolean;
+  manuallyEdited?: boolean;
 }
 
 export interface CoinSystemSettings {
   currency_name: string;
   currency_icon_url: string;
-  base_amount: number;
-  base_price: number;
+  base_amount: number; // Kept as fallback
+  base_price: number; // Kept as fallback
+  // Custom Pricing Badge configuration
+  badge_bg_color: string;
+  badge_text_color: string;
+  badge_padding_x: number;
+  badge_padding_y: number;
+  badge_icon_size: number;
+  badge_font_size: number;
+  badge_font_weight: string | number;
+  // Dynamic Packages
+  packages?: CoinPackage[];
 }
 
 export interface TokenSystemSettings {
@@ -29,26 +63,50 @@ export interface TokenSystemSettings {
 
 export interface AllPremiumSettings {
   premium_general: PremiumGeneralSettings;
+  premium_config: PremiumConfig;
   coin_system: CoinSystemSettings;
   token_settings: TokenSystemSettings;
 }
 
 const DEFAULTS: AllPremiumSettings = {
   premium_general: {
-    enable_coins: true,
-    enable_subscriptions: false,
     payment_stripe_public_key: '',
     payment_stripe_secret_key: '',
     payment_paypal_client_id: '',
     payment_paypal_secret: '',
+    payment_razorpay_key_id: '',
+    payment_razorpay_key_secret: '',
     payment_usdt_address: '',
     payment_usdt_network: 'TRC20',
+  },
+  premium_config: {
+    enable_coins: true,
+    enable_subscriptions: false,
+    enable_stripe: false,
+    enable_paypal: false,
+    enable_razorpay: false,
+    enable_usdt: false,
   },
   coin_system: {
     currency_name: 'Coins',
     currency_icon_url: '',
     base_amount: 50,
     base_price: 0.99,
+    badge_bg_color: '#E8D47E',
+    badge_text_color: '#A57C1B',
+    badge_padding_x: 12,
+    badge_padding_y: 3,
+    badge_icon_size: 14,
+    badge_font_size: 13,
+    badge_font_weight: 900,
+    packages: [
+      { id: '1', coins: 50, price: 0.99, label: 'Starter', popular: false, bonus: 0 },
+      { id: '2', coins: 150, price: 2.97, label: 'Popular', popular: true, bonus: 0 },
+      { id: '3', coins: 350, price: 6.93, label: 'Value', popular: false, bonus: 50 },
+      { id: '4', coins: 750, price: 14.85, label: 'Premium', popular: false, bonus: 150 },
+      { id: '5', coins: 1600, price: 31.68, label: 'Mega', popular: false, bonus: 400 },
+      { id: '6', coins: 5000, price: 99.00, label: 'Ultimate', popular: false, bonus: 1500 },
+    ],
   },
   token_settings: {
     checkin_reward: 1,
@@ -68,7 +126,7 @@ export function usePremiumSettings() {
       const { data: rows, error } = await supabase
         .from('site_settings')
         .select('key, value')
-        .in('key', ['premium_general', 'coin_system', 'token_settings']);
+        .in('key', ['premium_general', 'premium_config', 'coin_system', 'token_settings']);
 
       if (error) throw error;
 

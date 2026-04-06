@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertCircle } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 
 interface ContentWarningDialogProps {
@@ -31,7 +31,7 @@ export const ContentWarningDialog = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="w-6 h-6" />
+            <Icon icon="ph:warning-circle-bold" className="w-6 h-6" />
             <AlertDialogTitle>Content Warning</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="space-y-3">

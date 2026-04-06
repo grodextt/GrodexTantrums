@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Send, FileText, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -66,7 +66,7 @@ export default function DMCA() {
     <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-10 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-2">
-        <Shield className="w-7 h-7 text-primary" />
+        <Icon icon="ph:shield-check-bold" className="w-7 h-7 text-primary" />
         <h1 className="text-2xl font-bold text-foreground">DMCA Policy & Takedown</h1>
       </div>
       <p className="text-muted-foreground mb-10 max-w-2xl">
@@ -79,7 +79,7 @@ export default function DMCA() {
           <Card key={s.title} className="bg-secondary/40 border-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary" />
+                <Icon icon="ph:file-text-bold" className="w-4 h-4 text-primary" />
                 {s.title}
               </CardTitle>
             </CardHeader>
@@ -95,7 +95,7 @@ export default function DMCA() {
         <Card className="bg-secondary/40 border-border max-w-2xl">
           <CardContent className="py-12 flex flex-col items-center gap-4 text-center">
             <div className="w-14 h-14 rounded-full bg-green-500/15 flex items-center justify-center">
-              <CheckCircle className="w-7 h-7 text-green-500" />
+              <Icon icon="ph:check-circle-bold" className="w-7 h-7 text-green-500" />
             </div>
             <h2 className="text-lg font-semibold text-foreground">Request Submitted</h2>
             <p className="text-sm text-muted-foreground max-w-md">
@@ -110,7 +110,7 @@ export default function DMCA() {
         <Card className="bg-secondary/40 border-border max-w-2xl">
           <CardHeader>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-orange-500" />
+              <Icon icon="ph:warning-bold" className="w-4 h-4 text-orange-500" />
               Submit a Takedown Request
             </CardTitle>
           </CardHeader>
@@ -210,7 +210,7 @@ export default function DMCA() {
               </div>
 
               <Button type="submit" disabled={!isValid} className="w-full sm:w-auto gap-2">
-                <Send className="w-4 h-4" />
+                <Icon icon="ph:paper-plane-right-bold" className="w-4 h-4" />
                 Submit Takedown Request
               </Button>
             </form>

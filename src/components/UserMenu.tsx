@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
-import { User, BookOpen, Moon, Sun, Coins, ShoppingCart, Settings, Shield, LogOut, LayoutDashboard, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useUserRole } from '@/hooks/useUserRole';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 export default function UserMenu() {
   const { profile, logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { isAdmin } = useIsAdmin();
+  const { isAdmin, isStaff } = useUserRole();
   const { settings: premiumSettings } = usePremiumSettings();
   const currencyName = premiumSettings.coin_system.currency_name;
   const currencyIconUrl = premiumSettings.coin_system.currency_icon_url;
@@ -52,7 +53,7 @@ export default function UserMenu() {
     currencyIconUrl ? (
       <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} />
     ) : (
-      <Coins className={className} />
+      <Icon icon="ph:coins-bold" className={className} />
     );
 
   return (
@@ -65,7 +66,7 @@ export default function UserMenu() {
           {profile?.avatar_url ? (
             <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <User className="w-5 h-5 text-primary" />
+            <Icon icon="ph:user-bold" className="w-5 h-5 text-primary" />
           )}
         </div>
         <span className="hidden lg:inline text-sm font-medium truncate max-w-[120px]">
@@ -82,7 +83,7 @@ export default function UserMenu() {
                 variant="ghost"
                 className="w-full rounded-xl h-10 bg-muted/50 hover:bg-muted gap-2 text-sm font-medium justify-center"
               >
-                <BookOpen className="w-4 h-4" /> Library
+                <Icon icon="ion:library" className="w-4 h-4" /> Library
               </Button>
             </Link>
             <Button
@@ -90,55 +91,63 @@ export default function UserMenu() {
               className="rounded-xl h-10 w-10 bg-muted/50 hover:bg-muted shrink-0"
               onClick={toggleTheme}
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {theme === 'dark' ? <Icon icon="ph:sun-bold" className="w-4 h-4" /> : <Icon icon="ph:moon-bold" className="w-4 h-4" />}
             </Button>
           </div>
 
           {/* Balance Card — matching reference screenshot */}
-          <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2">
-            <p className="text-[11px] font-bold text-muted-foreground text-center mb-2.5 uppercase tracking-widest">Your Balance</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                  <CurrencyIcon className="w-5 h-5 text-amber-500" />
+          {(premiumSettings.premium_config.enable_coins) && (
+            <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2">
+              <p className="text-[11px] font-bold text-muted-foreground text-center mb-2.5 uppercase tracking-widest">Your Balance</p>
+              <div className={`grid ${premiumSettings.premium_config.enable_coins ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                {premiumSettings.premium_config.enable_coins && (
+                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                      <CurrencyIcon className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <span className="text-lg font-bold text-foreground leading-none">{coinBalance}</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">{currencyName}</span>
+                  </div>
+                )}
+                <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                    <Icon icon="ph:ticket-bold" className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-lg font-bold text-foreground leading-none">{tokenBalance}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium">Tickets</span>
                 </div>
-                <span className="text-lg font-bold text-foreground leading-none">{coinBalance}</span>
-                <span className="text-[10px] text-muted-foreground font-medium">{currencyName}</span>
-              </div>
-              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                  <Ticket className="w-5 h-5 text-primary" />
-                </div>
-                <span className="text-lg font-bold text-foreground leading-none">{tokenBalance}</span>
-                <span className="text-[10px] text-muted-foreground font-medium">Tickets</span>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="h-px bg-border/40 my-1.5" />
 
           {/* Menu links */}
           <div className="flex flex-col gap-1">
-            {isAdmin && (
+            {(isAdmin || isStaff) && (
               <Link to="/admin" onClick={close}>
                 <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-primary/10 text-primary text-sm font-medium">
-                  <LayoutDashboard className="w-4 h-4" /> Admin Panel
+                  <Icon icon="ph:layout-bold" className="w-4 h-4" /> Admin Panel
                 </Button>
               </Link>
             )}
-            <Link to="/earn" onClick={close}>
-              <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
-                <Ticket className="w-4 h-4" /> Earn Tickets
-              </Button>
-            </Link>
-            <Link to="/coin-shop" onClick={close}>
-              <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
-                <ShoppingCart className="w-4 h-4" /> {currencyName} Shop
-              </Button>
-            </Link>
+            {premiumSettings.token_settings.comment_streak_enabled && (
+              <Link to="/earn" onClick={close}>
+                <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
+                  <Icon icon="ph:ticket-bold" className="w-4 h-4" /> Earn Tickets
+                </Button>
+              </Link>
+            )}
+            {premiumSettings.premium_config.enable_coins && (
+              <Link to="/coin-shop" onClick={close}>
+                <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
+                  <Icon icon="ph:shopping-cart-bold" className="w-4 h-4" /> {currencyName} Shop
+                </Button>
+              </Link>
+            )}
             <Link to="/settings" onClick={close}>
               <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
-                <Settings className="w-4 h-4" /> User Settings
+                <Icon icon="ph:gear-six-bold" className="w-4 h-4" /> User Settings
               </Button>
             </Link>
 
@@ -148,7 +157,7 @@ export default function UserMenu() {
                 <div className="flex gap-2">
                   <Link to="/dmca" onClick={close} className="flex-1">
                     <Button variant="ghost" className="w-full rounded-xl h-10 bg-muted/50 hover:bg-muted gap-2 text-sm font-medium justify-center">
-                      <Shield className="w-4 h-4" /> DMCA
+                      <Icon icon="ph:shield-check-bold" className="w-4 h-4" /> DMCA
                     </Button>
                   </Link>
                   <Button
@@ -156,14 +165,14 @@ export default function UserMenu() {
                     className="flex-1 rounded-xl h-10 bg-destructive/10 hover:bg-destructive/20 text-destructive gap-2 text-sm font-medium justify-center"
                     onClick={() => { logout(); close(); }}
                   >
-                    <LogOut className="w-4 h-4" /> Logout
+                    <Icon icon="ph:sign-out-bold" className="w-4 h-4" /> Logout
                   </Button>
                 </div>
               </>
             ) : (
               <Link to="/dmca" onClick={close}>
                 <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
-                  <Shield className="w-4 h-4" /> DMCA
+                  <Icon icon="ph:shield-check-bold" className="w-4 h-4" /> DMCA
                 </Button>
               </Link>
             )}
@@ -178,7 +187,7 @@ export default function UserMenu() {
                 className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-destructive/10 text-destructive text-sm font-medium"
                 onClick={() => { logout(); close(); }}
               >
-                <LogOut className="w-4 h-4" /> Sign Out
+                <Icon icon="ph:sign-out-bold" className="w-4 h-4" /> Sign Out
               </Button>
             </>
           )}

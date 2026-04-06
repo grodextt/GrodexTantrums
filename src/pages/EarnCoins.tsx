@@ -1,5 +1,5 @@
+import { Icon } from '@iconify/react';
 import { useState, useEffect, useMemo } from 'react';
-import { Ticket, Gift, CheckCircle2, Lock, Trophy, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
@@ -145,7 +145,7 @@ export default function EarnCoins() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-2xl bg-primary/15 flex items-center justify-center">
-            <Ticket className="w-6 h-6 text-primary" />
+            <Icon icon="ph:ticket-bold" className="w-6 h-6 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Earn Rewards</h1>
@@ -154,7 +154,7 @@ export default function EarnCoins() {
         </div>
 
         <div className="flex items-center gap-2 rounded-full bg-card border border-border/60 px-4 py-2">
-          <Ticket className="w-4 h-4 text-primary" />
+          <Icon icon="ph:ticket-bold" className="w-4 h-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">{tokenBalance}</span>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function EarnCoins() {
       {/* Daily Check-in */}
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
-          <Gift className="w-5 h-5 text-primary" />
+          <Icon icon="ph:gift-bold" className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold text-foreground">Daily Check-in</h2>
           <span className="text-xs text-muted-foreground ml-2">Day {Math.min(todayDay, cycleDays)} / {cycleDays}</span>
         </div>
@@ -190,11 +190,11 @@ export default function EarnCoins() {
                     claimed ? 'bg-primary/20' : isToday ? 'bg-primary/15' : 'bg-muted/60'
                   }`}>
                     {claimed ? (
-                      <CheckCircle2 className="w-5 h-5 text-primary" />
+                      <Icon icon="ph:check-circle-bold" className="w-5 h-5 text-primary" />
                     ) : locked ? (
-                      <Lock className="w-4 h-4 text-muted-foreground/50" />
+                      <Icon icon="ph:lock-key-bold" className="w-4 h-4 text-muted-foreground/50" />
                     ) : r.reward ? (
-                      <Ticket className="w-5 h-5 text-primary" />
+                      <Icon icon="ph:ticket-bold" className="w-5 h-5 text-primary" />
                     ) : (
                       <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
                     )}
@@ -223,7 +223,7 @@ export default function EarnCoins() {
                 : "Already checked in today! Come back tomorrow."}
             </p>
             <Button onClick={handleClaim} disabled={!canClaimToday || claiming} className="rounded-xl px-6 gap-2">
-              <Gift className="w-4 h-4" />
+              <Icon icon="ph:gift-bold" className="w-4 h-4" />
               {claiming ? 'Claiming...' : canClaimToday ? 'Check In' : 'Done'}
             </Button>
           </div>
@@ -234,7 +234,7 @@ export default function EarnCoins() {
       {streakEnabled && (
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-primary" />
+            <Icon icon="ph:trophy-bold" className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold text-foreground">Mission</h2>
           </div>
 
@@ -245,14 +245,14 @@ export default function EarnCoins() {
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                 streakComplete ? 'bg-primary/15' : 'bg-muted/50'
               }`}>
-                <MessageSquare className={`w-5 h-5 ${streakComplete ? 'text-primary' : 'text-muted-foreground'}`} />
+                <Icon icon="ph:chat-teardrop-dots-bold" className={`w-5 h-5 ${streakComplete ? 'text-primary' : 'text-muted-foreground'}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h3 className={`font-semibold text-sm ${streakComplete ? 'text-primary' : 'text-foreground'}`}>
                     Comment Streak
                   </h3>
-                  {streakComplete && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
+                  {streakComplete && <Icon icon="ph:check-circle-bold" className="w-4 h-4 text-primary shrink-0" />}
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">Leave a comment for {streakDays} days in a row</p>
                 <div className="flex items-center gap-3">

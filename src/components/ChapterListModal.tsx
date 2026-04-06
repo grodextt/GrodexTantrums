@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Lock, Unlock, Coins, Timer } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { usePremiumSettings } from "@/hooks/usePremiumSettings";
@@ -57,7 +57,7 @@ const ChapterListModal = ({
     currencyIconUrl ? (
       <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} />
     ) : (
-      <Coins className={className} />
+      <Icon icon="ph:coins-bold" className={className} />
     );
 
   return (
@@ -121,18 +121,18 @@ const ChapterListModal = ({
                         )}
                         {isPremium && !isUnlocked && (
                           <Badge className="bg-amber-500/15 text-amber-500 text-[10px] px-1.5 py-0 h-4 font-semibold border border-amber-500/20 shrink-0">
-                            <Lock className="w-2.5 h-2.5 mr-0.5" /> Premium
+                            <Icon icon="ph:lock-key-bold" className="w-2.5 h-2.5 mr-0.5" /> Premium
                           </Badge>
                         )}
                         {isPremium && isUnlocked && (
                           <Badge className="bg-green-500/15 text-green-500 text-[10px] px-1.5 py-0 h-4 font-semibold border border-green-500/20 shrink-0">
-                            <Unlock className="w-2.5 h-2.5 mr-0.5" /> Unlocked
+                            <Icon icon="ph:lock-key-open-bold" className="w-2.5 h-2.5 mr-0.5" /> Unlocked
                           </Badge>
                         )}
                       </h3>
                       <div className="flex items-center space-x-2 sm:space-x-3 text-xs text-muted-foreground mt-1 flex-wrap">
                         <div className="flex items-center space-x-1">
-                          <Calendar className="w-3 h-3" />
+                          <Icon icon="ph:calendar-bold" className="w-3 h-3" />
                           <span>{chapter.date}</span>
                         </div>
                         <span>{chapter.pages?.length || 8} pages</span>
@@ -144,7 +144,7 @@ const ChapterListModal = ({
                         )}
                         {isPremium && isUnlocked && isTicketUnlock && ticketDaysLeft > 0 && (
                           <div className="flex items-center space-x-1 text-muted-foreground">
-                            <Timer className="w-3 h-3" />
+                            <Icon icon="ph:timer-bold" className="w-3 h-3" />
                             <span className="font-medium">{ticketDaysLeft}d left</span>
                           </div>
                         )}
@@ -157,7 +157,7 @@ const ChapterListModal = ({
                       isCurrent ? "text-primary" : isPremium && !isUnlocked ? "text-amber-500" : isUnlocked ? "text-green-500" : "text-muted-foreground"
                     }`}
                   >
-                    {isCurrent ? "Current" : isPremium && !isUnlocked ? <Lock className="w-4 h-4" /> : isUnlocked ? <Unlock className="w-4 h-4" /> : "Read"}
+                    {isCurrent ? "Current" : isPremium && !isUnlocked ? <Icon icon="ph:lock-key-bold" className="w-4 h-4" /> : isUnlocked ? <Icon icon="ph:lock-key-open-bold" className="w-4 h-4" /> : "Read"}
                   </span>
                 </button>
               );

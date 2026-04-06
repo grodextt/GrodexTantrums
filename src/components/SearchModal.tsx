@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
+import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
-import { Search, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useAllManga } from '@/hooks/useAllManga';
@@ -29,7 +29,7 @@ export default function SearchModal({ open, onClose }: Props) {
       <DialogContent className="sm:max-w-2xl p-0 gap-0 bg-card border-border rounded-2xl overflow-hidden [&>button:last-child]:hidden">
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 border-b border-border">
-          <Search className="w-5 h-5 text-muted-foreground" />
+          <Icon icon="ph:magnifying-glass-bold" className="w-5 h-5 text-muted-foreground" />
           <Input
             placeholder="Search manga, manhwa, manhua..."
             className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base h-14"
@@ -81,7 +81,7 @@ export default function SearchModal({ open, onClose }: Props) {
               onClick={onClose}
               className="flex items-center justify-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors py-2"
             >
-              View all results <ArrowRight className="w-3.5 h-3.5" />
+              View all results <Icon icon="ph:arrow-right-bold" className="w-3.5 h-3.5" />
             </Link>
           </div>
         )}

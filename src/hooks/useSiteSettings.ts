@@ -7,6 +7,10 @@ export interface GeneralSettings {
   footer_text: string;
   footer_tagline: string;
   logo_url?: string;
+  discord_url?: string;
+  donation_name?: string;
+  donation_url?: string;
+  donation_icon_url?: string;
 }
 
 export interface AnnouncementSettings {
@@ -24,6 +28,8 @@ export interface StorageSettings {
   provider: 'supabase' | 'blogger';
   blogger_blog_id?: string;
   blogger_api_key?: string;
+  blogger_client_id?: string;
+  blogger_client_secret?: string;
 }
 
 export interface ThemeSettings {
@@ -33,25 +39,41 @@ export interface ThemeSettings {
   primaryDark?: string;
 }
 
+export interface SEOSettings {
+  google_site_verification?: string;
+  google_analytics_id?: string;
+  robots_meta?: string;
+  sitemap_url?: string;
+  extra_head_scripts?: string;
+}
+
 export interface SiteSettings {
   general: GeneralSettings;
   announcements: AnnouncementSettings;
   upload: UploadSettings;
   storage: StorageSettings;
   theme: ThemeSettings;
+  seo: SEOSettings;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
   general: {
-    site_name: '',
-    site_description: '',
-    footer_text: '',
-    footer_tagline: '',
+    site_name: 'MangaZ',
+    site_description: 'Read the latest manga, manhwa and manhua online for free.',
+    footer_text: 'MangaZ',
+    footer_tagline: 'Your favorite place to read manga.',
   },
   announcements: { message: '' },
   upload: { max_size_mb: 10, allowed_formats: 'jpg, png, webp' },
   storage: { provider: 'supabase' },
   theme: { preset: 'Obsidian' },
+  seo: {
+    google_site_verification: '',
+    google_analytics_id: '',
+    robots_meta: 'index, follow',
+    sitemap_url: '',
+    extra_head_scripts: '',
+  },
 };
 
 export const useSiteSettings = () => {

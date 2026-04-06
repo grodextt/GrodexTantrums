@@ -98,7 +98,7 @@ serve(async (req) => {
         );
       }
 
-      const baseUrl = returnUrl || "https://scan-zen-studio.lovable.app/coin-shop";
+      const baseUrl = returnUrl || `${Deno.env.get("SITE_URL") || "http://localhost:8080"}/coin-shop`;
 
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       let customerId: string;

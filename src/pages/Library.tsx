@@ -1,4 +1,4 @@
-import { Library as LibraryIcon, LogIn, History, BookOpen } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,11 +15,11 @@ export default function Library() {
   if (!isAuthenticated) {
     return (
       <div className="container py-20 text-center space-y-4">
-        <LibraryIcon className="w-16 h-16 mx-auto text-muted-foreground/30" />
+        <Icon icon="ph:books-bold" className="w-16 h-16 mx-auto text-muted-foreground/30" />
         <h1 className="text-2xl font-bold">Your Library</h1>
         <p className="text-muted-foreground">Sign in to save and track your favorite manga.</p>
         <Button className="gap-2" onClick={() => setShowLoginModal(true)}>
-          <LogIn className="w-4 h-4" />
+          <Icon icon="ph:sign-in-bold" className="w-4 h-4" />
           Sign In
         </Button>
       </div>
@@ -31,14 +31,14 @@ export default function Library() {
       {/* Bookmarks */}
       <section>
         <div className="flex items-center gap-2 mb-4">
-          <LibraryIcon className="w-6 h-6 text-primary" />
+          <Icon icon="ph:books-bold" className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold">Your Library</h1>
         </div>
         {bookmarksLoading ? (
           <div className="text-muted-foreground text-sm">Loading bookmarks...</div>
         ) : bookmarks.length === 0 ? (
           <div className="text-center py-12 bg-secondary/30 rounded-xl border border-border/50">
-            <BookOpen className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+            <Icon icon="ph:book-open-bold" className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-muted-foreground text-sm">No bookmarks yet. Add manga to your library from their info pages.</p>
           </div>
         ) : (
@@ -53,14 +53,14 @@ export default function Library() {
       {/* Reading History */}
       <section>
         <div className="flex items-center gap-2 mb-4">
-          <History className="w-6 h-6 text-primary" />
+          <Icon icon="ph:history-bold" className="w-6 h-6 text-primary" />
           <h2 className="text-xl font-bold">Reading History</h2>
         </div>
         {historyLoading ? (
           <div className="text-muted-foreground text-sm">Loading history...</div>
         ) : history.length === 0 ? (
           <div className="text-center py-12 bg-secondary/30 rounded-xl border border-border/50">
-            <History className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
+            <Icon icon="ph:history-bold" className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
             <p className="text-muted-foreground text-sm">No reading history yet. Start reading to track your progress.</p>
           </div>
         ) : (

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle, ArrowRight, Star } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { formatViews, optimizedImageUrl } from '@/lib/utils';
 import { useCompletedManga } from '@/hooks/useCompletedManga';
 import TypeBadge from './TypeBadge';
@@ -12,7 +12,7 @@ export default function CompletedSeries() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-primary" />
+            <Icon icon="ph:check-circle-bold" className="w-5 h-5 text-primary" />
             <h2 className="text-xl font-bold">Completed Series</h2>
           </div>
         </div>
@@ -31,11 +31,11 @@ export default function CompletedSeries() {
     <section>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-primary" />
+          <Icon icon="ph:check-circle-bold" className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-bold">Completed Series</h2>
         </div>
         <Link to="/series" className="flex items-center gap-1 text-sm text-primary hover:underline">
-          View all <ArrowRight className="w-3.5 h-3.5" />
+          View all <Icon icon="ph:arrow-right-bold" className="w-3.5 h-3.5" />
         </Link>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -57,10 +57,9 @@ export default function CompletedSeries() {
                 <h3 className="font-semibold text-sm text-foreground line-clamp-2 mb-1">{manga.title}</h3>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                    <Icon icon="ph:star-fill" className="w-3 h-3 text-yellow-500" />
                     {manga.rating || 0}
                   </span>
-                  <span>{formatViews(manga.views || 0)}</span>
                 </div>
                 <div className="mt-1 text-[10px] text-muted-foreground/60">
                   {manga.genres?.slice(0, 2).join(', ')}

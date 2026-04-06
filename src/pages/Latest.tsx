@@ -1,15 +1,15 @@
+import { Icon } from '@iconify/react';
 import { useState } from 'react';
-import { Clock, Grid3X3, Check } from 'lucide-react';
 import { useAllManga, MangaWithChapters } from '@/hooks/useAllManga';
 import LatestCard from '@/components/LatestCard';
 
 const FILTER_TABS = ['All Series', 'manga', 'manhwa', 'manhua'] as const;
 
 const TAB_ICONS: Record<string, React.ReactNode> = {
-  'All Series': <Grid3X3 className="w-3.5 h-3.5" />,
-  'manga': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇯🇵</span>,
-  'manhwa': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇰🇷</span>,
-  'manhua': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0">🇨🇳</span>,
+  'All Series': <Icon icon="ph:grid-four-bold" className="w-4 h-4" />,
+  'manga': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0 overflow-hidden"><Icon icon="emojione:flag-for-japan" className="w-3.5 h-3.5" /></span>,
+  'manhwa': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0 overflow-hidden"><Icon icon="emojione:flag-for-south-korea" className="w-3.5 h-3.5" /></span>,
+  'manhua': <span className="w-5 h-5 rounded-full bg-muted/50 flex items-center justify-center text-[10px] shrink-0 overflow-hidden"><Icon icon="emojione:flag-for-china" className="w-3.5 h-3.5" /></span>,
 };
 
 const TAB_LABELS: Record<string, string> = {
@@ -41,7 +41,7 @@ export default function Latest() {
     <div className="container py-8 space-y-6">
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <Clock className="w-6 h-6 text-primary" />
+          <Icon icon="ph:clock-bold" className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold">Latest Updates</h1>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-1 bg-secondary/60 rounded-2xl sm:rounded-full px-1.5 py-1.5 sm:px-1 sm:py-1">
@@ -57,7 +57,7 @@ export default function Latest() {
             >
               {TAB_ICONS[tab]}
               <span>{TAB_LABELS[tab]}</span>
-              {activeTab === tab && <Check className="w-3.5 h-3.5 ml-0.5" />}
+              {activeTab === tab && <Icon icon="ph:check-bold" className="w-3.5 h-3.5 ml-0.5" />}
             </button>
           ))}
         </div>
