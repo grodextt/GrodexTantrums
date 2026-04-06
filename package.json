@@ -69,7 +69,6 @@
     "@eslint/js": "^9.32.0",
     "@iconify/react": "^6.0.2",
     "@iconify/tailwind": "^1.2.0",
-    "@iconify/vue": "^5.0.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.0.0",
