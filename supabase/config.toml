@@ -14,3 +14,36 @@ verify_jwt = false
 
 [functions.storage-usage]
 verify_jwt = false
+
+[functions.unlock-chapter]
+verify_jwt = true
+
+[functions.secure-checkin]
+verify_jwt = true
+
+[functions.admin-update-balance]
+verify_jwt = true
+
+[functions.create-razorpay-order]
+verify_jwt = true
+
+[functions.capture-razorpay-order]
+verify_jwt = true
+
+[functions.create-subscription-order]
+verify_jwt = false
+
+[functions.capture-subscription-order]
+verify_jwt = true
+
+[functions.check-subscription-expiry]
+verify_jwt = false
+
+[functions.subscription-webhook]
+verify_jwt = false
+
+[functions.cryptomus-purchase]
+verify_jwt = false
+
+[functions.cryptomus-webhook]
+verify_jwt = false
