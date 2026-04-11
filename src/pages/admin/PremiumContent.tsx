@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import SubscriptionSystemTab from './SubscriptionSystemTab';
 
 type SubTab = 'general' | 'coins' | 'tokens' | 'subscriptions';
 
@@ -42,8 +43,8 @@ export default function PremiumContent() {
   // USDT / NOWPayments
   const [usdtAddress, setUsdtAddress] = useState('');
   const [usdtNetwork, setUsdtNetwork] = useState<'TRC20' | 'ERC20'>('TRC20');
-  const [nowpaymentsApiKey, setNowpaymentsApiKey] = useState('');
-  const [nowpaymentsIpnSecret, setNowpaymentsIpnSecret] = useState('');
+  const [cryptomusMerchantId, setCryptomusMerchantId] = useState('');
+  const [cryptomusPaymentKey, setCryptomusPaymentKey] = useState('');
 
   // Razorpay
   const [enableRazorpay, setEnableRazorpay] = useState(false);
@@ -100,8 +101,8 @@ export default function PremiumContent() {
       setPaypalSandbox(general.payment_paypal_sandbox ?? false);
       setRazorpayKeyId(general.payment_razorpay_key_id ?? '');
       setRazorpaySecret(general.payment_razorpay_key_secret ?? '');
-      setNowpaymentsApiKey(general.payment_nowpayments_api_key ?? '');
-      setNowpaymentsIpnSecret(general.payment_nowpayments_ipn_secret ?? '');
+      setCryptomusMerchantId(general.payment_cryptomus_merchant_id ?? '');
+      setCryptomusPaymentKey(general.payment_cryptomus_payment_key ?? '');
 
       const c = settings.coin_system;
       setCurrencyName(c.currency_name);
@@ -175,8 +176,8 @@ export default function PremiumContent() {
             payment_razorpay_key_secret: razorpaySecret,
             payment_usdt_address: usdtAddress,
             payment_usdt_network: usdtNetwork,
-            payment_nowpayments_api_key: nowpaymentsApiKey,
-            payment_nowpayments_ipn_secret: nowpaymentsIpnSecret,
+            payment_cryptomus_merchant_id: cryptomusMerchantId,
+            payment_cryptomus_payment_key: cryptomusPaymentKey,
           },
         })
       ]);
@@ -310,7 +311,7 @@ export default function PremiumContent() {
               <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                 <div>
                   <p className="text-sm font-medium">Enable Subscription System</p>
-                  <p className="text-xs text-muted-foreground">Coming soon — not yet functional</p>
+                  <p className="text-xs text-muted-foreground">Enable subscription features like early access and VIP perks</p>
                 </div>
                 <Switch checked={enableSubs} onCheckedChange={setEnableSubs} />
               </div>
@@ -483,12 +484,12 @@ export default function PremiumContent() {
                   <Icon icon="ph:currency-circle-dollar-bold" className="w-4.5 h-4.5 text-emerald-500" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm">USDT (Crypto via NOWPayments)</h3>
-                  <p className="text-xs text-muted-foreground">Accept USDT cryptocurrency payments</p>
+                  <h3 className="font-semibold text-sm">USDT (Crypto via Cryptomus)</h3>
+                  <p className="text-xs text-muted-foreground">Accept USDT via Binance Smart Chain</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <StatusBadge configured={!!nowpaymentsApiKey} enabled={enableUsdt} />
+                <StatusBadge configured={!!cryptomusMerchantId} enabled={enableUsdt} />
                 <Switch checked={enableUsdt} onCheckedChange={setEnableUsdt} />
               </div>
             </div>
@@ -502,46 +503,30 @@ export default function PremiumContent() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="TRC20">TRC20 (Tron) — Lower fees</SelectItem>
+                      <SelectItem value="TRC20">BSC (BEP-20) — Recommended</SelectItem>
                       <SelectItem value="ERC20">ERC20 (Ethereum)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Wallet Address (for display)</label>
-                  <Input value={usdtAddress} onChange={e => setUsdtAddress(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="T... or 0x..." />
+                  <label className="text-sm font-medium mb-1 block">Cryptomus Merchant ID</label>
+                  <Input type="text" value={cryptomusMerchantId} onChange={e => setCryptomusMerchantId(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="Merchant ID" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">NOWPayments API Key</label>
-                  <Input type="password" value={nowpaymentsApiKey} onChange={e => setNowpaymentsApiKey(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="Your NOWPayments API key" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">NOWPayments IPN Secret</label>
-                  <Input type="password" value={nowpaymentsIpnSecret} onChange={e => setNowpaymentsIpnSecret(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="Your IPN callback secret" />
-                  <p className="text-[10px] text-muted-foreground mt-1">Used to verify webhook callbacks. Found in NOWPayments dashboard → Payment Settings.</p>
+                  <label className="text-sm font-medium mb-1 block">Cryptomus Payment Key</label>
+                  <Input type="password" value={cryptomusPaymentKey} onChange={e => setCryptomusPaymentKey(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="Payment API Key" />
                 </div>
 
-                <TutorialToggle open={usdtTutorialOpen} onToggle={() => setUsdtTutorialOpen(!usdtTutorialOpen)} label="How to set up NOWPayments" />
+                <TutorialToggle open={usdtTutorialOpen} onToggle={() => setUsdtTutorialOpen(!usdtTutorialOpen)} label="How to set up Cryptomus" />
                 {usdtTutorialOpen && (
                   <div className="bg-muted/30 rounded-xl p-4 space-y-2 text-sm text-muted-foreground border border-border/40">
-                    <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Setup Guide</p>
+                    <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Setup Guide — Cryptomus (USDT)</p>
                     <ol className="list-decimal list-inside space-y-1.5 text-xs">
-                      <li>Go to <a href="https://nowpayments.io" target="_blank" rel="noopener" className="text-primary underline">nowpayments.io</a> and create an account.</li>
-                      <li>Navigate to <strong>Store Settings</strong> and add your website URL.</li>
-                      <li>Go to <strong>Payment Settings</strong> and set your payout wallet address for USDT.</li>
-                      <li>Navigate to <strong>API</strong> section and click <strong>"Generate API Key"</strong>. Copy it.</li>
-                      <li>In <strong>Payment Settings → IPN</strong>, set the <strong>IPN Callback URL</strong> to:<br />
-                        <code className="bg-muted px-1.5 py-0.5 rounded text-[10px] break-all block mt-1">
-                          https://mqtowxaxwanovvjdktpq.supabase.co/functions/v1/nowpayments/webhook
-                        </code>
-                      </li>
-                      <li>Copy the <strong>IPN Secret</strong> shown on the same page.</li>
-                      <li>Paste the API Key and IPN Secret above and click <strong>Save</strong>.</li>
+                      <li>Go to <a href="https://cryptomus.com" target="_blank" rel="noopener" className="text-primary underline">cryptomus.com</a> and sign up.</li>
+                      <li>Create a new Merchant project and pass their basic moderation (takes a few hours).</li>
+                      <li>In your merchant settings, generate your API Keys.</li>
+                      <li>Copy your <strong>Merchant ID</strong> and <strong>Payment Key</strong>, then paste them above.</li>
                     </ol>
-                    <div className="flex items-start gap-2 p-2 bg-emerald-500/10 rounded-lg mt-2">
-                      <Icon icon="ph:shield-bold" className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400">The IPN Secret is critical for security — it verifies that webhook callbacks are actually from NOWPayments and not forged.</p>
-                    </div>
                   </div>
                 )}
               </div>
@@ -874,11 +859,7 @@ export default function PremiumContent() {
 
       {/* ─── SUBSCRIPTION SYSTEM TAB ─── */}
       {subTab === 'subscriptions' && (
-        <div className="bg-card border border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center">
-          <Icon icon="ph:crown-bold" className="w-12 h-12 text-primary/30 mb-4" />
-          <h3 className="text-lg font-bold text-foreground mb-2">Subscription System</h3>
-          <p className="text-muted-foreground text-sm">Coming soon.</p>
-        </div>
+        <SubscriptionSystemTab settings={settings} updatePremiumSettings={updatePremiumSettings} />
       )}
     </div>
   );

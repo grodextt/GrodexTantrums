@@ -13,6 +13,9 @@ interface Chapter {
   title?: string;
   premium?: boolean;
   coin_price?: number;
+  free_release_at?: string;
+  is_subscription?: boolean;
+  subscription_free_release_at?: string;
 }
 
 interface ChapterSubPanelProps {
@@ -114,7 +117,6 @@ export function ChapterSubPanel({
         <div className="px-2 py-1">
           {filtered.map(ch => {
             const isCurrent = ch.number === currentChapterNum;
-            const isPremium = !!ch.premium;
             const unlockRecord = getUnlockStatus(ch.id);
             const isUnlocked = !!unlockRecord;
             const isTicketUnlock = unlockRecord?.unlock_type === 'ticket';
@@ -126,6 +128,12 @@ export function ChapterSubPanel({
             const hoursLeft = ticketExpiry
               ? Math.max(0, Math.floor(((new Date(ticketExpiry).getTime() - Date.now()) % 86400000) / 3600000))
               : 0;
+
+            const isSubFreeRelease = ch.subscription_free_release_at ? new Date(ch.subscription_free_release_at).getTime() <= Date.now() : false;
+            const isFreeRelease = ch.free_release_at ? new Date(ch.free_release_at).getTime() <= Date.now() : false;
+            
+            const isPremium = !!ch.premium && !isFreeRelease;
+            const isSub = !!ch.is_subscription && !isSubFreeRelease;
 
             return (
               <button
@@ -145,6 +153,9 @@ export function ChapterSubPanel({
                   <span className={`${isCurrent ? 'font-semibold' : ''}`}>
                     Chapter {ch.number}{ch.title ? ` — ${ch.title}` : ''}
                   </span>
+                  {isSub && (
+                    <Icon icon="mdi:latest" className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  )}
                 </div>
                 {/* Premium indicators */}
                 {isPremium && !isUnlocked && (
@@ -155,12 +166,12 @@ export function ChapterSubPanel({
                     <span className="text-amber-400">{ch.coin_price ?? 100} {currencyName}</span>
                   </div>
                 )}
-                {isPremium && isUnlocked && !isTicketUnlock && (
+                {(isPremium || isSub) && isUnlocked && !isTicketUnlock && (
                   <div className="flex items-center gap-1.5 mt-1 ml-5 text-xs">
                     <Icon icon="lucide:unlock" className="w-3 h-3 text-green-500" />
                   </div>
                 )}
-                {isPremium && isUnlocked && isTicketUnlock && (
+                {(isPremium || isSub) && isUnlocked && isTicketUnlock && (
                   <div className="flex items-center gap-1.5 mt-1 ml-5 text-xs">
                     <Icon icon="lucide:unlock" className="w-3 h-3 text-green-500" />
                     <Icon icon="lucide:timer" className="w-3 h-3 text-gray-400 ml-1" />

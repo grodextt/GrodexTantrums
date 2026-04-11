@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MangaWithChapters } from '@/hooks/useAllManga';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import TypeBadge from './TypeBadge';
+import { formatDistanceToNow } from 'date-fns';
 
 interface LatestCardProps {
   manga: MangaWithChapters;
@@ -19,7 +20,7 @@ function formatRelativeDate(dateStr: string): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function isNewChapter(dateStr: string): boolean {
@@ -43,33 +44,97 @@ function CurrencyIcon({ iconUrl, className }: { iconUrl: string; className?: str
   );
 }
 
-function ChapterRow({ ch, slug, currencyIconUrl }: { ch: { id: string; number: number; premium: boolean | null; created_at: string }; slug: string; currencyIconUrl: string }) {
+type ChapterEntry = { 
+  id: string; 
+  number: number; 
+  premium: boolean | null; 
+  free_release_at?: string | null;
+  is_subscription?: boolean | null; 
+  subscription_free_release_at?: string | null; 
+  created_at: string 
+};
+
+function ChapterRow({ ch, slug, currencyIconUrl, subBadgeLabel }: { ch: ChapterEntry; slug: string; currencyIconUrl: string; subBadgeLabel?: string }) {
   return (
     <Link
       key={ch.id}
       to={`/manga/${slug}/chapter/${ch.number}`}
       className="flex items-center justify-between text-xs py-1.5 hover:bg-muted/40 rounded-lg px-2 transition-colors"
     >
-      <span className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground truncate">
+      <span className="flex items-center gap-1 text-muted-foreground hover:text-foreground truncate">
         <span className="truncate font-medium">Chapter {ch.number}</span>
-        {ch.premium && <CurrencyIcon iconUrl={currencyIconUrl} className="w-3 h-3 text-amber-400 shrink-0" />}
-        {isNewChapter(ch.created_at) && <NewBadge />}
+        {(() => {
+          const isSub = !!ch.is_subscription && (!ch.subscription_free_release_at || new Date(ch.subscription_free_release_at).getTime() > Date.now());
+          const isPrem = !!ch.premium && (!ch.free_release_at || new Date(ch.free_release_at).getTime() > Date.now());
+          
+          if (isSub) return <Icon icon="mdi:latest" className="w-4 h-4 text-amber-400 shrink-0 ml-0.5" />;
+          if (isPrem) return <CurrencyIcon iconUrl={currencyIconUrl} className="w-4 h-4 text-amber-400 shrink-0 ml-0.5" />;
+          return null;
+        })()}
+        {isNewChapter(ch.created_at) && !ch.is_subscription && <NewBadge />}
       </span>
-      <span className="text-muted-foreground/50 text-[11px] shrink-0 ml-2">
-        {formatRelativeDate(ch.created_at)}
+      <span className="text-muted-foreground/50 text-[11px] shrink-0 ml-2 text-right">
+        {ch.is_subscription && ch.subscription_free_release_at && new Date(ch.subscription_free_release_at).getTime() > Date.now() ? (
+          <span className="text-amber-500 font-medium" title={new Date(ch.subscription_free_release_at).toLocaleString()}>
+            {formatDistanceToNow(new Date(ch.subscription_free_release_at))}
+          </span>
+        ) : (
+          formatRelativeDate(ch.created_at)
+        )}
       </span>
     </Link>
   );
 }
 
+/** Dotted divider between chapters of the same type */
+function DottedDivider() {
+  return <div className="border-t border-dashed border-border/50 mx-2" />;
+}
+
+/** Bold solid divider between free and premium sections */
+function SectionDivider() {
+  return <div className="border-t-2 border-border/70 my-1" />;
+}
+
 export default function LatestCard({ manga }: LatestCardProps) {
   const { settings } = usePremiumSettings();
   const chapters = manga.chapters || [];
-  const sortByDate = (a: typeof chapters[0], b: typeof chapters[0]) =>
+  const sortByDate = (a: ChapterEntry, b: ChapterEntry) =>
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  const premiumChapters = chapters.filter(ch => ch.premium === true).sort(sortByDate).slice(0, 2);
-  const freeChapters = chapters.filter(ch => ch.premium === false || ch.premium === null).sort(sortByDate).slice(0, 2);
-  const hasBoth = premiumChapters.length > 0 && freeChapters.length > 0;
+
+  const now = Date.now();
+  const allPremium = chapters.filter(ch => {
+    const subExpired = !!ch.is_subscription && !!ch.subscription_free_release_at && new Date(ch.subscription_free_release_at).getTime() <= now;
+    const premExpired = !!ch.premium && !!ch.free_release_at && new Date(ch.free_release_at).getTime() <= now;
+    const isActuallySub = !!ch.is_subscription && !subExpired;
+    const isActuallyPrem = !!ch.premium && !premExpired;
+    return isActuallySub || isActuallyPrem;
+  }).sort(sortByDate);
+
+  const allFree = chapters.filter(ch => {
+    const subExpired = !!ch.is_subscription && !!ch.subscription_free_release_at && new Date(ch.subscription_free_release_at).getTime() <= now;
+    const premExpired = !!ch.premium && !!ch.free_release_at && new Date(ch.free_release_at).getTime() <= now;
+    const isFreeBase = !ch.premium && !ch.is_subscription;
+    return isFreeBase || subExpired || premExpired;
+  }).sort(sortByDate);
+
+  let premiumChapters: ChapterEntry[];
+  let freeChapters: ChapterEntry[];
+
+  if (allPremium.length === 0) {
+    premiumChapters = [];
+    freeChapters = allFree.slice(0, 4);
+  } else if (allPremium.length === 1) {
+    premiumChapters = allPremium.slice(0, 1);
+    freeChapters = allFree.slice(0, 3);
+  } else {
+    premiumChapters = allPremium.slice(0, 2);
+    freeChapters = allFree.slice(0, 2);
+  }
+
+  const hasPremiumAndFree = premiumChapters.length > 0 && freeChapters.length > 0;
+  const iconUrl = settings.coin_system.currency_icon_url;
+  const subBadgeLabel = settings.subscription_settings?.badge_label || 'Early Access';
 
   return (
     <div className="flex gap-3 pr-3 rounded-lg border border-border/40 bg-card/60 hover:bg-card/80 transition-colors group overflow-hidden">
@@ -88,26 +153,33 @@ export default function LatestCard({ manga }: LatestCardProps) {
       </Link>
       <div className="flex-1 min-w-0 flex flex-col py-3 overflow-hidden">
         <Link to={`/manga/${manga.slug}`}>
-          <h3 className="font-bold text-sm text-foreground line-clamp-1 hover:text-primary transition-colors">
+          <h3 className="font-bold text-sm text-foreground line-clamp-2 hover:text-primary transition-colors leading-snug">
             {manga.title}
           </h3>
         </Link>
 
-        <div className="mt-2 flex flex-col gap-0.5">
+        <div className="mt-2 flex flex-col gap-0">
           {chapters.length === 0 && (
             <span className="text-xs text-muted-foreground italic">No chapters yet</span>
           )}
 
-          {premiumChapters.map(ch => (
-            <ChapterRow key={ch.id} ch={ch} slug={manga.slug} currencyIconUrl={settings.coin_system.currency_icon_url} />
+          {/* Premium chapters */}
+          {premiumChapters.map((ch, idx) => (
+            <div key={ch.id}>
+              {idx > 0 && <DottedDivider />}
+              <ChapterRow ch={ch} slug={manga.slug} currencyIconUrl={iconUrl} />
+            </div>
           ))}
 
-          {hasBoth && (
-            <div className="border-t border-border/40 my-1" />
-          )}
+          {/* Bold divider between premium and free */}
+          {hasPremiumAndFree && <SectionDivider />}
 
-          {freeChapters.map(ch => (
-            <ChapterRow key={ch.id} ch={ch} slug={manga.slug} currencyIconUrl={settings.coin_system.currency_icon_url} />
+          {/* Free chapters */}
+          {freeChapters.map((ch, idx) => (
+            <div key={ch.id}>
+              {idx > 0 && <DottedDivider />}
+              <ChapterRow ch={ch} slug={manga.slug} currencyIconUrl={iconUrl} />
+            </div>
           ))}
         </div>
       </div>

@@ -13,7 +13,7 @@ export const useAllManga = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("manga")
-        .select("*, chapters(id, number, title, created_at, premium)")
+        .select("*, chapters(id, number, title, created_at, premium, free_release_at, is_subscription, subscription_free_release_at)")
         .order("updated_at", { ascending: false });
 
       if (error) throw error;

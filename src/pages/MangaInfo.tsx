@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import { useTrendingManga } from '@/hooks/useTrendingManga';
+import { useHasActiveSubscription } from '@/hooks/useSubscription';
 import TypeBadge from '@/components/TypeBadge';
 import TypeFlag from '@/components/TypeFlag';
 import CommentSection from '@/components/CommentSection';
@@ -59,6 +60,7 @@ export default function MangaInfo() {
   } = premiumSettings.coin_system;
   const { data: allManga = [] } = useAllManga();
   const { data: trending = [] } = useTrendingManga(8);
+  const { isSubscriber } = useHasActiveSubscription();
 
   // Fetch user's chapter unlocks for this manga
   const { data: userUnlocks = [] } = useQuery({
@@ -348,10 +350,13 @@ export default function MangaInfo() {
                 {visibleChapters.map((ch, idx) => {
                   const chDate = formatDistanceToNow(new Date(ch.created_at), { addSuffix: true });
                   const isFreeRelease = ch.free_release_at ? new Date(ch.free_release_at).getTime() <= Date.now() : false;
+                  const isSubFreeRelease = ch.subscription_free_release_at ? new Date(ch.subscription_free_release_at).getTime() <= Date.now() : false;
                   const isPremium = !!ch.premium && !isFreeRelease && premiumSettings.premium_config.enable_coins;
+                  const isSub = !!ch.is_subscription && !isSubFreeRelease;
                   const unlockRecord = getUnlockStatus(ch.id);
                   const isChapterUnlocked = !!unlockRecord;
                   const isNew = (Date.now() - new Date(ch.created_at).getTime()) < 24 * 60 * 60 * 1000;
+                  const subBadgeLabel = premiumSettings.subscription_settings?.badge_label || 'Early Access';
                     return (
                       <Link
                         key={ch.id}
@@ -363,14 +368,14 @@ export default function MangaInfo() {
                           <img
                             src={manga.cover_url}
                             alt=""
-                            className={`w-full h-full object-cover rounded-xl shadow-sm transition-all duration-300 ${isPremium && !isChapterUnlocked ? 'opacity-40 grayscale-[0.5]' : 'group-hover:scale-105'}`}
+                            className={`w-full h-full object-cover rounded-xl shadow-sm transition-all duration-300 ${(isPremium && !isChapterUnlocked) || (isSub && !isSubscriber) ? 'opacity-40 grayscale-[0.5]' : 'group-hover:scale-105'}`}
                           />
-                          {isPremium && !isChapterUnlocked && (
+                          {((isPremium && !isChapterUnlocked) || (isSub && !isSubscriber)) && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl backdrop-blur-[1px]">
                               <Icon icon="ph:lock-key-fill" className="w-6 h-6 text-white drop-shadow-md" />
                             </div>
                           )}
-                          {isPremium && isChapterUnlocked && (
+                          {((isPremium && isChapterUnlocked) || (isSub && isSubscriber)) && (
                             <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/10 rounded-xl">
                               <Icon icon="ph:lock-key-open-fill" className="w-5 h-5 text-emerald-500 drop-shadow-lg" />
                             </div>
@@ -384,7 +389,7 @@ export default function MangaInfo() {
                             <h3 className="text-[15px] font-bold truncate group-hover:text-primary transition-colors">
                               Chapter {ch.number}
                             </h3>
-                            {isNew && (
+                            {isNew && !isSub && (
                               <span className="px-1.5 py-0.5 rounded-[6px] bg-zinc-500/20 text-zinc-400 dark:bg-zinc-600 dark:text-zinc-200 text-[10px] font-bold uppercase tracking-wider animate-[pulse_2s_ease-in-out_infinite]">
                                 New
                               </span>
@@ -393,11 +398,17 @@ export default function MangaInfo() {
 
                           {/* Row 2: Release Time */}
                           <p className="text-[13px] font-medium text-muted-foreground/70 mb-1">
-                            {chDate}
+                            {isSub && ch.subscription_free_release_at && new Date(ch.subscription_free_release_at).getTime() > Date.now() ? (
+                              <span className="text-amber-500 font-bold flex items-center gap-1" title={new Date(ch.subscription_free_release_at).toLocaleString()}>
+                                <Icon icon="ph:timer-bold" /> Unlocks in {formatDistanceToNow(new Date(ch.subscription_free_release_at))}
+                              </span>
+                            ) : (
+                              chDate
+                            )}
                           </p>
 
                           {/* Row 3: Pricing */}
-                          {isPremium && !isChapterUnlocked ? (
+                          {(isPremium && !isChapterUnlocked) || (isSub && !isSubscriber) ? (
                             <div className="flex shrink-0">
                               <div
                                 className="flex items-center gap-1.5 shadow-sm transition-transform group-hover:scale-105 w-fit rounded-[10px]"
@@ -406,13 +417,17 @@ export default function MangaInfo() {
                                   padding: `${badge_padding_y}px ${badge_padding_x}px`
                                 }}
                               >
-                                <CurrencyIcon size={badge_icon_size} className="text-current" style={{ color: badge_text_color }} />
+                                {isSub ? (
+                                  <Icon icon="mdi:latest" style={{ width: badge_icon_size, height: badge_icon_size, color: badge_text_color }} />
+                                ) : (
+                                  <CurrencyIcon size={badge_icon_size} className="text-current" style={{ color: badge_text_color }} />
+                                )}
                                 <span style={{ color: badge_text_color, fontSize: `${badge_font_size}px`, fontWeight: badge_font_weight, letterSpacing: '-0.025em' }}>
-                                  {ch.coin_price ?? 100}
+                                  {isSub ? subBadgeLabel : (ch.coin_price ?? 100)}
                                 </span>
                               </div>
                             </div>
-                          ) : isPremium && isChapterUnlocked ? (
+                          ) : (isPremium && isChapterUnlocked) || (isSub && isSubscriber) ? (
                             <div className="flex items-center gap-1.5 text-[11px] text-emerald-500 font-bold uppercase tracking-wider w-fit bg-emerald-500/10 px-2 py-0.5 rounded-md">
                               <Icon icon="ph:check-circle-fill" className="w-3.5 h-3.5" />
                               <span>Unlocked</span>

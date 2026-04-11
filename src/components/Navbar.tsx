@@ -11,7 +11,9 @@ import UserMenu from './UserMenu';
 import NotificationMenu from './NotificationMenu';
 import logoImg from '@/assets/logo.png';
 
-const NAV_LINKS = [
+import { usePremiumSettings } from '@/hooks/usePremiumSettings';
+
+const BASE_NAV_LINKS = [
   { path: '/latest', label: 'Latest', icon: 'akar-icons:schedule' },
   { path: '/series', label: 'Series', icon: 'ic:round-dashboard' },
 ];
@@ -20,10 +22,19 @@ export default function Navbar() {
   const { isAuthenticated, setShowLoginModal } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { settings } = useSiteSettings();
+  const { settings: premiumSettings } = usePremiumSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const subName = premiumSettings?.subscription_settings?.subscription_name || 'Subscribe';
+
+  type NavLink = { path: string; label: string; icon: string; highlight?: boolean };
+  const NAV_LINKS: NavLink[] = [
+    ...BASE_NAV_LINKS,
+    ...(isAuthenticated ? [{ path: '/subscribe', label: subName, icon: 'mdi:latest', highlight: true }] : [])
+  ];
 
   const siteName = settings.general.site_name || '';
   const isActive = (path: string) => location.pathname === path;
@@ -65,12 +76,19 @@ export default function Navbar() {
               <Icon icon="ph:magnifying-glass-bold" className="w-4 h-4" />
               <span className="hidden lg:inline">Search</span>
             </Button>
-            {NAV_LINKS.map(({ path, label, icon }) => (
+            {NAV_LINKS.map(({ path, label, icon, highlight }) => (
               <Link key={path} to={path}>
-                <Button variant="ghost" className={`rounded-full h-11 transition-all duration-200 hover:scale-[1.02] text-sm font-medium md:w-11 md:px-0 lg:w-auto lg:gap-2 lg:px-5 ${isActive(path) ? 'bg-primary/15 text-primary hover:bg-primary/20 ring-1 ring-primary/30' : 'bg-muted/60 hover:bg-muted'}`}>
-                  <Icon icon={icon} className="w-4 h-4" />
-                  <span className="hidden lg:inline">{label}</span>
-                </Button>
+                {highlight ? (
+                  <Button variant="ghost" className={`rounded-full h-11 transition-all duration-200 hover:scale-[1.02] text-sm font-bold md:w-11 md:px-0 lg:w-auto lg:gap-2 lg:px-5 ${isActive(path) ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20 ring-1 ring-purple-400' : 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-500'}`}>
+                    <Icon icon={icon} className="w-4 h-4" />
+                    <span className="hidden lg:inline">{label}</span>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" className={`rounded-full h-11 transition-all duration-200 hover:scale-[1.02] text-sm font-medium md:w-11 md:px-0 lg:w-auto lg:gap-2 lg:px-5 ${isActive(path) ? 'bg-primary/15 text-primary hover:bg-primary/20 ring-1 ring-primary/30' : 'bg-muted/60 hover:bg-muted'}`}>
+                    <Icon icon={icon} className="w-4 h-4" />
+                    <span className="hidden lg:inline">{label}</span>
+                  </Button>
+                )}
               </Link>
             ))}
             <div className="w-px h-6 bg-border/60 mx-1" />
@@ -123,9 +141,9 @@ export default function Navbar() {
             <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-12 bg-muted/40 hover:bg-muted text-sm font-medium" onClick={() => { setSearchOpen(true); setMobileOpen(false); }}>
               <Icon icon="ph:magnifying-glass-bold" className="w-4 h-4" /> Search
             </Button>
-            {NAV_LINKS.map(({ path, label, icon }) => (
+            {NAV_LINKS.map(({ path, label, icon, highlight }) => (
               <Link key={path} to={path} onClick={() => setMobileOpen(false)}>
-                <Button variant="ghost" className={`w-full justify-start gap-2.5 rounded-xl h-12 text-sm font-medium ${isActive(path) ? 'bg-primary/15 text-primary' : 'bg-muted/40 hover:bg-muted'}`}>
+                <Button variant="ghost" className={`w-full justify-start gap-2.5 rounded-xl h-12 text-sm font-semibold ${highlight ? (isActive(path) ? 'bg-purple-500 text-white' : 'bg-purple-500/10 text-purple-500') : (isActive(path) ? 'bg-primary/15 text-primary' : 'bg-muted/40 hover:bg-muted')}`}>
                   <Icon icon={icon} className="w-4 h-4" /> {label}
                 </Button>
               </Link>

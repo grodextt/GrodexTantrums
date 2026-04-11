@@ -11,8 +11,8 @@ export interface PremiumGeneralSettings {
   payment_razorpay_key_secret: string;
   payment_usdt_address: string;
   payment_usdt_network: 'TRC20' | 'ERC20';
-  payment_nowpayments_api_key?: string;
-  payment_nowpayments_ipn_secret?: string;
+  payment_cryptomus_merchant_id?: string;
+  payment_cryptomus_payment_key?: string;
   payment_paypal_sandbox?: boolean;
 }
 
@@ -61,11 +61,29 @@ export interface TokenSystemSettings {
   comment_streak_days: number;
 }
 
+export interface SubscriptionSettings {
+  subscription_name: string;
+  badge_label: string;
+  bonus_coins_enabled: boolean;
+  double_daily_login_enabled: boolean;
+  show_subscriber_count: boolean;
+  default_free_release_days: number;
+  sub_enable_paypal: boolean;
+  sub_paypal_client_id: string;
+  sub_paypal_secret: string;
+  sub_paypal_sandbox: boolean;
+  sub_enable_usdt: boolean;
+  sub_usdt_address: string;
+  sub_cryptomus_merchant_id: string;
+  sub_cryptomus_payment_key: string;
+}
+
 export interface AllPremiumSettings {
   premium_general: PremiumGeneralSettings;
   premium_config: PremiumConfig;
   coin_system: CoinSystemSettings;
   token_settings: TokenSystemSettings;
+  subscription_settings: SubscriptionSettings;
 }
 
 const DEFAULTS: AllPremiumSettings = {
@@ -115,6 +133,22 @@ const DEFAULTS: AllPremiumSettings = {
     comment_streak_reward: 1,
     comment_streak_days: 3,
   },
+  subscription_settings: {
+    subscription_name: 'Subscription',
+    badge_label: 'Early Access',
+    bonus_coins_enabled: true,
+    double_daily_login_enabled: true,
+    show_subscriber_count: true,
+    default_free_release_days: 7,
+    sub_enable_paypal: false,
+    sub_paypal_client_id: '',
+    sub_paypal_secret: '',
+    sub_paypal_sandbox: false,
+    sub_enable_usdt: false,
+    sub_usdt_address: '',
+    sub_cryptomus_merchant_id: '',
+    sub_cryptomus_payment_key: '',
+  },
 };
 
 export function usePremiumSettings() {
@@ -126,7 +160,7 @@ export function usePremiumSettings() {
       const { data: rows, error } = await supabase
         .from('site_settings')
         .select('key, value')
-        .in('key', ['premium_general', 'premium_config', 'coin_system', 'token_settings']);
+        .in('key', ['premium_general', 'premium_config', 'coin_system', 'token_settings', 'subscription_settings']);
 
       if (error) throw error;
 

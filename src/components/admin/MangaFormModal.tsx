@@ -73,6 +73,12 @@ const mangaFormSchema = z.object({
   discord_primary_role_id: z.string().optional(),
   discord_secondary_role_id: z.string().optional(),
   discord_notification_template: z.string().optional(),
+  discord_free_channel_name: z.string().optional(),
+  discord_free_role_id: z.string().optional(),
+  discord_premium_channel_name: z.string().optional(),
+  discord_premium_role_id: z.string().optional(),
+  discord_subscription_channel_name: z.string().optional(),
+  discord_subscription_role_id: z.string().optional(),
 });
 
 type MangaFormValues = z.infer<typeof mangaFormSchema>;
@@ -116,6 +122,12 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       discord_primary_role_id: "",
       discord_secondary_role_id: "",
       discord_notification_template: "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}\nRead now: {chapter_url}",
+      discord_free_channel_name: "",
+      discord_free_role_id: "",
+      discord_premium_channel_name: "",
+      discord_premium_role_id: "",
+      discord_subscription_channel_name: "",
+      discord_subscription_role_id: "",
     },
   });
 
@@ -166,6 +178,12 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
             form.setValue('discord_primary_role_id', data.primary_role_id || '');
             form.setValue('discord_secondary_role_id', data.secondary_role_id || '');
             form.setValue('discord_notification_template', data.notification_template || "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}");
+            form.setValue('discord_free_channel_name', (data as any).free_channel_name || '');
+            form.setValue('discord_free_role_id', (data as any).free_role_id || '');
+            form.setValue('discord_premium_channel_name', (data as any).premium_channel_name || '');
+            form.setValue('discord_premium_role_id', (data as any).premium_role_id || '');
+            form.setValue('discord_subscription_channel_name', (data as any).subscription_channel_name || '');
+            form.setValue('discord_subscription_role_id', (data as any).subscription_role_id || '');
           }
         });
       }
@@ -244,6 +262,12 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
           primary_role_id: values.discord_primary_role_id || null,
           secondary_role_id: values.discord_secondary_role_id || null,
           notification_template: values.discord_notification_template || null,
+          free_channel_name: values.discord_free_channel_name || null,
+          free_role_id: values.discord_free_role_id || null,
+          premium_channel_name: values.discord_premium_channel_name || null,
+          premium_role_id: values.discord_premium_role_id || null,
+          subscription_channel_name: values.discord_subscription_channel_name || null,
+          subscription_role_id: values.discord_subscription_role_id || null,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'manga_id' });
       } else {
@@ -682,45 +706,93 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                     />
 
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="discord_primary_role_id"
+                      <FormField control={form.control} name="discord_primary_role_id"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Primary Role ID (Optional)</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="784110782341185577"
-                              />
-                            </FormControl>
-                            <p className="text-sm text-muted-foreground">
-                              Role to ping for new chapters
-                            </p>
+                            <FormControl><Input {...field} placeholder="784110782341185577" /></FormControl>
+                            <p className="text-sm text-muted-foreground">Default role to ping for all chapters</p>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name="discord_secondary_role_id"
+                      <FormField control={form.control} name="discord_secondary_role_id"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Secondary Role ID (Optional)</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                placeholder="784110780672638996"
-                              />
-                            </FormControl>
-                            <p className="text-sm text-muted-foreground">
-                              Additional role to ping
-                            </p>
+                            <FormControl><Input {...field} placeholder="784110780672638996" /></FormControl>
+                            <p className="text-sm text-muted-foreground">Additional role to ping</p>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    </div>
+
+                    {/* Per-type channel overrides */}
+                    <p className="text-sm font-semibold border-t border-border/50 pt-3 mt-1">Per Chapter Type Overrides</p>
+                    <p className="text-xs text-muted-foreground -mt-2">Leave blank to use the default channel/role above.</p>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Free */}
+                      <div className="space-y-2 rounded-lg border border-border/50 p-3">
+                        <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Free Chapters</p>
+                        <FormField control={form.control} name="discord_free_channel_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Channel Name</FormLabel>
+                              <FormControl><Input {...field} placeholder="free-chapters" className="h-8 text-xs" /></FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField control={form.control} name="discord_free_role_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Role ID</FormLabel>
+                              <FormControl><Input {...field} placeholder="Role ID" className="h-8 text-xs" /></FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {/* Premium */}
+                      <div className="space-y-2 rounded-lg border border-amber-500/20 p-3">
+                        <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">Premium Chapters</p>
+                        <FormField control={form.control} name="discord_premium_channel_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Channel Name</FormLabel>
+                              <FormControl><Input {...field} placeholder="premium-chapters" className="h-8 text-xs" /></FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField control={form.control} name="discord_premium_role_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Role ID</FormLabel>
+                              <FormControl><Input {...field} placeholder="Role ID" className="h-8 text-xs" /></FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      {/* Subscription */}
+                      <div className="space-y-2 rounded-lg border border-purple-500/20 p-3">
+                        <p className="text-xs font-bold text-purple-400 uppercase tracking-widest">Early Access</p>
+                        <FormField control={form.control} name="discord_subscription_channel_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Channel Name</FormLabel>
+                              <FormControl><Input {...field} placeholder="early-access" className="h-8 text-xs" /></FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField control={form.control} name="discord_subscription_role_id"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Role ID</FormLabel>
+                              <FormControl><Input {...field} placeholder="Role ID" className="h-8 text-xs" /></FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
 
                     <FormField
@@ -748,6 +820,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                       <p className="text-sm font-medium">ℹ️ How it works</p>
                       <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                         <li>Notifications are sent automatically when you add a new chapter</li>
+                        <li>Per-type overrides allow different chapter types to post in different channels</li>
                         <li>Role IDs can be found by right-clicking a role in Discord (enable Developer Mode)</li>
                         <li>Template variables will be replaced with actual manga/chapter data</li>
                       </ul>

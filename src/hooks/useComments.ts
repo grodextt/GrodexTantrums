@@ -16,6 +16,8 @@ export interface CommentRow {
   created_at: string;
   profile?: { display_name: string | null; avatar_url: string | null } | null;
   is_admin?: boolean;
+  is_mod?: boolean;
+  is_subscriber?: boolean;
   user_has_liked?: boolean;
   replies?: CommentRow[];
 }
@@ -60,13 +62,21 @@ export const useComments = (mangaId: string | undefined, contextType?: 'manga' |
       }
 
       let adminUserIds: string[] = [];
+      let modUserIds: string[] = [];
+      let subUserIds: string[] = [];
       if (userIds.length > 0) {
         const { data: roles } = await supabase
-          .from('user_roles')
+          .from('user_roles_public' as any)
+          .select('user_id, role')
+          .in('user_id', userIds) as any;
+        adminUserIds = (roles || []).filter((r: any) => r.role === 'admin').map((r: any) => r.user_id);
+        modUserIds = (roles || []).filter((r: any) => r.role === 'moderator').map((r: any) => r.user_id);
+
+        const { data: subs } = await supabase
+          .from('user_subscriptions_active' as any)
           .select('user_id')
-          .eq('role', 'admin')
-          .in('user_id', userIds);
-        adminUserIds = (roles || []).map(r => r.user_id);
+          .in('user_id', userIds) as any;
+        subUserIds = (subs || []).map((s: any) => s.user_id);
       }
 
       let userLikes: string[] = [];
@@ -81,6 +91,8 @@ export const useComments = (mangaId: string | undefined, contextType?: 'manga' |
       const enriched = (data || []).map(c => ({
         ...c,
         is_admin: adminUserIds.includes(c.user_id),
+        is_mod: modUserIds.includes(c.user_id),
+        is_subscriber: subUserIds.includes(c.user_id),
         user_has_liked: userLikes.includes(c.id),
         profile: profilesMap[c.user_id] || null,
       })) as CommentRow[];

@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminManga, useDeleteManga } from '@/hooks/useManga';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
+import { useSubscriptionPlans } from '@/hooks/useSubscription';
 import { MangaFormModal } from '@/components/admin/MangaFormModal';
 import { ChapterManager } from '@/components/admin/ChapterManager';
 import {
@@ -72,6 +73,9 @@ export default function AdminPanel() {
   const toggleTutorial = (key: string) => setGoogleTutorialOpen(p => ({ ...p, [key]: !p[key] }));
   const [users, setUsers] = useState<UserRow[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [realViewCount, setRealViewCount] = useState(0);
+  const [realBookmarkCount, setRealBookmarkCount] = useState(0);
+  const [mangaViewCounts, setMangaViewCounts] = useState<Record<string, number>>({});
   const [mangaSearch, setMangaSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -90,6 +94,8 @@ export default function AdminPanel() {
   const [blockIp, setBlockIp] = useState('');
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const { settings: premiumSettings } = usePremiumSettings();
+  const { data: subscriptionPlans = [] } = useSubscriptionPlans();
+  const [editSubPlanId, setEditSubPlanId] = useState('');
 
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({
@@ -176,12 +182,35 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (activeTab === 'users' || activeTab === 'overview') fetchUsers();
+    if (activeTab === 'overview') fetchRealStats();
     
     // Redirect mods if they land on an unauthorized tab
     if (isMod && !['manga', 'users'].includes(activeTab)) {
       setActiveTab('manga');
     }
   }, [activeTab, isMod]);
+
+  const fetchRealStats = async () => {
+    const [{ count: viewCount }, { count: bookmarkCount }] = await Promise.all([
+      supabase.from('manga_views').select('*', { count: 'exact', head: true }),
+      supabase.from('bookmarks').select('*', { count: 'exact', head: true }),
+    ]);
+    setRealViewCount(viewCount || 0);
+    setRealBookmarkCount(bookmarkCount || 0);
+
+    // Fetch view counts per manga for top 5
+    const { data: viewData } = await supabase
+      .from('manga_views')
+      .select('manga_id');
+    
+    if (viewData) {
+      const counts: Record<string, number> = {};
+      viewData.forEach(v => {
+        counts[v.manga_id] = (counts[v.manga_id] || 0) + 1;
+      });
+      setMangaViewCounts(counts);
+    }
+  };
 
   const fetchUsers = async () => {
     setUsersLoading(true);
@@ -455,8 +484,8 @@ export default function AdminPanel() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 { label: 'Total Series', value: supabaseManga.length, icon: <Icon icon="ph:book-open-fill" className="w-6 h-6" />, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                { label: 'Overall Site Views', value: formatViews(totalViews), icon: <Icon icon="ph:eye-fill" className="w-6 h-6" />, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-                { label: 'Total Saves', value: formatViews(totalBookmarks), icon: <Icon icon="ph:bookmark-simple-fill" className="w-6 h-6" />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                { label: 'Overall Site Views', value: formatViews(realViewCount), icon: <Icon icon="ph:eye-fill" className="w-6 h-6" />, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                { label: 'Total Saves', value: formatViews(realBookmarkCount), icon: <Icon icon="ph:bookmark-simple-fill" className="w-6 h-6" />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
                 { label: 'Users', value: users.length, icon: <Icon icon="ph:users-fill" className="w-6 h-6" />, color: 'text-amber-500', bg: 'bg-amber-500/10' },
               ].map(stat => (
                 <div key={stat.label} className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -494,7 +523,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold">{formatViews(m.views || 0)}</p>
+                        <p className="text-sm font-semibold">{formatViews(mangaViewCounts[m.id] || 0)}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">Views</p>
                       </div>
                     </div>
@@ -710,13 +739,21 @@ export default function AdminPanel() {
                       {googleTutorialOpen['seo'] && (
                         <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
                           <ol className="text-xs space-y-4 text-muted-foreground list-decimal pl-4">
-                            <li>Go to <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Google Search Console</a>.</li>
-                            <li>Add a <strong>URL Prefix</strong> property for your site domain.</li>
-                            <li>Verify using the <strong>HTML tag</strong> method. Copy the meta tag provided.</li>
-                            <li>Paste it into the <strong>Verification HTML Tag</strong> field here.</li>
-                            <li>In Search Console left menu, go to <strong>Sitemaps</strong>.</li>
-                            <li>Enter <code className="bg-background px-1.5 py-0.5 rounded text-primary">sitemap_index.xml</code> and click Submit.</li>
+                            <li>Go to <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Google Search Console</a> and sign in.</li>
+                            <li>Click <strong>"Add Property"</strong> in the top left dropdown.</li>
+                            <li>Enter your website URL (e.g. <code className="bg-muted px-1 rounded">https://yourdomain.com</code>) under the <strong>URL Prefix</strong> option.</li>
+                            <li>In the verification methods list, expand the <strong>HTML tag</strong> section.</li>
+                            <li>Copy the meta tag provided — it should look like: <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">&lt;meta name="google-site-verification" content="..." /&gt;</code>.</li>
+                            <li>Paste the FULL meta tag into the <strong>Verification HTML Tag</strong> field above and click <strong>Save</strong>.</li>
+                            <li>Go back to Search Console and click <strong>"Verify"</strong> to confirm you added the tag.</li>
+                            <li>In the left sidebar, navigate to <strong>Indexing → Sitemaps</strong>.</li>
+                            <li>Type <code className="bg-background px-1.5 py-0.5 rounded text-primary font-mono font-bold italic">sitemap.xml</code> in the box and click <strong>Submit</strong>. This helps Google index your manga and chapters faster.</li>
+                            <li>Check back in 24 hours to see your indexing status and search performance.</li>
                           </ol>
+                          <div className="flex items-start gap-2 p-2 bg-blue-500/10 rounded-lg mt-2">
+                            <Icon icon="ph:info-bold" className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-blue-600 dark:text-blue-400">Search Console is essential for tracking how your site ranks in Google search results and identifying many common SEO issues.</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -753,12 +790,20 @@ export default function AdminPanel() {
                         <Icon icon={googleTutorialOpen['ga4'] ? "ph:caret-up-bold" : "ph:caret-down-bold"} className="w-4 h-4 text-muted-foreground" />
                       </button>
                       {googleTutorialOpen['ga4'] && (
-                        <div className="space-y-3 pt-2 border-t border-border/50">
+                        <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
                           <ol className="text-xs space-y-4 text-muted-foreground list-decimal pl-4">
-                            <li>Visit Google Analytics and create a property.</li>
-                            <li>Look for "Measurement ID" (starts with G-).</li>
-                            <li>Copy and paste it here.</li>
+                            <li>Go to <a href="https://analytics.google.com" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Google Analytics</a> and sign in with your Google account.</li>
+                            <li>Click <strong>"Start measuring"</strong> and enter an account name (e.g. "My Manga Site").</li>
+                            <li>Create a new <strong>Property</strong> — enter your website name and set your timezone and currency.</li>
+                            <li>Under <strong>Data Streams</strong>, click <strong>"Add stream" → "Web"</strong>.</li>
+                            <li>Enter your website URL (e.g. <code className="bg-muted px-1 rounded">https://yourdomain.com</code>) and give it a stream name.</li>
+                            <li>Copy the <strong>Measurement ID</strong> displayed (format: <code className="bg-muted px-1 rounded">G-XXXXXXXXXX</code>).</li>
+                            <li>Paste it into the field above and click <strong>Save</strong>.</li>
                           </ol>
+                          <div className="flex items-start gap-2 p-2 bg-blue-500/10 rounded-lg mt-2">
+                            <Icon icon="ph:info-bold" className="w-3.5 h-3.5 text-blue-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-blue-600 dark:text-blue-400">Data will start appearing in your Analytics dashboard within 24-48 hours after setup. Real-time data should appear almost immediately.</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -802,8 +847,35 @@ export default function AdminPanel() {
                         <Icon icon={googleTutorialOpen['oauth'] ? "ph:caret-up-bold" : "ph:caret-down-bold"} />
                       </button>
                       {googleTutorialOpen['oauth'] && (
-                        <div className="space-y-3 pt-2 border-t border-border/50">
-                          <p className="text-xs text-muted-foreground">Configure Credentials in Google Cloud Console and add your Supabase redirect URI.</p>
+                        <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <ol className="text-xs space-y-4 text-muted-foreground list-decimal pl-4">
+                            <li>Go to the <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Google Cloud Console</a>.</li>
+                            <li>Create a new project (or select an existing one). Give it a name like <strong>"MangaZ Auth"</strong>.</li>
+                            <li>In the left sidebar, navigate to <strong>APIs & Services → OAuth consent screen</strong>.</li>
+                            <li>Configure the consent screen:
+                              <ul className="list-disc pl-4 mt-1 space-y-1">
+                                <li>User Type: <strong>External</strong></li>
+                                <li>App name: Your site name</li>
+                                <li>Support email: Your email</li>
+                                <li>Authorized domains: Add your production domain (e.g. <code className="bg-muted px-1 rounded">yourdomain.com</code>)</li>
+                              </ul>
+                            </li>
+                            <li>Go to <strong>APIs & Services → Credentials</strong> and click <strong>"Create Credentials" → "OAuth client ID"</strong>.</li>
+                            <li>Select <strong>"Web application"</strong> as the Application type.</li>
+                            <li>Under <strong>Authorized redirect URIs</strong>, add your Supabase callback URL:<br />
+                              <code className="bg-muted px-1.5 py-0.5 rounded text-[10px] break-all block mt-1">
+                                https://mqtowxaxwanovvjdktpq.supabase.co/auth/v1/callback
+                              </code>
+                            </li>
+                            <li>Click <strong>Create</strong>. Copy the <strong>Client ID</strong> and <strong>Client Secret</strong> shown.</li>
+                            <li>Go to your <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Supabase Dashboard</a> → <strong>Authentication → Providers → Google</strong>.</li>
+                            <li>Enable the Google provider and paste the <strong>Client ID</strong> and <strong>Client Secret</strong>.</li>
+                            <li>Click <strong>Save</strong> in both the Supabase dashboard and here.</li>
+                          </ol>
+                          <div className="flex items-start gap-2 p-2 bg-indigo-500/10 rounded-lg mt-2">
+                            <Icon icon="ph:info-bold" className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-indigo-600 dark:text-indigo-400">The Client ID/Secret fields here are for reference only. The actual Google OAuth configuration must be set in the <strong>Supabase Dashboard → Authentication → Providers</strong> section for login to work.</p>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -820,15 +892,55 @@ export default function AdminPanel() {
                         </div>
                         <div>
                           <h3 className="font-bold text-lg">Google AdSense</h3>
-                          <p className="text-sm text-muted-foreground">Monetize your site.</p>
+                          <p className="text-sm text-muted-foreground">Monetize your site with display ads.</p>
                         </div>
                       </div>
-                      <Input
-                        value={settingsForm.google_ads_client_id}
-                        onChange={e => setSettingsForm(s => ({ ...s, google_ads_client_id: e.target.value }))}
-                        placeholder="Publisher ID (ca-pub-xxx)"
-                        className="rounded-xl font-mono text-xs h-12"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Publisher ID</label>
+                          <Input
+                            value={settingsForm.google_ads_client_id}
+                            onChange={e => setSettingsForm(s => ({ ...s, google_ads_client_id: e.target.value }))}
+                            placeholder="ca-pub-XXXXXXXXXXXXXXXX"
+                            className="rounded-xl font-mono text-xs h-12 bg-background border-border"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Ad Slot ID</label>
+                          <Input
+                            value={settingsForm.google_ads_slot}
+                            onChange={e => setSettingsForm(s => ({ ...s, google_ads_slot: e.target.value }))}
+                            placeholder="1234567890"
+                            className="rounded-xl font-mono text-xs h-12 bg-background border-border"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/30 border border-border/50 rounded-2xl p-6 space-y-4">
+                      <button onClick={() => toggleTutorial('ads')} className="w-full flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Icon icon="ph:book-open-bold" className="w-5 h-5 text-primary" />
+                          <h4 className="font-bold text-sm uppercase tracking-wider">Setup Tutorial</h4>
+                        </div>
+                        <Icon icon={googleTutorialOpen['ads'] ? "ph:caret-up-bold" : "ph:caret-down-bold"} className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      {googleTutorialOpen['ads'] && (
+                        <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <ol className="text-xs space-y-4 text-muted-foreground list-decimal pl-4">
+                            <li>Go to <a href="https://adsense.google.com" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Google AdSense</a> and sign up with your Google account.</li>
+                            <li>Add your website URL and wait for Google to review and approve your site (this can take 1-14 days).</li>
+                            <li>Once approved, go to <strong>Ads → By ad unit</strong> and create a new <strong>Display ad</strong>.</li>
+                            <li>Copy the <strong>Publisher ID</strong> from your AdSense dashboard (format: <code className="bg-muted px-1 rounded">ca-pub-XXXX</code>). It's in the top-right under your account info.</li>
+                            <li>Copy the <strong>Ad Slot ID</strong> from the ad unit you created (a numeric value like <code className="bg-muted px-1 rounded">1234567890</code>).</li>
+                            <li>Paste both values above and click <strong>Save</strong>.</li>
+                          </ol>
+                          <div className="flex items-start gap-2 p-2 bg-amber-500/10 rounded-lg mt-2">
+                            <Icon icon="ph:warning-bold" className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                            <p className="text-xs text-amber-600 dark:text-amber-400">AdSense requires your site to have original content and comply with Google's policies. Ensure your site has a Privacy Policy page before applying.</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -908,6 +1020,7 @@ export default function AdminPanel() {
                       setEditUserAvatar(u.avatar_url || '');
                       setEditCoinBalance(u.coin_balance ?? 0);
                       setEditTokenBalance(u.token_balance ?? 0);
+                      setEditSubPlanId('');
                       setBlockIp('');
                     }}>
                       <Icon icon="ph:dots-three-outline-bold" className="w-4 h-4" />
@@ -1207,6 +1320,42 @@ export default function AdminPanel() {
               }}>Save Balance</Button>
             </div>
 
+            {/* Grant Subscription */}
+            {premiumSettings.premium_config.enable_subscriptions && (
+              <div className="space-y-2 rounded-xl border border-border p-3">
+                <h4 className="text-sm font-semibold text-purple-400">Grant Subscription</h4>
+                <div className="flex gap-2">
+                  <select 
+                    value={editSubPlanId} 
+                    onChange={e => setEditSubPlanId(e.target.value)}
+                    className="flex-1 bg-background border border-border outline-none rounded-lg text-sm px-3 py-2"
+                  >
+                    <option value="">Select a plan</option>
+                    {subscriptionPlans.map(plan => (
+                      <option key={plan.id} value={plan.id}>{plan.name} ({plan.duration_days} days)</option>
+                    ))}
+                  </select>
+                  <Button size="sm" className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border-0" onClick={async () => {
+                    if (!userActionModal || !editSubPlanId) return;
+                    const plan = subscriptionPlans.find(p => p.id === editSubPlanId);
+                    if (!plan) return;
+                    try {
+                      const { error } = await supabase.rpc('admin_grant_subscription', {
+                        p_target_user_id: userActionModal.id,
+                        p_plan_id: plan.id,
+                        p_duration_days: plan.duration_days,
+                      });
+                      if (error) throw error;
+                      toast.success(`Granted ${plan.name} to ${userActionModal.display_name}!`);
+                      setEditSubPlanId('');
+                    } catch (err: any) {
+                      toast.error(`Failed to grant subscription: ${err.message}`);
+                    }
+                  }}>Grant</Button>
+                </div>
+              </div>
+            )}
+
             {/* Restrict by IP */}
             <div className="space-y-2 rounded-xl border border-border p-3">
               <h4 className="text-sm font-semibold">Restrict by IP</h4>
@@ -1233,7 +1382,8 @@ export default function AdminPanel() {
                   <Button size="sm" variant={userActionModal?.role === 'admin' ? 'secondary' : 'default'} className="w-full gap-2" disabled={userActionModal?.id === user?.id} onClick={async () => {
                     if (!userActionModal) return;
                     try {
-                      await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'admin' }, { onConflict: 'user_id' });
+                      const { error } = await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'admin' }, { onConflict: 'user_id' });
+                      if (error) throw error;
                       toast.success(`${userActionModal.display_name || 'User'} promoted to Admin`);
                       fetchUsers(); setUserActionModal(null);
                     } catch (err: any) { toast.error(`Failed: ${err.message}`); }
@@ -1243,7 +1393,8 @@ export default function AdminPanel() {
                   <Button size="sm" variant={userActionModal?.role === 'moderator' ? 'secondary' : 'outline'} className="w-full gap-2" disabled={userActionModal?.id === user?.id} onClick={async () => {
                     if (!userActionModal) return;
                     try {
-                      await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'moderator' }, { onConflict: 'user_id' });
+                      const { error } = await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'moderator' }, { onConflict: 'user_id' });
+                      if (error) throw error;
                       toast.success(`${userActionModal.display_name || 'User'} assigned Moderator role`);
                       fetchUsers(); setUserActionModal(null);
                     } catch (err: any) { toast.error(`Failed: ${err.message}`); }

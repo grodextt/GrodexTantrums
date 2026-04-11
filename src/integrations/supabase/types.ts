@@ -122,10 +122,13 @@ export type Database = {
           created_by: string | null
           free_release_at: string | null
           id: string
+          is_subscription: boolean | null
           manga_id: string
           number: number
           pages: string[] | null
           premium: boolean | null
+          subscription_free_release_at: string | null
+          subscription_free_release_days: number | null
           title: string | null
         }
         Insert: {
@@ -135,10 +138,13 @@ export type Database = {
           created_by?: string | null
           free_release_at?: string | null
           id?: string
+          is_subscription?: boolean | null
           manga_id: string
           number: number
           pages?: string[] | null
           premium?: boolean | null
+          subscription_free_release_at?: string | null
+          subscription_free_release_days?: number | null
           title?: string | null
         }
         Update: {
@@ -148,10 +154,13 @@ export type Database = {
           created_by?: string | null
           free_release_at?: string | null
           id?: string
+          is_subscription?: boolean | null
           manga_id?: string
           number?: number
           pages?: string[] | null
           premium?: boolean | null
+          subscription_free_release_at?: string | null
+          subscription_free_release_days?: number | null
           title?: string | null
         }
         Relationships: [
@@ -537,6 +546,7 @@ export type Database = {
           consecutive_comment_days: number | null
           created_at: string
           display_name: string | null
+          double_login_rewards: boolean | null
           id: string
           last_comment_at: string | null
           token_balance: number | null
@@ -548,6 +558,7 @@ export type Database = {
           consecutive_comment_days?: number | null
           created_at?: string
           display_name?: string | null
+          double_login_rewards?: boolean | null
           id: string
           last_comment_at?: string | null
           token_balance?: number | null
@@ -559,6 +570,7 @@ export type Database = {
           consecutive_comment_days?: number | null
           created_at?: string
           display_name?: string | null
+          double_login_rewards?: boolean | null
           id?: string
           last_comment_at?: string | null
           token_balance?: number | null
@@ -632,6 +644,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          bonus_coins: number | null
+          created_at: string | null
+          description: string | null
+          duration_days: number
+          id: string
+          is_active: boolean | null
+          name: string
+          price_usd: number
+        }
+        Insert: {
+          bonus_coins?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_usd?: number
+        }
+        Update: {
+          bonus_coins?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_usd?: number
+        }
+        Relationships: []
+      }
       user_checkins: {
         Row: {
           checked_in_at: string
@@ -686,6 +731,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          bonus_coins_awarded: boolean | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          payment_id: string | null
+          payment_method: string | null
+          plan_id: string
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          bonus_coins_awarded?: boolean | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          plan_id: string
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          bonus_coins_awarded?: boolean | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          payment_id?: string | null
+          payment_method?: string | null
+          plan_id?: string
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       chapters_public: {
@@ -695,9 +787,11 @@ export type Database = {
           created_at: string | null
           free_release_at: string | null
           id: string | null
+          is_subscription: boolean | null
           manga_id: string | null
           number: number | null
           premium: boolean | null
+          subscription_free_release_at: string | null
           title: string | null
         }
         Insert: {
@@ -706,9 +800,11 @@ export type Database = {
           created_at?: string | null
           free_release_at?: string | null
           id?: string | null
+          is_subscription?: boolean | null
           manga_id?: string | null
           number?: number | null
           premium?: boolean | null
+          subscription_free_release_at?: string | null
           title?: string | null
         }
         Update: {
@@ -717,9 +813,11 @@ export type Database = {
           created_at?: string | null
           free_release_at?: string | null
           id?: string | null
+          is_subscription?: boolean | null
           manga_id?: string | null
           number?: number | null
           premium?: boolean | null
+          subscription_free_release_at?: string | null
           title?: string | null
         }
         Relationships: [
@@ -756,8 +854,43 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles_public: {
+        Row: {
+          role: Database["public"]["Enums"]["app_role"] | null
+          user_id: string | null
+        }
+        Insert: {
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string | null
+        }
+        Update: {
+          role?: Database["public"]["Enums"]["app_role"] | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_subscriptions_active: {
+        Row: {
+          user_id: string | null
+        }
+        Insert: {
+          user_id?: string | null
+        }
+        Update: {
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      admin_grant_subscription: {
+        Args: {
+          p_duration_days: number
+          p_plan_id: string
+          p_target_user_id: string
+        }
+        Returns: undefined
+      }
       admin_set_user_balance: {
         Args: {
           p_coin_balance: number
@@ -769,6 +902,7 @@ export type Database = {
       can_user_checkin: { Args: { p_user_id: string }; Returns: boolean }
       get_chapter_pages: { Args: { p_chapter_id: string }; Returns: string[] }
       handle_auto_free_chapters: { Args: never; Returns: undefined }
+      has_active_subscription: { Args: { p_user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

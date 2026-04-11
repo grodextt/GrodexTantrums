@@ -45,6 +45,7 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const [chapterNumber, setChapterNumber] = useState("");
   const [chapterTitle, setChapterTitle] = useState("");
   const [isPremium, setIsPremium] = useState(false);
+  const [isSubscription, setIsSubscription] = useState(false);
   const [coinPrice, setCoinPrice] = useState(100);
   const [autoFreeEnabled, setAutoFreeEnabled] = useState(false);
   const [autoFreeDays, setAutoFreeDays] = useState(7);
@@ -74,7 +75,7 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const selectedPremiumIds = [...selectedIds].filter((id) => premiumChapters.some((c) => c.id === id));
 
   const resetForm = () => {
-    setChapterNumber(""); setChapterTitle(""); setIsPremium(false);
+    setChapterNumber(""); setChapterTitle(""); setIsPremium(false); setIsSubscription(false);
     setCoinPrice(100); setAutoFreeEnabled(false); setAutoFreeDays(7); setAutoFreeHours(0);
     setPageFiles(null); setShowAddForm(false); setEditingChapter(null);
   };
@@ -84,6 +85,7 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
     setChapterNumber(chapter.number.toString());
     setChapterTitle(chapter.title || '');
     setIsPremium(chapter.premium || false);
+    setIsSubscription(chapter.is_subscription || false);
     setCoinPrice(chapter.coin_price ?? 100);
     const hasAutoFree = chapter.auto_free_days !== null;
     setAutoFreeEnabled(hasAutoFree);
@@ -92,6 +94,12 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
       const hours = Math.round((chapter.auto_free_days - days) * 24);
       setAutoFreeDays(days);
       setAutoFreeHours(hours);
+    } else if (chapter.is_subscription && chapter.subscription_free_release_days) {
+      setAutoFreeEnabled(true);
+      const subDays = Math.floor(chapter.subscription_free_release_days);
+      const subHours = Math.round((chapter.subscription_free_release_days - subDays) * 24);
+      setAutoFreeDays(subDays);
+      setAutoFreeHours(subHours);
     } else {
       setAutoFreeDays(7);
       setAutoFreeHours(0);
@@ -123,6 +131,7 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
     const files = pageFiles ? Array.from(pageFiles) : [];
 
     const autoFreeDaysValue = isPremium && autoFreeEnabled ? autoFreeDays + (autoFreeHours / 24) : null;
+    const subFreeDays = isSubscription && autoFreeEnabled ? autoFreeDays + (autoFreeHours / 24) : null;
 
     try {
       if (editingChapter) {
@@ -135,6 +144,8 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
             premium: isPremium,
             coin_price: isPremium ? coinPrice : null,
             auto_free_days: autoFreeDaysValue,
+            is_subscription: isSubscription,
+            subscription_free_release_days: subFreeDays,
           },
           pageFiles: files.length > 0 ? files : undefined,
           mangaSlug: manga.slug,
@@ -149,6 +160,8 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
             premium: isPremium,
             coin_price: isPremium ? coinPrice : null,
             auto_free_days: autoFreeDaysValue,
+            is_subscription: isSubscription,
+            subscription_free_release_days: subFreeDays,
           },
           pageFiles: files,
           mangaSlug: manga.slug,
@@ -249,11 +262,22 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                               <div className="flex items-center gap-1 text-muted-foreground"><Icon icon="ph:image-bold" className="h-3.5 w-3.5" />{chapter.pages?.length || 0}</div>
                             </TableCell>
                             <TableCell>
-                              {chapter.premium ? (
-                                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30">Premium</Badge>
-                              ) : (
-                                <Badge variant="secondary" className="text-muted-foreground">Free</Badge>
-                              )}
+                              {(() => {
+                                const isSubExpired = chapter.is_subscription && chapter.subscription_free_release_at && new Date(chapter.subscription_free_release_at).getTime() <= Date.now();
+                                const isPremExpired = chapter.premium && chapter.free_release_at && new Date(chapter.free_release_at).getTime() <= Date.now();
+                                
+                                if (chapter.premium && !isPremExpired) {
+                                  return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30">Premium</Badge>;
+                                } else if (chapter.is_subscription && !isSubExpired) {
+                                  return (
+                                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30">
+                                      <Icon icon="mdi:new-releases" className="w-3 h-3 mr-1" />{settings.subscription_settings?.badge_label || 'Early Access'}
+                                    </Badge>
+                                  );
+                                } else {
+                                  return <Badge variant="secondary" className="text-muted-foreground">Free</Badge>;
+                                }
+                              })()}
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground">
                               {chapter.premium ? `${chapter.coin_price ?? 100} ${currencyName}` : '—'}
@@ -335,8 +359,16 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                 </div>
 
                 <div className="flex items-center justify-between rounded-lg border p-3">
-                  <Label htmlFor="premium">Premium Chapter</Label>
-                  <Switch id="premium" checked={isPremium} onCheckedChange={setIsPremium} />
+                  <Label htmlFor="premium">Premium Chapter (Coins)</Label>
+                  <Switch id="premium" checked={isPremium} onCheckedChange={(v) => { setIsPremium(v); if (v) setIsSubscription(false); }} />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <Label htmlFor="subscription">Subscription Chapter</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Only subscribers can read. Cannot be unlocked with coins.</p>
+                  </div>
+                  <Switch id="subscription" checked={isSubscription} onCheckedChange={(v) => { setIsSubscription(v); if (v) { setIsPremium(false); setAutoFreeEnabled(true); } }} />
                 </div>
 
                 {isPremium && (
@@ -352,6 +384,55 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                     {autoFreeEnabled && (
                       <div className="space-y-3">
                         <Label>Release as free after</Label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              value={autoFreeDays}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setAutoFreeDays(val === '' ? 0 : Math.max(0, parseInt(val) || 0));
+                              }}
+                              min={0}
+                              className="w-20"
+                            />
+                            <span className="text-sm text-muted-foreground">days</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              value={autoFreeHours}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setAutoFreeHours(val === '' ? 0 : Math.min(23, Math.max(0, parseInt(val) || 0)));
+                              }}
+                              min={0}
+                              max={23}
+                              className="w-20"
+                            />
+                            <span className="text-sm text-muted-foreground">hours</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Total: {autoFreeDays} day{autoFreeDays !== 1 ? 's' : ''} {autoFreeHours > 0 ? `${autoFreeHours} hour${autoFreeHours !== 1 ? 's' : ''}` : ''} after chapter release
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {isSubscription && (
+                  <div className="space-y-4 rounded-lg border border-purple-500/20 bg-purple-500/[0.03] p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-purple-400">
+                      <Icon icon="mdi:new-releases" className="w-4 h-4" /> Subscription Chapter Settings
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="sub-auto-free">Auto Free Release</Label>
+                      <Switch id="sub-auto-free" checked={autoFreeEnabled} onCheckedChange={setAutoFreeEnabled} />
+                    </div>
+                    {autoFreeEnabled && (
+                      <div className="space-y-3">
+                        <Label>Becomes free after</Label>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
                             <Input

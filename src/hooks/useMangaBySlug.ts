@@ -29,7 +29,7 @@ export const useMangaChapters = (mangaId: string | undefined) => {
       if (!mangaId) return [];
       const { data, error } = await (supabase
         .from("chapters_public" as any)
-        .select("id, number, title, created_at, manga_id, premium, coin_price, auto_free_days, free_release_at")
+        .select("id, number, title, created_at, manga_id, premium, coin_price, auto_free_days, free_release_at, is_subscription, subscription_free_release_at")
         .eq("manga_id", mangaId)
         .order("number", { ascending: false })) as any;
 

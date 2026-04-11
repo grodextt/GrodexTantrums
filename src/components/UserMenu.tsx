@@ -8,8 +8,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useUserRole } from '@/hooks/useUserRole';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
+import { useHasActiveSubscription } from '@/hooks/useSubscription';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function UserMenu() {
   const { profile, logout, user } = useAuth();
@@ -34,8 +36,16 @@ export default function UserMenu() {
     refetchInterval: 30000,
   });
 
+  const { isSubscriber, subscription } = useHasActiveSubscription();
+
   const coinBalance = balances?.coin_balance ?? 0;
   const tokenBalance = balances?.token_balance ?? 0;
+
+  let daysLeft = 0;
+  if (subscription?.expires_at) {
+    const diff = new Date(subscription.expires_at).getTime() - Date.now();
+    daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -120,6 +130,23 @@ export default function UserMenu() {
             </div>
           )}
 
+          {/* User Type Card */}
+          <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2 flex flex-col justify-center items-center text-center">
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1">User Type</p>
+            {isAdmin ? (
+               <p className="text-[15px] font-black text-rose-500 uppercase tracking-widest drop-shadow-sm">ADMIN user</p>
+            ) : isStaff ? (
+               <p className="text-[15px] font-black text-emerald-500 uppercase tracking-widest drop-shadow-sm">Moderator</p>
+            ) : isSubscriber ? (
+               <div className="flex flex-col items-center">
+                 <p className="text-[15px] font-black text-purple-400 uppercase tracking-widest drop-shadow-sm flex items-center gap-1.5"><Icon icon="mdi:latest" className="w-4 h-4"/> {premiumSettings.subscription_settings.subscription_name} User</p>
+                 <p className="text-xs text-muted-foreground font-semibold mt-0.5">{daysLeft} Days Left</p>
+               </div>
+            ) : (
+               <p className="text-[13px] font-bold text-foreground">Regular user</p>
+            )}
+          </div>
+
           <div className="h-px bg-border/40 my-1.5" />
 
           {/* Menu links */}
@@ -145,6 +172,11 @@ export default function UserMenu() {
                 </Button>
               </Link>
             )}
+            <Link to="/subscribe" onClick={close}>
+              <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-purple-500/10 text-purple-400 text-sm font-medium">
+                <Icon icon="mdi:latest" className="w-4 h-4" /> {premiumSettings?.subscription_settings?.subscription_name || 'Subscribe'}
+              </Button>
+            </Link>
             <Link to="/settings" onClick={close}>
               <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
                 <Icon icon="ph:gear-six-bold" className="w-4 h-4" /> User Settings

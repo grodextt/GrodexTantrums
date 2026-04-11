@@ -104,6 +104,8 @@ function CommentItem({
   const isOwner = currentUserId === comment.user_id;
   const canModerate = isOwner || isAdmin || isStaff;
   const effectiveParentId = topLevelParentId || comment.id;
+  const { settings: premiumSettings } = usePremiumSettings();
+  const subName = premiumSettings?.subscription_settings?.subscription_name || 'Sub';
 
   const handleSaveEdit = () => {
     if (editText.trim() && editText !== comment.text) onEdit(comment.id, editText.trim());
@@ -135,6 +137,16 @@ function CommentItem({
           {comment.is_admin && (
             <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/15 text-primary border border-primary/20">
               <Icon icon="ph:shield-bold" className="w-2.5 h-2.5" /> Admin
+            </span>
+          )}
+          {comment.is_mod && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-500 border border-emerald-500/20">
+              <Icon icon="ph:shield-check-bold" className="w-2.5 h-2.5" /> Mod
+            </span>
+          )}
+          {comment.is_subscriber && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/20 shadow-[0_0_8px_rgba(168,85,247,0.15)]">
+              <Icon icon="mdi:latest" className="w-2.5 h-2.5" /> {subName}
             </span>
           )}
           {comment.is_pinned && (

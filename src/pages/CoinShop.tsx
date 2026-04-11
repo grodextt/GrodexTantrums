@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 const PAYMENT_METHODS = [
   { id: 'stripe', label: 'Card / Stripe', icon: 'ph:credit-card-bold' },
@@ -231,7 +232,7 @@ export default function CoinShop() {
     } else if (paymentMethod === 'usdt') {
       setProcessing(true);
       try {
-        const { data, error } = await supabase.functions.invoke('nowpayments', {
+        const { data, error } = await supabase.functions.invoke('cryptomus-purchase', {
           body: { action: 'create-payment', coins: selectedPkgData.coins, amount: selectedPkgData.price },
         });
         if (error || !data?.payAddress) {
@@ -501,17 +502,44 @@ export default function CoinShop() {
       </div>
 
       <Dialog open={!!usdtPayment} onOpenChange={(open) => !open && setUsdtPayment(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Icon icon="ph:currency-circle-dollar-bold" className="w-5 h-5 text-primary" /> USDT Payment</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-md p-6">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Icon icon="cryptocurrency-color:usdt" className="w-5 h-5" /> USDT Payment</DialogTitle></DialogHeader>
           {usdtPayment && (
-            <div className="space-y-4">
-              <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-                <div><p className="text-xs text-muted-foreground mb-1">Send exactly</p><p className="text-lg font-bold text-foreground">{usdtPayment.payAmount} {usdtPayment.payCurrency?.toUpperCase()}</p></div>
-                <div><p className="text-xs text-muted-foreground mb-1">To this address</p>
-                  <div className="flex items-center gap-2"><code className="text-xs bg-background px-2 py-1 rounded border border-border flex-1 break-all">{usdtPayment.payAddress}</code><Button size="icon" variant="outline" className="shrink-0 h-8 w-8" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAddress); toast.success('Address copied!'); }}><Icon icon="ph:copy-bold" className="w-3.5 h-3.5" /></Button></div>
+            <div className="space-y-6 pt-2">
+              {/* QR Code */}
+              <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm mx-auto max-w-fit">
+                <img 
+                   src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${usdtPayment.payAddress}`} 
+                   alt="Wallet Address QR" 
+                   className="w-40 h-40 object-contain"
+                />
+              </div>
+
+              {/* Amount */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Send exactly</label>
+                <div className="flex gap-2">
+                  <Input readOnly value={`${usdtPayment.payAmount} ${usdtPayment.payCurrency?.toUpperCase()}`} className="font-mono bg-muted/50 rounded-lg h-11 text-lg font-bold text-emerald-600" />
+                  <Button variant="secondary" className="h-11 px-4 shrinks-0" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAmount); toast.success('Amount copied!'); }}>
+                    <Icon icon="ph:copy-bold" className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center">Your balance will update automatically once confirmed.</p>
+
+              {/* Address */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">To this {usdtPayment.network || 'BSC'} address</label>
+                <div className="flex gap-2">
+                  <Input readOnly value={usdtPayment.payAddress} className="font-mono bg-muted/50 rounded-lg h-11 text-xs" />
+                  <Button variant="secondary" className="h-11 px-4 shrinks-0" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAddress); toast.success('Address copied!'); }}>
+                    <Icon icon="ph:copy-bold" className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs font-medium text-blue-500 text-center bg-blue-500/10 p-2.5 rounded-lg flex items-center justify-center gap-2">
+                <Icon icon="ph:spinner-bold" className="w-4 h-4 animate-spin" />
+                Your balance will update automatically.
+              </p>
             </div>
           )}
         </DialogContent>

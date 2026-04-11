@@ -1,88 +1,125 @@
-# MangaZ V1 - Modern Manga Platform 📚
+# MangaZ V1 - Professional Manga & Scanlation Platform 📚
 
-MangaZ is a high-performance, dark-mode-first manga reading platform. It is built as a Single Page Application (SPA) with **React**, **Vite**, and **Tailwind CSS**, and uses **Supabase** as its robust backend infrastructure.
+MangaZ is a next-generation, high-performance manga reading and scanlation management platform. Designed with a "Premium-First" philosophy, it combines a sleek, distraction-free reader with a robust monetization engine and an enterprise-grade admin dashboard.
 
-This "V1" release marks a departure from its original prototype. It has been cleaned of all external meta-tag references and is now optimized for scale, clean deployments, and custom hosting.
+![MangaZ Platform Banner](file:///C:/Users/Dreqi/.gemini/antigravity/brain/f6e40157-3048-460f-a058-2736199c9448/subscribe_page_demo_1775504126638.webp)
 
 ---
 
-## ⚡ Core Features
+## 🌟 Vision & Design
+MangaZ isn't just a reader; it's an ecosystem for scanlation groups and content creators. Built with **React**, **Vite**, and **Tailwind CSS**, it leverages **Supabase** for a serverless yet powerful backend, ensuring lightning-fast performance across any device.
 
-### 📖 For Readers:
-- **Fast Discovery**: A landing page designed for engagement, featuring trending, latest, and categorized manga.
-- **Optimized Reader**: A distraction-free experience with seamless chapter transitions, scroll-to-top, and mobile responsiveness.
-- **Personal Library**: User dashboards to track progress and saved titles (powered by Supabase Auth).
-- **Premium Content**: Integrated "Coin" and "Gem" system for unlocking early-access content.
+- **Mobile Optimized**: A fluid, responsive UI designed for reading on the go.
+- **Micro-Animations**: Subtle hover effects and transitions built with Framer Motion and Lucide icons.
+- **Dark Mode Native**: A curated "High-Contrast Dark" theme that prioritizes reader comfort.
 
-### 🛠️ For Administrators:
-- **Comprehensive Dashboard**: Full control over your library from title creation to chapter uploads.
-- **Multiple Storage Providers**: Support for **Supabase Storage**, **Imgur CDN**, and **Google Cloud/Blogger CDN** for unlimited free image hosting.
-- **Discord Integration**: Automatic publication of new releases to your community's Discord channels.
-- **Monetization**: Ready-to-use coin packages and payment processing.
+---
+
+## 🚀 Key Features
+
+### 📖 Immersive Reading Experience
+- **Advanced Reader Settings**: Toggle between Long Strip, Single Page, and Double Page modes. Includes greyscale mode, dimming controls, and custom strip margins.
+- **Reading Progress**: Automatically tracks your last read chapter and page.
+- **Smart Early Access**: Dynamic badges that automatically transition from "Early Access" to "Free" based on adjustable release timers.
+- **Library Management**: One-click bookmarking with a dedicated user dashboard to track your collection.
+
+### 💰 Monetization & Economy System
+- **Cryptomus Integration**: Fully integrated white-labeled crypto payment gateway. Accept **USDT (BEP-20/BSC)** and other cryptocurrencies with zero-redirect checkout.
+- **Tiered Subscriptions**: Customizable subscription plans (e.g., Weekly, Monthly, Yearly) with custom names, prices, and benefit descriptions.
+- **Coin System**: A virtual currency system for unlocking individual premium chapters. Support for custom currency names and icons.
+- **In-Site Checkout**: Professional payment modals with dynamically generated QR codes and real-time transaction polling.
+
+### 🛡️ Enterprise-Grade Admin Panel
+- **Manga Management**: Effortless title creation, chapter uploads, and metadata editing.
+- **Multi-Cloud Storage**: Integrated support for **Google Cloud (Blogger)**, **Imgur**, and **Supabase Storage** for unlimited horizontal scaling.
+- **User Economy Controls**: Manually grant subscriptions, adjust balances, and manage user roles (Admin, Moderator, Subscriber).
+- **Discord Webhooks**: Automatically notify your community when new chapters are published.
+- **System Logs**: Comprehensive logging for transactions and user activities via Supabase.
+
+---
+
+## 📸 Platform Showcases
+
+### 💳 Seamless Payments
+The platform features a native, white-labeled checkout experience. No more redirecting users to confusing third-party sites—everything stays within MangaZ.
+
+![Cryptomus Checkout Modal](file:///C:/Users/Dreqi/.gemini/antigravity/brain/f6e40157-3048-460f-a058-2736199c9448/media__1775597218430.png)
+
+### 💎 Premium Membership
+Offering tiers of access to your readers has never been easier. The subscription system is fully synced with the UI, including custom badges in comments and the navbar.
+
+![Subscription Page](file:///C:/Users/Dreqi/.gemini/antigravity/brain/f6e40157-3048-460f-a058-2736199c9448/subscribe_page_bottom_1775504175116.png)
 
 ---
 
 ## 🏗️ Technical Stack
 
-- **Frontend**: 
-  - **Framework**: [React 18+](https://reactjs.org/) with [Vite](https://vitejs.dev/)
-  - **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
-  - **State**: [TanStack Query v5](https://tanstack.com/query/latest) (React Query)
-- **Backend / Database**:
-  - **Platform**: [Supabase](https://supabase.com/) (PostgreSQL + Auth + Storage)
-  - **Logic**: [Edge Functions](https://supabase.com/docs/guides/functions) (Deno based)
-- **Deployment**:
-  - **Frontend**: Optimized for [Cloudflare Pages](https://pages.cloudflare.com/) (SPA redirect rules included)
-  - **Backend**: Supabase Edge Functions for global low-latency responses.
+| Component | Technology |
+| :--- | :--- |
+| **Frontend** | React 18, Vite, TypeScript |
+| **Styling** | Tailwind CSS, shadcn/ui |
+| **Backend** | Supabase (Auth, DB, Storage) |
+| **Logic** | Deno-based Edge Functions |
+| **Payments** | Cryptomus API |
+| **Deployment** | Cloudflare Pages (Frontend) |
 
 ---
 
-## 🚀 Installation & Setup
+## 🔧 Installation & Setup
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [npm](https://www.npmjs.com/)
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **Supabase Account**: For database and backend logic.
+- **Cryptomus Account**: For payment processing.
 
-### 🛠️ Local Development
+### 2. Local Setup
+```bash
+# Clone the repository
+git clone https://github.com/akuzenaiarts-cloud/MangaZ.git
+cd MangaZ
 
-1. **Clone the project**:
-   ```bash
-   git clone https://github.com/akuzenaiarts-cloud/MangaZ.git
-   cd MangaZ
-   ```
+# Install dependencies
+npm install
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+# Setup environment variables (.env)
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_PUBLISHABLE_KEY=your_anon_key
 
-3. **Configure Environment**:
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_SUPABASE_URL=your-supabase-url
-   VITE_SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
-   ```
+# Run development server
+npm run dev
+```
 
-4. **Launch Dev Server**:
-   ```bash
-   npm run dev
-   ```
-
----
-
-## 🌐 Deployment to Cloudflare Pages
-
-MangaZ is pre-configured for Cloudflare Pages:
-
-1. **Build Command**: `npm run build`
-2. **Output Directory**: `dist`
-3. **Environment**: Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in the Cloudflare Dashboard.
-4. **SPA Support**: The project includes a `public/_redirects` file that automatically handles client-side routing on Cloudflare.
+### 3. Edge Functions Deployment
+To enable payments and background tasks, deploy the edge functions:
+```bash
+supabase functions deploy create-subscription-order
+supabase functions deploy subscription-webhook
+supabase functions deploy cryptomus-purchase
+supabase functions deploy cryptomus-webhook
+```
 
 ---
 
-## 🎓 Support & Project History
+## 🛠️ Optimization & Production
+MangaZ is pre-configured for **Cloudflare Pages**. It includes a specialized `_redirects` file to handle SPA routing and is optimized for low-latency delivery.
 
-This version was moved from a prototype stage to a fully production-ready "V1" by removing all legacy development metadata and optimizing for standalone repository ownership.
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+
+---
+
+## 📜 Updates & Changelog
+
+### Version 1.1 (Current)
+- **NEW**: Migrated from NOWPayments to Cryptomus for superior crypto integration.
+- **NEW**: In-site Checkout Modal with QR Code generation.
+- **NEW**: Admin Manual Subscription Granting through User Management.
+- **FIX**: Dynamic Early Access badge logic for automatic chapter release.
+- **IMPROVEMENT**: Synced subscriber and moderator badges in the comments section.
+
+---
+
+## ⚖️ License
+This project is licensed under the MIT License. Portions of the UI are powered by [shadcn/ui](https://ui.shadcn.com/).
 
 **Repository ownership**: [akuzenaiarts-cloud/MangaZ](https://github.com/akuzenaiarts-cloud/MangaZ)

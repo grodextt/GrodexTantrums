@@ -9,12 +9,14 @@ import { useRecordReading } from '@/hooks/useReadingHistory';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChapterUnlock, useUserCoinBalance, useUserTokenBalance } from '@/hooks/useChapterUnlock';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
+import { useHasActiveSubscription } from '@/hooks/useSubscription';
 import { toast as sonnerToast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useTrackView } from '@/hooks/useTrackView';
 import { useReaderSettings } from '@/hooks/useReaderSettings';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useUserRole } from '@/hooks/useUserRole';
 
 // Reader Components
 import ReaderHeader from '@/components/reader/ReaderHeader';
@@ -54,6 +56,59 @@ function CountdownTimer({ targetDate, onExpired }: { targetDate: string; onExpir
   return <span>{timeLeft}</span>;
 }
 
+function DetailedCountdown({ targetDate, onExpired }: { targetDate: string; onExpired?: () => void }) {
+  const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, s: number } | null>(null);
+
+  useEffect(() => {
+    let expired = false;
+    const update = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const diff = target - now;
+      if (diff <= 0) {
+        setTimeLeft(null);
+        if (!expired) { 
+          expired = true; 
+          onExpired?.(); 
+        }
+        return;
+      }
+      setTimeLeft({
+        d: Math.floor(diff / 86400000),
+        h: Math.floor((diff % 86400000) / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000)
+      });
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  if (!timeLeft) return <span className="text-xl font-bold text-gray-400">Available now!</span>;
+
+  let totalHours = timeLeft.d * 24 + timeLeft.h;
+
+  return (
+    <div className="flex items-center gap-4 sm:gap-6 justify-center">
+      <div className="flex flex-col items-center min-w-[50px]">
+        <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>{String(totalHours).padStart(2, '0')}</span>
+        <span className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 sm:mt-2">Hours</span>
+      </div>
+      <span className="text-2xl sm:text-4xl font-black text-purple-500/30 mb-5 sm:mb-6">:</span>
+      <div className="flex flex-col items-center min-w-[50px]">
+        <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>{String(timeLeft.m).padStart(2, '0')}</span>
+        <span className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 sm:mt-2">Min</span>
+      </div>
+      <span className="text-2xl sm:text-4xl font-black text-purple-500/30 mb-5 sm:mb-6">:</span>
+      <div className="flex flex-col items-center min-w-[50px]">
+        <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter" style={{ fontVariantNumeric: 'tabular-nums' }}>{String(timeLeft.s).padStart(2, '0')}</span>
+        <span className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1 sm:mt-2">Sec</span>
+      </div>
+    </div>
+  );
+}
+
 export default function ChapterReader() {
   const { slug, chapterId } = useParams<{ slug: string; chapterId: string }>();
   const navigate = useNavigate();
@@ -69,7 +124,8 @@ export default function ChapterReader() {
   
   const { toast } = useToast();
   const recordReading = useRecordReading();
-  const { user } = useAuth();
+  const { user, setShowLoginModal } = useAuth();
+  const { isAdmin, isMod } = useUserRole();
   useTrackView(manga?.id);
   
   const readerSettings = useReaderSettings();
@@ -79,6 +135,7 @@ export default function ChapterReader() {
   const currencyIconUrl = premiumSettings?.coin_system?.currency_icon_url;
   const coinBalance = useUserCoinBalance();
   const tokenBalance = useUserTokenBalance();
+  const { isSubscriber } = useHasActiveSubscription();
 
   const { settings: siteSettings } = useSiteSettings();
   const discordUrl = siteSettings?.general?.discord_url || 'https://discord.gg';
@@ -102,12 +159,15 @@ export default function ChapterReader() {
   const currentChapter = chapters.find(c => c.number === chapterNum);
   const { isUnlocked, unlock, unlockWithToken } = useChapterUnlock(currentChapter?.id);
 
-  const { data: securePages = [] } = useQuery({
+  const { data: securePages = [], isLoading: pagesLoading, isError: pagesError } = useQuery({
     queryKey: ['chapter-pages', currentChapter?.id, isUnlocked],
     queryFn: async () => {
       if (!currentChapter?.id) return [];
       const { data, error } = await supabase.rpc('get_chapter_pages', { p_chapter_id: currentChapter.id });
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching pages:', error);
+        throw error;
+      }
       return (data as string[]) || [];
     },
     enabled: !!currentChapter?.id,
@@ -179,9 +239,16 @@ export default function ChapterReader() {
     );
   }
 
+
   const isFreeRelease = currentChapter.free_release_at && new Date(currentChapter.free_release_at).getTime() <= Date.now();
+  const isSubFreeRelease = currentChapter.subscription_free_release_at && new Date(currentChapter.subscription_free_release_at).getTime() <= Date.now();
   const isLocked = !!currentChapter.premium && !isFreeRelease && pageUrls.length === 0 && !isUnlocked && (premiumSettings?.premium_config?.enable_coins ?? true);
+  const isSubLocked = !!currentChapter.is_subscription && !isSubFreeRelease && !isSubscriber && pageUrls.length === 0;
+  const showAdminBypassBanner = !!currentChapter.is_subscription && !isSubFreeRelease && !isSubscriber && pageUrls.length > 0 && (isAdmin || isMod);
+  
   const coinPrice = currentChapter.coin_price ?? 100;
+  const subName = premiumSettings?.subscription_settings?.subscription_name || 'Subscription';
+  const subBadge = premiumSettings?.subscription_settings?.badge_label || 'Early Access';
 
   const CurrencyIcon = ({ className }: { className?: string }) =>
     currencyIconUrl ? (
@@ -233,7 +300,69 @@ export default function ChapterReader() {
 
       {/* Main Content Area */}
       <main className="w-full">
-        {isLocked ? (
+        {showAdminBypassBanner && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 text-center py-2 px-4 shadow-sm animate-in slide-in-from-top fade-in relative z-40">
+            <p className="text-amber-500 text-sm font-semibold flex items-center justify-center gap-2">
+              <Icon icon="ph:shield-warning-bold" className="w-4 h-4" />
+              Admin Bypass Active: This chapter is Early Access and locked for normal users, but you have access because you are an admin.
+            </p>
+          </div>
+        )}
+
+        {isSubLocked ? (
+          <div className="max-w-xl mx-auto py-12 px-6">
+            <div className="bg-[#101217] border border-white/5 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+              <div className="flex gap-5 sm:gap-6 items-start">
+                <img src={manga.cover_url} alt="" className="w-20 sm:w-24 h-28 sm:h-32 object-cover rounded-xl shadow-lg shrink-0" />
+                <div className="flex flex-col gap-2 pt-1 min-w-0">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 w-fit border border-purple-500/20 shrink-0">
+                    <Icon icon="ph:lock-key-fill" className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">{subBadge}</span>
+                  </div>
+                  <h1 className="text-lg sm:text-xl font-bold text-white leading-tight line-clamp-2">{manga.title}</h1>
+                  <p className="text-sm font-medium text-purple-400 truncate">
+                    Chapter {chapterNum} <span className="text-gray-600 mx-1">·</span> <span className="text-gray-400">"{currentChapter.title}"</span>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mt-8 space-y-6">
+                <p className="text-sm text-gray-300 leading-relaxed font-medium">
+                  This chapter is available early for {subName} members. It will become free for all readers soon.
+                </p>
+
+                {currentChapter.subscription_free_release_at && (
+                  <div className="bg-[#16181d] rounded-2xl p-6 flex flex-col items-center border border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl -mr-16 -mt-16" />
+                    <p className="text-xs text-gray-400 font-medium tracking-wide mb-5">Becomes free for everyone in</p>
+                    <DetailedCountdown targetDate={currentChapter.subscription_free_release_at} onExpired={() => window.location.reload()} />
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {user ? (
+                    <button
+                      onClick={() => navigate('/subscribe')}
+                      className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-amber-950 font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Icon icon="ph:star-fill" className="w-5 h-5" />
+                      Upgrade to {subName}
+                    </button>
+                  ) : (
+                    <Button onClick={() => setShowLoginModal(true)} variant="outline" className="w-full h-14 rounded-2xl text-base font-bold bg-purple-500/10 border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-all flex justify-center items-center gap-2">
+                      <Icon icon="ph:sign-in-bold" className="w-5 h-5" />
+                      Sign in to Upgrade
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="pt-2 text-center">
+                  <Link to={`/manga/${manga.slug}`} className="text-xs text-gray-500 hover:text-white transition-colors font-medium">Back to Chapter List</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : isLocked ? (
           <div className="max-w-2xl mx-auto py-20 px-6">
             <div className="bg-[#1a1d26] border border-white/5 rounded-3xl p-8 sm:p-12 text-center shadow-2xl space-y-8">
               <div className="w-24 h-24 rounded-3xl bg-amber-500/10 flex items-center justify-center mx-auto ring-1 ring-amber-500/20">
@@ -282,17 +411,27 @@ export default function ChapterReader() {
               <Link to={`/manga/${manga.slug}`} className="block text-sm text-gray-500 hover:text-white transition-colors">Back to Chapter List</Link>
             </div>
           </div>
+        ) : pagesLoading ? (
+          <div className="flex justify-center items-center py-32">
+             <Icon icon="ph:spinner-bold" className="w-8 h-8 animate-spin text-primary" />
+          </div>
         ) : (
           <div className={`mx-auto flex flex-col items-center ${settings.displayMode === 'longstrip' ? '' : 'min-h-[80vh] justify-center'}`}
                style={{ gap: `${settings.stripMargin}px`, maxWidth: settings.fitMode === 'width' ? '900px' : settings.fitMode === 'height' ? '60vh' : 'none' }}>
             
-            {settings.displayMode === 'longstrip' ? (
+            {pageUrls.length === 0 ? (
+              <div className="py-20 text-center text-muted-foreground">
+                <p>No pages found for this chapter.</p>
+                {pagesError && <p className="text-red-400 mt-2">There was an error loading the pages.</p>}
+              </div>
+            ) : settings.displayMode === 'longstrip' ? (
               pageUrls.map((url, i) => (
                 <img
                   key={i}
                   src={url}
                   alt={`Page ${i + 1}`}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
                   className="w-full h-auto shadow-2xl"
                   style={{ 
                     maxWidth: settings.imageSettings.limitMaxWidth ? '800px' : 'none',
@@ -305,6 +444,7 @@ export default function ChapterReader() {
                 <img
                   src={pageUrls[currentPage]}
                   alt={`Page ${currentPage + 1}`}
+                  referrerPolicy="no-referrer"
                   className="max-h-[85vh] w-auto shadow-2xl rounded-lg"
                   onClick={() => settings.readingDirection === 'ltr' ? (currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)) : (currentPage > 0 && setCurrentPage(currentPage - 1))}
                 />
@@ -318,8 +458,8 @@ export default function ChapterReader() {
               /* Double page mode */
               <div className="flex flex-col items-center gap-8 py-10">
                 <div className="flex gap-1 justify-center max-w-[95vw]">
-                  <img src={pageUrls[currentPage]} className="max-h-[80vh] w-auto shadow-xl rounded-l-lg" />
-                  {currentPage + 1 < totalPages && <img src={pageUrls[currentPage + 1]} className="max-h-[80vh] w-auto shadow-xl rounded-r-lg" />}
+                  <img src={pageUrls[currentPage]} referrerPolicy="no-referrer" className="max-h-[80vh] w-auto shadow-xl rounded-l-lg" />
+                  {currentPage + 1 < totalPages && <img src={pageUrls[currentPage + 1]} referrerPolicy="no-referrer" className="max-h-[80vh] w-auto shadow-xl rounded-r-lg" />}
                 </div>
                 <div className="flex items-center gap-4">
                   <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(0, p - 2))} disabled={currentPage === 0}>Prev</Button>
@@ -333,7 +473,7 @@ export default function ChapterReader() {
       </main>
 
       {/* Reader Nav & Comments Footer */}
-      {!isLocked && (
+      {!isLocked && !isSubLocked && (
         <div className="max-w-[1000px] mx-auto py-12 px-4 space-y-8">
           {/* Bottom chapter nav */}
           <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 shadow-md">

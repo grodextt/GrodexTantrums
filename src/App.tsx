@@ -25,6 +25,9 @@ const CoinShop = lazy(() => import("./pages/CoinShop"));
 const UserSettings = lazy(() => import("./pages/UserSettings"));
 const DMCA = lazy(() => import("./pages/DMCA"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const Subscribe = lazy(() => import("./pages/Subscribe"));
+const SubscribeCheckout = lazy(() => import("./pages/SubscribeCheckout"));
+const SubscribeSuccess = lazy(() => import("./pages/SubscribeSuccess"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -68,6 +71,9 @@ const AppLayout = () => {
             <Route path="/settings" element={<UserSettings />} />
             <Route path="/dmca" element={<DMCA />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/subscribe" element={<Subscribe />} />
+            <Route path="/subscribe/checkout/:planId" element={<SubscribeCheckout />} />
+            <Route path="/subscribe/success" element={<SubscribeSuccess />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
