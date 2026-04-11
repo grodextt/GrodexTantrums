@@ -2,7 +2,7 @@
 
 MangaZ is a next-generation, high-performance manga reading and scanlation management platform. Designed with a "Premium-First" philosophy, it combines a sleek, distraction-free reader with a robust monetization engine and an enterprise-grade admin dashboard.
 
-![MangaZ Platform Banner](file:///C:/Users/Dreqi/.gemini/antigravity/brain/f6e40157-3048-460f-a058-2736199c9448/subscribe_page_demo_1775504126638.webp)
+![MangaZ Platform Banner]( public/assets/images/banner.webp)
 
 ---
 
@@ -43,12 +43,12 @@ MangaZ isn't just a reader; it's an ecosystem for scanlation groups and content 
 ### 💳 Seamless Payments
 The platform features a native, white-labeled checkout experience. No more redirecting users to confusing third-party sites—everything stays within MangaZ.
 
-![Cryptomus Checkout Modal](file:///C:/Users/Dreqi/.gemini/antigravity/brain/f6e40157-3048-460f-a058-2736199c9448/media__1775597218430.png)
+![Cryptomus Checkout Modal](public/assets/images/checkout.png)
 
 ### 💎 Premium Membership
 Offering tiers of access to your readers has never been easier. The subscription system is fully synced with the UI, including custom badges in comments and the navbar.
 
-![Subscription Page](file:///C:/Users/Dreqi/.gemini/antigravity/brain/f6e40157-3048-460f-a058-2736199c9448/subscribe_page_bottom_1775504175116.png)
+![Subscription Page](public/assets/images/subscription.png)
 
 ---
 
@@ -120,6 +120,6 @@ MangaZ is pre-configured for **Cloudflare Pages**. It includes a specialized `_r
 ---
 
 ## ⚖️ License
-This project is licensed under the MIT License. Portions of the UI are powered by [shadcn/ui](https://ui.shadcn.com/).
+© 2026. All Rights Reserved. This software is proprietary and confidential. You may not copy, modify, distribute, sell, or lease any part of it. 
 
 **Repository ownership**: [akuzenaiarts-cloud/MangaZ](https://github.com/akuzenaiarts-cloud/MangaZ)
