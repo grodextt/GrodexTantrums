@@ -279,7 +279,36 @@ export default function PremiumContent() {
 
       {/* ─── GENERAL TAB ─── */}
       {subTab === 'general' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 rounded-2xl p-6 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 scale-150">
+               <Icon icon="ph:crown-bold" className="w-24 h-24 text-primary" />
+             </div>
+             <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+               <Icon icon="ph:sparkle-bold" className="w-5 h-5 text-primary" />
+               Premium System Checklist
+             </h3>
+             <ul className="space-y-2 text-sm text-muted-foreground relative z-10">
+               <li className="flex items-center gap-2">
+                 <Icon icon="ph:check-circle-fill" className="w-4 h-4 text-emerald-500" />
+                 <span><strong>Enable Systems:</strong> Turn on Coins for per-chapter sales and Subscriptions for VIP access.</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <Icon icon="ph:check-circle-fill" className="w-4 h-4 text-emerald-500" />
+                 <span><strong>Configure Payments:</strong> Set up Stripe (Cards), PayPal, or Cryptomus (USDT).</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <Icon icon="ph:check-circle-fill" className="w-4 h-4 text-emerald-500" />
+                 <span><strong>Currency Branding:</strong> Customize the coin name and icon in the "Coin System" tab.</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <Icon icon="ph:check-circle-fill" className="w-4 h-4 text-emerald-500" />
+                 <span><strong>Assign Premium Manga:</strong> Mark specific series or chapters as "Premium" in the Manga list.</span>
+               </li>
+             </ul>
+          </div>
+
+          <div className="space-y-4">
           {/* Premium Features toggles */}
           <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
             <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:crown-bold" className="w-4 h-4" /> Premium Features</h3>
@@ -452,16 +481,57 @@ export default function PremiumContent() {
                   </p>
                 </div>
 
-                <TutorialToggle open={usdtTutorialOpen} onToggle={() => setUsdtTutorialOpen(!usdtTutorialOpen)} label="How to set up Cryptomus" />
+                <TutorialToggle open={usdtTutorialOpen} onToggle={() => setUsdtTutorialOpen(!usdtTutorialOpen)} label="Detailed Cryptomus Setup Guide" />
                 {usdtTutorialOpen && (
-                  <div className="bg-muted/30 rounded-xl p-4 space-y-2 text-sm text-muted-foreground border border-border/40">
-                    <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Setup Guide — Cryptomus</p>
-                    <ol className="list-decimal list-inside space-y-1.5 text-xs">
-                      <li>Go to <a href="https://cryptomus.com" target="_blank" rel="noopener" className="text-primary underline">cryptomus.com</a> and sign up.</li>
-                      <li>Create a new Merchant project and complete reactivation.</li>
-                      <li>In your merchant settings, navigate to <strong>API & Integration</strong>.</li>
-                      <li>Copy your <strong>Merchant ID</strong> and <strong>Payment Key</strong>.</li>
-                    </ol>
+                  <div className="bg-muted/30 rounded-xl p-5 space-y-4 text-sm text-muted-foreground border border-border/40 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                       <p className="font-bold text-foreground flex items-center gap-2">
+                         <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">1</span>
+                         Merchant Account Setup
+                       </p>
+                       <ul className="list-disc list-inside pl-7 space-y-1 text-xs">
+                         <li>Register at <a href="https://cryptomus.com" target="_blank" rel="noopener" className="text-primary underline">cryptomus.com</a>.</li>
+                         <li>Create a <strong>"Merchant"</strong> account (not individual).</li>
+                         <li>Create a new <strong>Project</strong> for your website. You will need to provide your website URL.</li>
+                         <li>Wait for <strong>Moderation</strong> (usually 1-12 hours). API keys won't work for real payments until approved.</li>
+                       </ul>
+                    </div>
+
+                    <div className="space-y-2">
+                       <p className="font-bold text-foreground flex items-center gap-2">
+                         <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">2</span>
+                         Get API Credentials
+                       </p>
+                       <ul className="list-disc list-inside pl-7 space-y-1 text-xs">
+                         <li>Inside your project dashboard, go to <strong>Settings -> API & Integration</strong>.</li>
+                         <li>Copy the <strong>Merchant ID</strong> and paste it above.</li>
+                         <li>Create a <strong>Payment API Key</strong> (it might be called "IPN Secret" or "Key"). Copy and paste it into the "Payment API Key" field.</li>
+                       </ul>
+                    </div>
+
+                    <div className="space-y-2">
+                       <p className="font-bold text-foreground flex items-center gap-2">
+                         <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">3</span>
+                         Configure Webhook (CRITICAL)
+                       </p>
+                       <p className="text-[11px] pl-7 leading-relaxed">
+                         To automate coins delivery, you <strong>MUST</strong> set the Success Webhook URL in the Cryptomus dashboard:
+                       </p>
+                       <div className="ml-7 p-2.5 bg-background border border-border rounded-lg font-mono text-[10px] break-all select-all">
+                         [YOUR_SUPABASE_URL]/functions/v1/cryptomus-webhook
+                       </div>
+                       <p className="text-[10px] pl-7 text-amber-500 font-medium italic">
+                         * Replace [YOUR_SUPABASE_URL] with your projects API URL (found in Settings -> API).
+                       </p>
+                    </div>
+
+                    <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl flex gap-3">
+                      <Icon icon="ph:check-circle-bold" className="w-4 h-4 text-emerald-500 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Supported Currencies</p>
+                        <p className="text-[10px] text-emerald-600/80">Users can pay with USDT (TRC-20, ERC-20, BEP-20), BTC, ETH, and many other cryptocurrencies. Cryptomus converts them for you.</p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

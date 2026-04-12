@@ -220,7 +220,38 @@ export default function SubscriptionSystemTab({ settings, updatePremiumSettings 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* ─── OVERVIEW & STRATEGY ─── */}
+      <div className="bg-gradient-to-br from-amber-500/10 via-background to-background border border-amber-500/20 rounded-2xl p-6 relative overflow-hidden">
+         <div className="absolute top-0 right-0 p-4 opacity-10 -rotate-12 scale-150">
+           <Icon icon="ph:crown-fill" className="w-24 h-24 text-amber-500" />
+         </div>
+         <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
+           <Icon icon="ph:sketch-logo-bold" className="w-5 h-5 text-amber-500" />
+           Subscription Strategy
+         </h3>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+           <div className="space-y-2">
+             <p className="text-xs font-bold text-foreground flex items-center gap-2">
+               <Icon icon="ph:lightning-bold" className="text-amber-500" />
+               The "Early Access" Model
+             </p>
+             <p className="text-[11px] text-muted-foreground leading-relaxed">
+               Most successful sites lock new chapters for <strong>7-14 days</strong> under a Subscription. After that, they become <strong>Coins-only</strong> for another period, then finally <strong>Free</strong>. This maximizes revenue from eager fans.
+             </p>
+           </div>
+           <div className="space-y-2">
+             <p className="text-xs font-bold text-foreground flex items-center gap-2">
+               <Icon icon="ph:gift-bold" className="text-emerald-500" />
+               Retention Tip
+             </p>
+             <p className="text-[11px] text-muted-foreground leading-relaxed">
+               Add <strong>Bonus Coins</strong> to your subscription plans. This gives users immediate value and encourages them to spend those coins on library series they haven't finished yet.
+             </p>
+           </div>
+         </div>
+      </div>
+
       {/* ─── SECTION A: Subscription Identity ─── */}
       <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
         <div>
@@ -441,16 +472,54 @@ export default function SubscriptionSystemTab({ settings, updatePremiumSettings 
                 <label className="text-sm font-medium mb-1 block">Cryptomus Payment Key</label>
                 <Input type="password" value={subCryptomusPaymentKey} onChange={e => setSubCryptomusPaymentKey(e.target.value)} className="rounded-xl bg-background font-mono text-xs" placeholder="Payment Key" />
               </div>
-              <TutorialToggle open={usdtTutOpen} onToggle={() => setUsdtTutOpen(!usdtTutOpen)} label="How to set up Cryptomus" />
+              <TutorialToggle open={usdtTutOpen} onToggle={() => setUsdtTutOpen(!usdtTutOpen)} label="Detailed Cryptomus Setup Guide" />
               {usdtTutOpen && (
-                <div className="bg-muted/30 rounded-xl p-4 space-y-2 text-sm text-muted-foreground border border-border/40">
-                  <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Setup Guide</p>
-                  <ol className="list-decimal list-inside space-y-1.5 text-xs">
-                    <li>Go to <a href="https://cryptomus.com" target="_blank" rel="noopener" className="text-primary underline">cryptomus.com</a> and sign up for a merchant account.</li>
-                    <li>Create a new Merchant project and pass the moderation.</li>
-                    <li>Inside your API settings, copy your <strong>Merchant ID</strong> and <strong>Payment Key</strong>.</li>
-                    <li>Paste both values above and click <strong>Save</strong>.</li>
-                  </ol>
+                <div className="bg-muted/30 rounded-xl p-5 space-y-4 text-sm text-muted-foreground border border-border/40 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-2">
+                     <p className="font-bold text-foreground flex items-center gap-2">
+                       <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">1</span>
+                       Separate Project Recommended
+                     </p>
+                     <p className="text-[11px] pl-7 leading-relaxed">
+                       We recommend creating a <strong>Separate Project</strong> in your Cryptomus dashboard for subscriptions. This keeps your bookkeeping clean and allows you to use a different webhook URL.
+                     </p>
+                  </div>
+
+                  <div className="space-y-2">
+                     <p className="font-bold text-foreground flex items-center gap-2">
+                       <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">2</span>
+                       Get API Credentials
+                     </p>
+                     <ul className="list-disc list-inside pl-7 space-y-1 text-xs">
+                       <li>Go to <strong>Settings -> API & Integration</strong> in your Cryptomus project.</li>
+                       <li>Copy the <strong>Merchant ID</strong> and <strong>Payment Key</strong> (IPN Secret).</li>
+                       <li>Paste them into the fields above.</li>
+                     </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                     <p className="font-bold text-foreground flex items-center gap-2">
+                       <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px]">3</span>
+                       Configure Webhook (CRITICAL)
+                     </p>
+                     <p className="text-[11px] pl-7 leading-relaxed">
+                       Set the Success Webhook URL in your Cryptomus dashboard to:
+                     </p>
+                     <div className="ml-7 p-2.5 bg-background border border-border rounded-lg font-mono text-[10px] break-all select-all">
+                       [YOUR_SUPABASE_URL]/functions/v1/subscription-webhook
+                     </div>
+                     <p className="text-[10px] pl-7 text-amber-500 font-medium italic mt-1">
+                       * Note: This uses "subscription-webhook" instead of "cryptomus-webhook".
+                     </p>
+                  </div>
+
+                  <div className="p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl flex gap-3">
+                    <Icon icon="ph:info-bold" className="w-4 h-4 text-blue-500 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Recurring Payments?</p>
+                      <p className="text-[10px] text-blue-600/80 leading-relaxed">Cryptomus for USDT is <strong>one-time payment</strong>. To "renew", users simply buy the plan again. The system will extend their expiry date automatically.</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
