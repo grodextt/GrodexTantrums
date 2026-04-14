@@ -27,11 +27,12 @@ export interface UploadSettings {
 }
 
 export interface StorageSettings {
-  provider: 'supabase' | 'blogger';
+  provider: 'supabase' | 'blogger' | 'discord';
   blogger_blog_id?: string;
   blogger_api_key?: string;
   blogger_client_id?: string;
   blogger_client_secret?: string;
+  discord_webhook_url?: string;
 }
 
 export interface ThemeSettings {

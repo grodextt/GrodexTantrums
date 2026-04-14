@@ -1,16 +1,15 @@
 import { Hono } from "https://deno.land/x/hono@v4.3.11/mod.ts";
+import { cors } from "https://deno.land/x/hono@v4.3.11/middleware.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 const app = new Hono();
 
-app.options('/*', (c) => new Response(null, { headers: corsHeaders }));
+app.use('/*', cors({
+  origin: '*',
+  allowHeaders: ['authorization', 'x-client-info', 'apikey', 'content-type'],
+}));
 
-app.post('/', async (c) => {
+app.post('/*', async (c) => {
   try {
     // We expect multipart/form-data as sent by useManga.ts
     const formData = await c.req.formData();
@@ -72,14 +71,21 @@ app.post('/', async (c) => {
 
     // Step 2: Upload to Blogger
     // We upload by creating a post with the image.
-    // Convert file to base64
+    // Convert file to base64 robustly
     const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    const binary = String.fromCharCode(...bytes);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // We must use a robust chunked base64 encoder to avoid "call stack size exceeded" on large files
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, uint8Array.subarray(i, i + chunkSize));
+    }
     const base64Image = btoa(binary);
 
     const postTitle = `img_${path.replace(/\//g, '_')}_${Date.now()}`;
-    const htmlContent = `<img src="data:${file.type};base64,${base64Image}" />`;
+    // Blogger usually prefers single quotes or specific formatting to trigger auto-hosting
+    const htmlContent = `<img src="data:${file.type || 'image/jpeg'};base64,${base64Image}" />`;
 
     console.log(`Uploading to Blogger blog ${blogId}...`);
     const bloggerResponse = await fetch(
@@ -94,7 +100,7 @@ app.post('/', async (c) => {
           kind: 'blogger#post',
           title: postTitle,
           content: htmlContent,
-          status: 'LIVE'
+          status: 'LIVE' // Must be LIVE for Base64 host resolution to trigger
         }),
       }
     );
@@ -108,19 +114,20 @@ app.post('/', async (c) => {
     const postData = await bloggerResponse.json();
 
     // Step 3: Extract hosted image URL
+    // Blogger natively converts base64 inline images to 1.bp.blogspot.com URLs
     const content = postData.content || '';
-    const imgMatch = content.match(/src="(https:\/\/[^"]+blogspot[^"]+)"/);
+    const imgMatch = content.match(/src=["'](https:\/\/[^"']+blogspot[^"']+)["']/);
     
     let imageUrl = '';
     if (imgMatch) {
       imageUrl = imgMatch[1];
     } else {
-      const anyImgMatch = content.match(/src="(https:\/\/[^"]+)"/);
+      const anyImgMatch = content.match(/src=["'](https:\/\/[^"']+)["']/);
       if (anyImgMatch) imageUrl = anyImgMatch[1];
     }
 
     if (!imageUrl) {
-      return c.json({ error: 'Blogger upload succeeded but no image URL was found in the response' }, 500);
+      return c.json({ error: 'Blogger upload succeeded but no image URL was found. Base64 conversion likely failed.', content: postData.content }, 500);
     }
 
     // Optional: Delete the post now that the image is hosted on Google's CDN

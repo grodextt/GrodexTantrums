@@ -25,13 +25,15 @@ const uploadFile = async (
   
   const storage = storageRow?.value as any;
   const isBlogger = storage?.provider === 'blogger';
+  const isDiscord = storage?.provider === 'discord';
 
-  if (isBlogger) {
+  if (isBlogger || isDiscord) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('path', path);
 
-    const { data: uploadData, error: uploadError } = await supabase.functions.invoke('blogger-upload', {
+    const functionName = isBlogger ? 'blogger-upload' : 'discord-upload';
+    const { data: uploadData, error: uploadError } = await supabase.functions.invoke(functionName, {
       body: formData,
     });
 

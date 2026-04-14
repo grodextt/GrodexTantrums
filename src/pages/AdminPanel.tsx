@@ -118,7 +118,7 @@ export default function AdminPanel() {
     blogger_api_key: '',
     blogger_client_id: '',
     blogger_client_secret: '',
-    imgur_client_id: '',
+    discord_webhook_url: '',
     theme_preset: 'Obsidian',
     custom_primary_hsl: '',
     google_site_verification: '',
@@ -170,7 +170,7 @@ export default function AdminPanel() {
         blogger_api_key: adminData.storage?.blogger_api_key || '',
         blogger_client_id: adminData.storage?.blogger_client_id || '',
         blogger_client_secret: adminData.storage?.blogger_client_secret || '',
-        imgur_client_id: adminData.storage?.imgur_client_id || '',
+        discord_webhook_url: adminData.storage?.discord_webhook_url || '',
         theme_preset: adminData.theme?.preset || settings?.theme?.preset || 'Obsidian',
         custom_primary_hsl: adminData.theme?.custom_primary_hsl || settings?.theme?.custom_primary_hsl || '',
         google_site_verification: adminData.seo?.google_site_verification || settings?.seo?.google_site_verification || '',
@@ -360,7 +360,7 @@ export default function AdminPanel() {
             blogger_api_key: settingsForm.blogger_api_key,
             blogger_client_id: settingsForm.blogger_client_id,
             blogger_client_secret: settingsForm.blogger_client_secret,
-            imgur_client_id: settingsForm.imgur_client_id,
+            discord_webhook_url: settingsForm.discord_webhook_url,
           },
         }),
         updateSettings.mutateAsync({
@@ -415,7 +415,7 @@ export default function AdminPanel() {
         blogger_api_key: settings.storage?.blogger_api_key || '',
         blogger_client_id: settings.storage?.blogger_client_id || '',
         blogger_client_secret: settings.storage?.blogger_client_secret || '',
-        imgur_client_id: (settings.storage as any)?.imgur_client_id || '',
+        discord_webhook_url: settings.storage?.discord_webhook_url || '',
         theme_preset: settings.theme?.preset || 'Obsidian',
         custom_primary_hsl: settings.theme?.custom_primary_hsl || '',
         google_site_verification: settings.seo?.google_site_verification || '',
@@ -884,7 +884,7 @@ export default function AdminPanel() {
                             <li>Select <strong>"Web application"</strong> as the Application type.</li>
                             <li>Under <strong>Authorized redirect URIs</strong>, add your Supabase callback URL:<br />
                               <code className="bg-muted px-1.5 py-0.5 rounded text-[10px] break-all block mt-1">
-                                https://mqtowxaxwanovvjdktpq.supabase.co/auth/v1/callback
+                                https://esbwpbkjiigftefoiqoy.supabase.co/auth/v1/callback
                               </code>
                             </li>
                             <li>Click <strong>Create</strong>. Copy the <strong>Client ID</strong> and <strong>Client Secret</strong> shown.</li>

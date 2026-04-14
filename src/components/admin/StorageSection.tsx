@@ -10,14 +10,14 @@ interface StorageSectionProps {
     blogger_api_key: string;
     blogger_client_id: string;
     blogger_client_secret: string;
-    imgur_client_id: string;
+    discord_webhook_url: string;
   };
   setSettingsForm: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export function StorageSection({ settingsForm, setSettingsForm }: StorageSectionProps) {
   const [bloggerTutorialOpen, setBloggerTutorialOpen] = useState(false);
-  const [imgurTutorialOpen, setImgurTutorialOpen] = useState(false);
+  const [discordTutorialOpen, setDiscordTutorialOpen] = useState(false);
   const [storageUsage, setStorageUsage] = useState<{ total_mb: number; total_files: number } | null>(null);
   const [storageLoading, setStorageLoading] = useState(false);
 
@@ -48,12 +48,12 @@ export function StorageSection({ settingsForm, setSettingsForm }: StorageSection
       bg: 'bg-primary/10',
     },
     {
-      id: 'imgur',
-      label: 'Imgur CDN',
-      desc: 'Free • Fastly CDN • 32 MB/image',
-      icon: 'ph:image-bold',
-      color: 'text-green-500',
-      bg: 'bg-green-500/10',
+      id: 'discord',
+      label: 'Discord Storage',
+      desc: 'Free • Fast • 25MB/file',
+      icon: 'ph:discord-logo-bold',
+      color: 'text-blue-500',
+      bg: 'bg-blue-500/10',
     },
     {
       id: 'blogger',
@@ -106,15 +106,15 @@ export function StorageSection({ settingsForm, setSettingsForm }: StorageSection
           )}
         </div>
 
-        {/* Imgur Status */}
+        {/* Discord Status */}
         <div className="bg-card border border-border rounded-2xl p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-              <Icon icon="ph:image-bold" className="w-5 h-5 text-green-500" />
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <Icon icon="ph:discord-logo-bold" className="w-5 h-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Imgur CDN</p>
-              <p className="text-[10px] text-muted-foreground">Fastly global CDN</p>
+              <p className="text-sm font-semibold">Discord Storage</p>
+              <p className="text-[10px] text-muted-foreground">CDN via Webhooks</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -123,11 +123,11 @@ export function StorageSection({ settingsForm, setSettingsForm }: StorageSection
               <span className="text-xs text-muted-foreground">unlimited</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {settingsForm.storage_provider === 'imgur' && settingsForm.imgur_client_id
+              {settingsForm.storage_provider === 'discord' && settingsForm.discord_webhook_url
                 ? '✓ Configured & Active'
                 : 'Not configured'}
             </p>
-            <p className="text-[10px] text-muted-foreground">32 MB per image limit</p>
+            <p className="text-[10px] text-muted-foreground">Free & Extremely Fast</p>
           </div>
         </div>
 
@@ -161,7 +161,7 @@ export function StorageSection({ settingsForm, setSettingsForm }: StorageSection
       <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
         <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:database-bold" className="w-4 h-4" /> Storage Provider</h3>
         <p className="text-sm text-muted-foreground">
-          Choose where to store uploaded manga chapter images. <strong>Imgur CDN</strong> is recommended — free, fast, and works immediately.
+          Choose where to store uploaded manga chapter images. <strong>Discord Storage</strong> is recommended — free, fast, and stays available forever.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -189,57 +189,49 @@ export function StorageSection({ settingsForm, setSettingsForm }: StorageSection
           ))}
         </div>
 
-        {/* ── Imgur Config ── */}
-        {settingsForm.storage_provider === 'imgur' && (
+        {/* ── Discord Config ── */}
+        {settingsForm.storage_provider === 'discord' && (
           <div className="space-y-3 pt-3 border-t border-border">
-            <div className="flex items-start gap-2 p-3 bg-green-500/5 border border-green-500/20 rounded-xl">
-              <Icon icon="ph:check-circle-bold" className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-              <p className="text-xs text-green-600 dark:text-green-400">
-                <strong>Recommended:</strong> Imgur is completely free, requires no complex OAuth setup, and serves images via Fastly's global CDN.
+            <div className="flex items-start gap-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+              <Icon icon="ph:info-bold" className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                <strong>Recommended:</strong> Discord is perfect for manga pages. It is free, unlimited, and very fast. Create a private server and a webhook to start.
               </p>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Imgur Client ID</label>
+              <label className="text-sm font-medium mb-1 block">Discord Webhook URL</label>
               <Input
-                value={settingsForm.imgur_client_id}
-                onChange={e => setSettingsForm((s: any) => ({ ...s, imgur_client_id: e.target.value }))}
+                value={settingsForm.discord_webhook_url}
+                onChange={e => setSettingsForm((s: any) => ({ ...s, discord_webhook_url: e.target.value }))}
                 className="rounded-xl bg-background font-mono text-xs"
-                placeholder="e.g. a1b2c3d4e5f6789"
+                placeholder="https://discord.com/api/webhooks/..."
               />
-              <p className="text-xs text-muted-foreground mt-1">Only the Client ID is needed (not a secret or OAuth). Anonymous uploads are allowed.</p>
             </div>
 
-            {/* Imgur Tutorial */}
+            {/* Discord Tutorial */}
             <button
-              onClick={() => setImgurTutorialOpen(!imgurTutorialOpen)}
+              onClick={() => setDiscordTutorialOpen(!discordTutorialOpen)}
               className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium mt-1 transition-colors"
             >
               <Icon icon="ph:book-open-bold" className="w-3.5 h-3.5" />
-              How to get your Imgur Client ID (2 minutes)
-              {imgurTutorialOpen ? <Icon icon="ph:caret-up-bold" className="w-3 h-3" /> : <Icon icon="ph:caret-down-bold" className="w-3 h-3" />}
+              How to create a Discord Webhook (30 seconds)
+              {discordTutorialOpen ? <Icon icon="ph:caret-up-bold" className="w-3 h-3" /> : <Icon icon="ph:caret-down-bold" className="w-3 h-3" />}
             </button>
 
-            {imgurTutorialOpen && (
+            {discordTutorialOpen && (
               <div className="bg-muted/30 rounded-xl p-4 space-y-3 text-sm text-muted-foreground border border-border/40">
-                <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Imgur CDN Setup Guide</p>
+                <p className="font-semibold text-foreground text-xs uppercase tracking-wider">Discord Storage Setup</p>
                 <ol className="list-decimal list-inside space-y-2 text-xs pl-2">
-                  <li>Go to <a href="https://imgur.com/account/register" target="_blank" rel="noopener" className="text-primary underline">imgur.com/account/register</a> and create a free account (or log in)</li>
-                  <li>Go to <a href="https://api.imgur.com/oauth2/addclient" target="_blank" rel="noopener" className="text-primary underline">api.imgur.com/oauth2/addclient</a></li>
-                  <li>Fill in the form:
-                    <ul className="list-disc list-inside pl-4 mt-1 space-y-1">
-                      <li><strong>Application name:</strong> MangaZ CDN (or anything)</li>
-                      <li><strong>Authorization type:</strong> Select <strong>"Anonymous usage without user authorization"</strong></li>
-                      <li><strong>Email:</strong> Your email</li>
-                    </ul>
-                  </li>
-                  <li>Click <strong>Submit</strong></li>
-                  <li>Copy the <strong>Client ID</strong> shown on the next page and paste it above</li>
+                  <li>Create a new Discord Server (or use an existing one)</li>
+                  <li>Go to <strong>Server Settings</strong> {'>'} <strong>Integrations</strong> {'>'} <strong>Webhooks</strong></li>
+                  <li>Click <strong>New Webhook</strong>, then click <strong>Copy Webhook URL</strong></li>
+                  <li>Paste the URL into the field above and save settings.</li>
                 </ol>
                 <div className="flex items-start gap-2 p-2.5 bg-primary/5 rounded-lg">
                   <Icon icon="ph:info-bold" className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                   <p className="text-xs">
-                    <strong>How it works:</strong> Images are uploaded directly to Imgur using anonymous upload. Each image gets a permanent URL served by Fastly CDN (e.g. <code className="bg-muted px-1 rounded">https://i.imgur.com/abcd1234.jpg</code>).
+                    <strong>Note:</strong> Make sure the channel where the webhook is located is private if you want to keep your library assets hidden from others, although image links will still work on the site.
                   </p>
                 </div>
               </div>
