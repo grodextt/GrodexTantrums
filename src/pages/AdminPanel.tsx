@@ -1402,7 +1402,7 @@ export default function AdminPanel() {
                   <Button size="sm" variant={userActionModal?.role === 'admin' ? 'secondary' : 'default'} className="w-full gap-2" disabled={userActionModal?.id === user?.id} onClick={async () => {
                     if (!userActionModal) return;
                     try {
-                      const { error } = await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'admin' }, { onConflict: 'user_id' });
+                      const { error } = await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'admin' });
                       if (error) throw error;
                       toast.success(`${userActionModal.display_name || 'User'} promoted to Admin`);
                       fetchUsers(); setUserActionModal(null);
@@ -1413,7 +1413,7 @@ export default function AdminPanel() {
                   <Button size="sm" variant={userActionModal?.role === 'moderator' ? 'secondary' : 'outline'} className="w-full gap-2" disabled={userActionModal?.id === user?.id} onClick={async () => {
                     if (!userActionModal) return;
                     try {
-                      const { error } = await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'moderator' }, { onConflict: 'user_id' });
+                      const { error } = await supabase.from('user_roles').upsert({ user_id: userActionModal.id, role: 'moderator' });
                       if (error) throw error;
                       toast.success(`${userActionModal.display_name || 'User'} assigned Moderator role`);
                       fetchUsers(); setUserActionModal(null);
