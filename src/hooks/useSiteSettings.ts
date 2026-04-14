@@ -108,13 +108,21 @@ export const useSiteSettings = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate and refetch immediately to ensure UI reflects database state
       queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+      queryClient.refetchQueries({ queryKey: ['site-settings'] });
     },
   });
+
+  const refreshSettings = () => {
+    queryClient.invalidateQueries({ queryKey: ['site-settings'] });
+    queryClient.refetchQueries({ queryKey: ['site-settings'] });
+  };
 
   return {
     settings: settings || DEFAULT_SETTINGS,
     isLoading,
     updateSettings,
+    refreshSettings,
   };
 };

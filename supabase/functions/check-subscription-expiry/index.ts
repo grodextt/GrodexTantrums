@@ -57,4 +57,12 @@ serve(async (req) => {
     }), {
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {\n    console.error(err);\n    return new Response(JSON.stringify({ error: (err as Error).message }), {\n      status: 500,\n      headers: { \"Content-Type\": \"application/json\" },\n    });\n  }\n});
+  } catch (err) {
+    console.error(err);
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});
+

@@ -132,45 +132,65 @@ export default function AdminPanel() {
     google_ads_slot: '',
   });
 
-  // Load settings into form
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // Load settings into form exactly once on load
+  // We fetch directly from Supabase so admins receive protected keys like 'storage'
   useEffect(() => {
-    if (settings) {
+    const loadSettings = async () => {
+      if (settingsLoaded) return;
+      
+      const { data, error } = await supabase.from('site_settings').select('key, value');
+      if (error || !data) {
+        toast.error('Failed to load admin settings');
+        return;
+      }
+      
+      const adminData: any = {};
+      data.forEach(r => { adminData[r.key] = r.value; });
+      
       setSettingsForm(prev => ({
         ...prev,
-        site_name: settings.general.site_name,
-        site_description: settings.general.site_description,
-        footer_text: settings.general.footer_text,
-        footer_tagline: settings.general.footer_tagline,
-        logo_url: settings.general.logo_url || '',
-        discord_url: settings.general.discord_url || '',
-        donation_name: settings.general.donation_name || 'Patreon',
-        donation_url: settings.general.donation_url || '',
-        donation_icon_url: settings.general.donation_icon_url || '',
-        announcement_message: settings.announcements.message,
-        announcement_button_text: settings.announcements.button_text || '',
-        announcement_button_url: settings.announcements.button_url || '',
-        max_size_mb: settings.upload.max_size_mb,
-        allowed_formats: settings.upload.allowed_formats,
-        storage_provider: settings.storage?.provider || 'supabase',
-        blogger_blog_id: settings.storage?.blogger_blog_id || '',
-        blogger_api_key: settings.storage?.blogger_api_key || '',
-        blogger_client_id: settings.storage?.blogger_client_id || '',
-        blogger_client_secret: settings.storage?.blogger_client_secret || '',
-        imgur_client_id: (settings.storage as any)?.imgur_client_id || '',
-        theme_preset: settings.theme?.preset || 'Obsidian',
-        custom_primary_hsl: settings.theme?.custom_primary_hsl || '',
-        google_site_verification: settings.seo?.google_site_verification || '',
-        google_analytics_id: settings.seo?.google_analytics_id || '',
-        robots_meta: settings.seo?.robots_meta || 'index, follow',
-        sitemap_url: settings.seo?.sitemap_url || '',
-        extra_head_scripts: settings.seo?.extra_head_scripts || '',
-        google_client_id: (settings.seo as any)?.google_client_id || '',
-        google_client_secret: (settings.seo as any)?.google_client_secret || '',
-        google_ads_client_id: (settings.seo as any)?.google_ads_client_id || '',
-        google_ads_slot: (settings.seo as any)?.google_ads_slot || '',
+        site_name: adminData.general?.site_name || settings?.general?.site_name || '',
+        site_description: adminData.general?.site_description || settings?.general?.site_description || '',
+        footer_text: adminData.general?.footer_text || settings?.general?.footer_text || '',
+        footer_tagline: adminData.general?.footer_tagline || settings?.general?.footer_tagline || '',
+        logo_url: adminData.general?.logo_url || settings?.general?.logo_url || '',
+        discord_url: adminData.general?.discord_url || settings?.general?.discord_url || '',
+        donation_name: adminData.general?.donation_name || settings?.general?.donation_name || 'Patreon',
+        donation_url: adminData.general?.donation_url || settings?.general?.donation_url || '',
+        donation_icon_url: adminData.general?.donation_icon_url || settings?.general?.donation_icon_url || '',
+        announcement_message: adminData.announcements?.message || settings?.announcements?.message || '',
+        announcement_button_text: adminData.announcements?.button_text || settings?.announcements?.button_text || '',
+        announcement_button_url: adminData.announcements?.button_url || settings?.announcements?.button_url || '',
+        max_size_mb: adminData.upload?.max_size_mb || settings?.upload?.max_size_mb || 10,
+        allowed_formats: adminData.upload?.allowed_formats || settings?.upload?.allowed_formats || 'png, jpg, webp',
+        storage_provider: adminData.storage?.provider || settings?.storage?.provider || 'supabase',
+        blogger_blog_id: adminData.storage?.blogger_blog_id || '',
+        blogger_api_key: adminData.storage?.blogger_api_key || '',
+        blogger_client_id: adminData.storage?.blogger_client_id || '',
+        blogger_client_secret: adminData.storage?.blogger_client_secret || '',
+        imgur_client_id: adminData.storage?.imgur_client_id || '',
+        theme_preset: adminData.theme?.preset || settings?.theme?.preset || 'Obsidian',
+        custom_primary_hsl: adminData.theme?.custom_primary_hsl || settings?.theme?.custom_primary_hsl || '',
+        google_site_verification: adminData.seo?.google_site_verification || settings?.seo?.google_site_verification || '',
+        google_analytics_id: adminData.seo?.google_analytics_id || settings?.seo?.google_analytics_id || '',
+        robots_meta: adminData.seo?.robots_meta || settings?.seo?.robots_meta || 'index, follow',
+        sitemap_url: adminData.seo?.sitemap_url || settings?.seo?.sitemap_url || '',
+        extra_head_scripts: adminData.seo?.extra_head_scripts || settings?.seo?.extra_head_scripts || '',
+        google_client_id: adminData.seo?.google_client_id || '',
+        google_client_secret: adminData.seo?.google_client_secret || '',
+        google_ads_client_id: adminData.seo?.google_ads_client_id || '',
+        google_ads_slot: adminData.seo?.google_ads_slot || '',
       }));
+      setSettingsLoaded(true);
+    };
+    
+    // settings provides a reactive trigger to ensure we only load once initial auth checking is done
+    if (settings && !settingsLoaded) {
+      loadSettings();
     }
-  }, [settings]);
+  }, [settings, settingsLoaded]);
 
   useEffect(() => {
     if (!loading && !isStaff) navigate('/');

@@ -199,12 +199,12 @@ CREATE POLICY "Anyone can read active subscription plans" ON public.subscription
 DROP POLICY IF EXISTS "Admins can manage subscriptions" ON public.user_subscriptions;
 CREATE POLICY "Admins can manage subscriptions" ON public.user_subscriptions
   FOR ALL TO public
-  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'::app_role)));
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'::app_role));
 
 DROP POLICY IF EXISTS "Admins can read all subscriptions" ON public.user_subscriptions;
 CREATE POLICY "Admins can read all subscriptions" ON public.user_subscriptions
   FOR SELECT TO public
-  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'::app_role)));
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'::app_role));
 
 DROP POLICY IF EXISTS "Users can create own pending subscriptions" ON public.user_subscriptions;
 CREATE POLICY "Users can create own pending subscriptions" ON public.user_subscriptions

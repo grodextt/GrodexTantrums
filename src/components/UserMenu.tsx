@@ -172,11 +172,13 @@ export default function UserMenu() {
                 </Button>
               </Link>
             )}
-            <Link to="/subscribe" onClick={close}>
-              <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-purple-500/10 text-purple-400 text-sm font-medium">
-                <Icon icon="mdi:latest" className="w-4 h-4" /> {premiumSettings?.subscription_settings?.subscription_name || 'Subscribe'}
-              </Button>
-            </Link>
+            {premiumSettings.premium_config.enable_subscriptions && (
+              <Link to="/subscribe" onClick={close}>
+                <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-purple-500/10 text-purple-400 text-sm font-medium">
+                  <Icon icon="mdi:latest" className="w-4 h-4" /> {premiumSettings?.subscription_settings?.subscription_name || 'Subscribe'}
+                </Button>
+              </Link>
+            )}
             <Link to="/settings" onClick={close}>
               <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
                 <Icon icon="ph:gear-six-bold" className="w-4 h-4" /> User Settings

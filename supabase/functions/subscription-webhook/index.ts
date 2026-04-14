@@ -85,4 +85,40 @@ serve(async (req) => {
         return new Response("Already processed");
       }
 
-      const endsAt = new Date();\n      endsAt.setDate(endsAt.getDate() + (plan.duration_days || 30));\n\n      const { error: insertError } = await supabase\n        .from(\"user_subscriptions\")\n        .insert({\n          user_id: userId,\n          plan_id: planId,\n          status: \"active\",\n          starts_at: new Date().toISOString(),\n          ends_at: endsAt.toISOString(),\n          payment_id: uuid,\n          payment_provider: \"cryptomus\",\n        });\n\n      if (insertError) {\n        console.error(\"Failed to insert subscription\", insertError);\n        return new Response(\"Error updating database\", { status: 500 });\n      }\n\n      // Grant bonus coins\n      if (plan.bonus_coins > 0) {\n        await supabase.rpc('increment_coins', { \n          user_id: userId, \n          amount: plan.bonus_coins \n        });\n      }\n    }\n\n    return new Response(\"OK\", { status: 200 });\n\n  } catch (err) {\n    console.error(\"Webhook error:\", err);\n    return new Response((err as Error).message, { status: 500 });\n  }\n});
+      const endsAt = new Date();
+      endsAt.setDate(endsAt.getDate() + (plan.duration_days || 30));
+
+      const { error: insertError } = await supabase
+        .from("user_subscriptions")
+        .insert({
+          user_id: userId,
+          plan_id: planId,
+          status: "active",
+          starts_at: new Date().toISOString(),
+          ends_at: endsAt.toISOString(),
+          payment_id: uuid,
+          payment_provider: "cryptomus",
+        });
+
+      if (insertError) {
+        console.error("Failed to insert subscription", insertError);
+        return new Response("Error updating database", { status: 500 });
+      }
+
+      // Grant bonus coins
+      if (plan.bonus_coins > 0) {
+        await supabase.rpc('increment_coins', { 
+          user_id: userId, 
+          amount: plan.bonus_coins 
+        });
+      }
+    }
+
+    return new Response("OK", { status: 200 });
+
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return new Response((err as Error).message, { status: 500 });
+  }
+});
+

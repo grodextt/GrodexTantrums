@@ -92,4 +92,83 @@ serve(async (req) => {
 
     const captureRes = await fetch(`${paypalBase}/v2/checkout/orders/${orderId}/capture`, {
       method: "POST",
-      headers: {\n        Authorization: `Bearer ${accessToken}`,\n        \"Content-Type\": \"application/json\",\n      },\n    });\n    const captureData = await captureRes.json();\n\n    if (captureData.status !== \"COMPLETED\") {\n      return json({ error: \"Payment not completed\", status: captureData.status }, 400);\n    }\n\n    const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id;\n    if (!customId) return json({ error: \"Missing order metadata\" }, 400);\n\n    const [orderUserId, orderPlanId] = customId.split(\"_\");\n\n    if (orderUserId !== user.id || orderPlanId !== planId) {\n      return json({ error: \"Invalid custom_id format or mismatch\" }, 400);\n    }\n\n    // Fetch plan\n    const { data: plan } = await supabase\n      .from(\"subscription_plans\")\n      .select(\"*\")\n      .eq(\"id\", planId)\n      .single();\n\n    if (!plan) return json({ error: \"Plan not found\" }, 404);\n\n    // Create user_subscription\n    const now = new Date();\n    const expiresAt = new Date(now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000);\n\n    await supabase.from(\"user_subscriptions\").insert({\n      user_id: user.id,\n      plan_id: planId,\n      started_at: now.toISOString(),\n      expires_at: expiresAt.toISOString(),\n      payment_method: \"paypal\",\n      payment_id: orderId,\n      status: \"active\",\n      bonus_coins_awarded: bonusCoinsEnabled ? plan.bonus_coins : 0,\n    });\n\n    // Credit coins\n    const { data: profile } = await supabase\n      .from(\"profiles\")\n      .select(\"coin_balance\")\n      .eq(\"id\", user.id)\n      .single();\n\n    let updates: any = {};\n    if (bonusCoinsEnabled && plan.bonus_coins > 0) {\n      updates.coin_balance = (profile?.coin_balance ?? 0) + plan.bonus_coins;\n    }\n    \n    if (doubleLoginRewards) {\n      updates.double_login_rewards = true;\n    }\n\n    if (Object.keys(updates).length > 0) {\n      await supabase\n        .from(\"profiles\")\n        .update(updates)\n        .eq(\"id\", user.id);\n    }\n\n    // Mark as processed\n    await supabase.from(\"site_settings\").insert({\n      key: processKey,\n      value: { processed: true, user_id: user.id, plan_id: planId },\n    });\n\n    return json({ success: true });\n  } catch (err) {\n    console.error(err);\n    return json({ error: (err as Error).message }, 500);\n  }\n});
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    const captureData = await captureRes.json();
+
+    if (captureData.status !== "COMPLETED") {
+      return json({ error: "Payment not completed", status: captureData.status }, 400);
+    }
+
+    const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.custom_id;
+    if (!customId) return json({ error: "Missing order metadata" }, 400);
+
+    const [orderUserId, orderPlanId] = customId.split("_");
+
+    if (orderUserId !== user.id || orderPlanId !== planId) {
+      return json({ error: "Invalid custom_id format or mismatch" }, 400);
+    }
+
+    // Fetch plan
+    const { data: plan } = await supabase
+      .from("subscription_plans")
+      .select("*")
+      .eq("id", planId)
+      .single();
+
+    if (!plan) return json({ error: "Plan not found" }, 404);
+
+    // Create user_subscription
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000);
+
+    await supabase.from("user_subscriptions").insert({
+      user_id: user.id,
+      plan_id: planId,
+      started_at: now.toISOString(),
+      expires_at: expiresAt.toISOString(),
+      payment_method: "paypal",
+      payment_id: orderId,
+      status: "active",
+      bonus_coins_awarded: bonusCoinsEnabled ? plan.bonus_coins : 0,
+    });
+
+    // Credit coins
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("coin_balance")
+      .eq("id", user.id)
+      .single();
+
+    let updates: any = {};
+    if (bonusCoinsEnabled && plan.bonus_coins > 0) {
+      updates.coin_balance = (profile?.coin_balance ?? 0) + plan.bonus_coins;
+    }
+    
+    if (doubleLoginRewards) {
+      updates.double_login_rewards = true;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", user.id);
+    }
+
+    // Mark as processed
+    await supabase.from("site_settings").insert({
+      key: processKey,
+      value: { processed: true, user_id: user.id, plan_id: planId },
+    });
+
+    return json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return json({ error: (err as Error).message }, 500);
+  }
+});
+

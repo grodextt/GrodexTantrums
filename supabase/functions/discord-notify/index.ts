@@ -94,7 +94,8 @@ Deno.serve(async (req) => {
 
     // Build the notification message from template
     const template = discordSettings.notification_template || 
-      "New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}\nRead now: {chapter_url}";
+      `New chapter released: {manga_title} - Chapter {chapter_number}: {chapter_title}
+Read now: {chapter_url}`;
     
     const messageContent = template
       .replace(/{manga_title}/g, manga.title)
@@ -164,3 +165,4 @@ Deno.serve(async (req) => {
     });
   }
 });
+

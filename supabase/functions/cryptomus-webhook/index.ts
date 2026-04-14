@@ -76,4 +76,9 @@ serve(async (req) => {
 
     return new Response("OK", { status: 200 });
 
-  } catch (err) {\n    console.error(\"Webhook error:\", err);\n    return new Response((err as Error).message, { status: 500 });\n  }\n});
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return new Response((err as Error).message, { status: 500 });
+  }
+});
+

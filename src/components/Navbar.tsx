@@ -33,7 +33,7 @@ export default function Navbar() {
   type NavLink = { path: string; label: string; icon: string; highlight?: boolean };
   const NAV_LINKS: NavLink[] = [
     ...BASE_NAV_LINKS,
-    ...(isAuthenticated ? [{ path: '/subscribe', label: subName, icon: 'mdi:latest', highlight: true }] : [])
+    ...(isAuthenticated && premiumSettings.premium_config.enable_subscriptions ? [{ path: '/subscribe', label: subName, icon: 'mdi:latest', highlight: true }] : [])
   ];
 
   const siteName = settings.general.site_name || '';

@@ -147,4 +147,8 @@ serve(async (req) => {
     });
 
     return json({ success: true, coins_added: orderCoins });
-  } catch (err) {\n    return json({ error: (err as Error).message }, 500);\n  }\n});
+  } catch (err) {
+    return json({ error: (err as Error).message }, 500);
+  }
+});
+

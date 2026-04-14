@@ -97,4 +97,108 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "http://localhost:5173";
     const returnUrl = `${origin}/subscribe/success`;
 
-    if (method === "paypal") {\n      const { paypalClientId, paypalClientSecret, paypalIsSandbox } = creds;\n      if (!paypalClientId || !paypalClientSecret) {\n        return json({ error: "PayPal subscription credentials not configured." }, 400);\n      }\n\n      const paypalBase = paypalIsSandbox ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";\n      const accessToken = await getAccessToken(paypalClientId, paypalClientSecret, paypalBase);\n      if (!accessToken) return json({ error: "Failed to authenticate with PayPal" }, 500);\n\n      const usdValue = Number(plan.price_usd).toFixed(2);\n      const purchaseUnit: any = {\n        amount: { currency_code: "USD", value: usdValue },\n        custom_id: `${user.id}_${plan.id}`,\n      };\n\n      const orderRes = await fetch(`${paypalBase}/v2/checkout/orders`, {\n        method: \"POST\",\n        headers: {\n          Authorization: `Bearer ${accessToken}`,\n          \"Content-Type\": \"application/json\",\n        },\n        body: JSON.stringify({\n          intent: \"CAPTURE\",\n          purchase_units: [purchaseUnit],\n          application_context: {\n            brand_name: \"Subscription\",\n            landing_page: \"LOGIN\",\n            user_action: \"PAY_NOW\",\n            shipping_preference: \"NO_SHIPPING\",\n            return_url: returnUrl,\n            cancel_url: `${origin}/subscribe`,\n          },\n        }),\n      });\n      const orderData = await orderRes.json();\n\n      if (orderData.id) {\n        const approveLink = orderData.links.find((l: any) => l.rel === \"approve\")?.href;\n        return json({ orderId: orderData.id, approveUrl: approveLink });\n      }\n      return json({ error: \"Failed to create PayPal order\", details: orderData }, 500);\n    }\n\n    if (method === \"usdt\") {\n       const { cryptomusMerchantId, cryptomusPaymentKey } = creds;\n       if (!cryptomusMerchantId || !cryptomusPaymentKey) {\n         return json({ error: \"Cryptomus USDT credentials not configured.\" }, 400);\n       }\n\n       const usdValue = Number(plan.price_usd).toFixed(2);\n       const orderId = `${user.id}_${plan.id}_${Date.now()}`;\n       const webhookUrl = `${supabaseUrl}/functions/v1/subscription-webhook`;\n\n       const reqBody = {\n         amount: usdValue.toString(),\n         currency: \"USD\",\n         order_id: orderId,\n         network: \"BSC\",\n         to_currency: \"USDT\",\n         url_callback: webhookUrl,\n         url_return: `${returnUrl}?method=usdt`,\n         is_payment_multiple: false,\n         lifetime: \"3600\",\n       };\n\n       console.log(\"CRYPTOMUS REQUEST BODY\", reqBody);\n       const signature = generateCryptomusSignature(reqBody, cryptomusPaymentKey);\n\n       const paymentRes = await fetch(`${CRYPTOMUS_API}/payment`, {\n         method: \"POST\",\n         headers: {\n           \"merchant\": cryptomusMerchantId,\n           \"sign\": signature,\n           \"Content-Type\": \"application/json\",\n         },\n         body: JSON.stringify(reqBody),\n       });\n       \n       const paymentData = await paymentRes.json();\n       console.log(\"CRYPTOMUS RESPONSE\", paymentData);\n\n       if (paymentData.state === 0 && paymentData.result) {\n         return json({\n            payAddress: paymentData.result.address,\n            payAmount: paymentData.result.payer_amount,\n            payCurrency: paymentData.result.payer_currency,\n            invoiceUrl: paymentData.result.url,\n            orderId: paymentData.result.order_id,\n            uuid: paymentData.result.uuid,\n            network: paymentData.result.network\n         });\n       }\n\n       return json({ error: \"Failed to create Cryptomus payment\", details: paymentData }, 400);\n    }\n    \n    return json({ error: \"Unsupported method\" }, 400);\n\n  } catch (err) {\n    console.error(\"Function error:\", err);\n    return json({ error: (err as Error).message }, 500);\n  }\n});
+    if (method === "paypal") {
+      const { paypalClientId, paypalClientSecret, paypalIsSandbox } = creds;
+      if (!paypalClientId || !paypalClientSecret) {
+        return json({ error: "PayPal subscription credentials not configured." }, 400);
+      }
+
+      const paypalBase = paypalIsSandbox ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
+      const accessToken = await getAccessToken(paypalClientId, paypalClientSecret, paypalBase);
+      if (!accessToken) return json({ error: "Failed to authenticate with PayPal" }, 500);
+
+      const usdValue = Number(plan.price_usd).toFixed(2);
+      const purchaseUnit: any = {
+        amount: { currency_code: "USD", value: usdValue },
+        custom_id: `${user.id}_${plan.id}`,
+      };
+
+      const orderRes = await fetch(`${paypalBase}/v2/checkout/orders`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          intent: "CAPTURE",
+          purchase_units: [purchaseUnit],
+          application_context: {
+            brand_name: "Subscription",
+            landing_page: "LOGIN",
+            user_action: "PAY_NOW",
+            shipping_preference: "NO_SHIPPING",
+            return_url: returnUrl,
+            cancel_url: `${origin}/subscribe`,
+          },
+        }),
+      });
+      const orderData = await orderRes.json();
+
+      if (orderData.id) {
+        const approveLink = orderData.links.find((l: any) => l.rel === "approve")?.href;
+        return json({ orderId: orderData.id, approveUrl: approveLink });
+      }
+      return json({ error: "Failed to create PayPal order", details: orderData }, 500);
+    }
+
+    if (method === "usdt") {
+       const { cryptomusMerchantId, cryptomusPaymentKey } = creds;
+       if (!cryptomusMerchantId || !cryptomusPaymentKey) {
+         return json({ error: "Cryptomus USDT credentials not configured." }, 400);
+       }
+
+       const usdValue = Number(plan.price_usd).toFixed(2);
+       const orderId = `${user.id}_${plan.id}_${Date.now()}`;
+       const webhookUrl = `${supabaseUrl}/functions/v1/subscription-webhook`;
+
+       const reqBody = {
+         amount: usdValue.toString(),
+         currency: "USD",
+         order_id: orderId,
+         network: "BSC",
+         to_currency: "USDT",
+         url_callback: webhookUrl,
+         url_return: `${returnUrl}?method=usdt`,
+         is_payment_multiple: false,
+         lifetime: "3600",
+       };
+
+       console.log("CRYPTOMUS REQUEST BODY", reqBody);
+       const signature = generateCryptomusSignature(reqBody, cryptomusPaymentKey);
+
+       const paymentRes = await fetch(`${CRYPTOMUS_API}/payment`, {
+         method: "POST",
+         headers: {
+           "merchant": cryptomusMerchantId,
+           "sign": signature,
+           "Content-Type": "application/json",
+         },
+         body: JSON.stringify(reqBody),
+       });
+       
+       const paymentData = await paymentRes.json();
+       console.log("CRYPTOMUS RESPONSE", paymentData);
+
+       if (paymentData.state === 0 && paymentData.result) {
+         return json({
+            payAddress: paymentData.result.address,
+            payAmount: paymentData.result.payer_amount,
+            payCurrency: paymentData.result.payer_currency,
+            invoiceUrl: paymentData.result.url,
+            orderId: paymentData.result.order_id,
+            uuid: paymentData.result.uuid,
+            network: paymentData.result.network
+         });
+       }
+
+       return json({ error: "Failed to create Cryptomus payment", details: paymentData }, 400);
+    }
+    
+    return json({ error: "Unsupported method" }, 400);
+
+  } catch (err) {
+    console.error("Function error:", err);
+    return json({ error: (err as Error).message }, 500);
+  }
+});
+
