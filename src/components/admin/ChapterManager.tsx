@@ -31,6 +31,8 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useQueryClient } from "@tanstack/react-query";
+import { PageEditor } from "@/components/admin/PageEditor";
 
 type Manga = Tables<"manga">;
 type Chapter = Tables<"chapters">;
@@ -60,10 +62,12 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const [htmlPasteOpen, setHtmlPasteOpen] = useState(false);
   const [pastedHtml, setPastedHtml] = useState('');
   const [extractedUrls, setExtractedUrls] = useState<string[]>([]);
+  const [pageEditorChapter, setPageEditorChapter] = useState<Chapter | null>(null);
 
   const { user } = useAuth();
   const { isAdmin, isMod } = useUserRole();
   const { settings } = usePremiumSettings();
+  const queryClient = useQueryClient();
 
   const { settings: siteSettings } = useSiteSettings();
   const isManualBlogger = siteSettings.storage.provider === 'manual_blogger';
@@ -383,6 +387,21 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                                       <Button 
                                         variant="ghost" 
                                         size="icon" 
+                                        className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10" 
+                                        onClick={() => setPageEditorChapter(chapter)}
+                                        disabled={!canManageChapter(chapter)}
+                                        title={!canManageChapter(chapter) ? "You can only manage chapters you created" : "Edit Pages"}
+                                      >
+                                        <Icon icon="ph:images-bold" className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Edit Pages</TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
                                         className="h-8 w-8" 
                                         onClick={() => handleEditClick(chapter)}
                                         disabled={!canManageChapter(chapter)}
@@ -391,7 +410,7 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                                         <Icon icon="ph:pencil-simple-bold" className="h-4 w-4" />
                                       </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>Edit</TooltipContent>
+                                    <TooltipContent>Edit Chapter</TooltipContent>
                                   </Tooltip>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -673,6 +692,23 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Page Editor Dialog */}
+      {pageEditorChapter && (
+        <PageEditor
+          open={!!pageEditorChapter}
+          onOpenChange={(v) => { if (!v) setPageEditorChapter(null); }}
+          chapterId={pageEditorChapter.id}
+          chapterTitle={`Chapter ${pageEditorChapter.number}${pageEditorChapter.title ? ` — ${pageEditorChapter.title}` : ''}`}
+          initialPages={pageEditorChapter.pages || []}
+          isManualBlogger={isManualBlogger}
+          onSaved={(pages) => {
+            // Invalidate admin-chapters cache so page count refreshes
+            queryClient.invalidateQueries({ queryKey: ['admin-chapters', manga?.id] });
+            setPageEditorChapter(null);
+          }}
+        />
+      )}
     </>
   );
 };
