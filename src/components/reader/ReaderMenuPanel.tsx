@@ -7,6 +7,7 @@ import AdvancedSettingsModal from './AdvancedSettingsModal';
 import type { useReaderSettings } from '@/hooks/useReaderSettings';
 import { useMangaBookmark } from '@/hooks/useBookmarks';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Chapter {
   id: string;
@@ -54,9 +55,22 @@ export default function ReaderMenuPanel({
   const [showPagePanel, setShowPagePanel] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showReportInput, setShowReportInput] = useState(false);
-  const [reportText, setReportText] = useState('');
+  const isMobile = useIsMobile();
+  const sortedChapters = [...chapters].sort((a, b) => a.number - b.number);
+  const currentChapterIndex = sortedChapters.findIndex(c => c.number === currentChapterNum);
+  const prevChapter = currentChapterIndex > 0 ? sortedChapters[currentChapterIndex - 1] : null;
+  const nextChapter = currentChapterIndex < sortedChapters.length - 1 ? sortedChapters[currentChapterIndex + 1] : null;
 
   const { settings, cycleHeaderMode, cycleDisplayMode, cycleFitMode, cycleReadingDirection, cycleProgressPosition, update, updateImage } = readerSettings;
+
+  const handleCycleDisplayMode = () => {
+    if (isMobile) {
+      if (settings.displayMode === 'longstrip') update('displayMode', 'single');
+      else update('displayMode', 'longstrip');
+    } else {
+      cycleDisplayMode();
+    }
+  };
 
   const handleChapterNav = useCallback((chapterNum: number) => {
     navigate(`/manga/${mangaSlug}/chapter/${chapterNum}`);
@@ -159,8 +173,8 @@ export default function ReaderMenuPanel({
           {/* D) Chapter selector */}
           <div className="flex items-center gap-1 px-3 mt-3">
             <button
-              disabled={!hasPrev}
-              onClick={() => handleChapterNav(currentChapterNum - 1)}
+              disabled={!prevChapter}
+              onClick={() => handleChapterNav(prevChapter!.number)}
               className="w-8 h-9 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <Icon icon="ph:caret-left-bold" className="w-4 h-4" />
@@ -173,8 +187,8 @@ export default function ReaderMenuPanel({
               <Icon icon="ph:caret-down-bold" className="w-3 h-3 text-gray-500" />
             </button>
             <button
-              disabled={!hasNext}
-              onClick={() => handleChapterNav(currentChapterNum + 1)}
+              disabled={!nextChapter}
+              onClick={() => handleChapterNav(nextChapter!.number)}
               className="w-8 h-9 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <Icon icon="ph:caret-right-bold" className="w-4 h-4" />
@@ -261,7 +275,7 @@ export default function ReaderMenuPanel({
               <span>{headerModeInfo.label}</span>
               {headerModeInfo.icon}
             </button>
-            <button onClick={cycleDisplayMode} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+            <button onClick={handleCycleDisplayMode} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
               <span>{displayModeInfo.label}</span>
               {displayModeInfo.icon}
             </button>

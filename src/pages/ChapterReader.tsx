@@ -157,7 +157,16 @@ export default function ChapterReader() {
     }
   };
 
-  const currentChapter = chapters.find(c => c.number === chapterNum);
+  const sortedChapters = [...chapters].sort((a, b) => a.number - b.number);
+  const currentChapterIndex = sortedChapters.findIndex(c => c.number === chapterNum);
+  const currentChapter = sortedChapters[currentChapterIndex];
+  
+  const prevChapter = currentChapterIndex > 0 ? sortedChapters[currentChapterIndex - 1] : null;
+  const nextChapter = currentChapterIndex < sortedChapters.length - 1 ? sortedChapters[currentChapterIndex + 1] : null;
+
+  const hasPrev = !!prevChapter;
+  const hasNext = !!nextChapter;
+
   const { isUnlocked, unlock, unlockWithToken } = useChapterUnlock(currentChapter?.id);
 
   const { data: securePages = [], isLoading: pagesLoading, isError: pagesError } = useQuery({
@@ -176,9 +185,6 @@ export default function ChapterReader() {
 
   const pageUrls = (Array.isArray(securePages) ? securePages : []).filter(Boolean);
   const totalPages = pageUrls.length;
-  const maxChapter = chapters.length > 0 ? Math.max(...chapters.map(c => c.number)) : 0;
-  const hasPrev = chapterNum > 1;
-  const hasNext = chapterNum < maxChapter;
 
   useEffect(() => { window.scrollTo(0, 0); setCurrentPage(0); }, [chapterNum]);
 
@@ -193,7 +199,9 @@ export default function ChapterReader() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? (currentScrollY / docHeight) * 100 : 0);
+      // Use 100vh offset for progress to feel more natural and accommodate bottom UI
+      const adjustedProgress = docHeight > 100 ? (currentScrollY / docHeight) * 100 : 0;
+      setScrollProgress(Math.min(100, Math.max(0, adjustedProgress)));
 
       if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
         setIsHeaderVisible(false);
@@ -203,14 +211,16 @@ export default function ChapterReader() {
       lastScrollY.current = currentScrollY;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
+    // Run once to init progress
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && hasPrev && settings.readingDirection === 'ltr') navigate(`/manga/${slug}/chapter/${chapterNum - 1}`);
-      if (e.key === 'ArrowRight' && hasNext && settings.readingDirection === 'ltr') navigate(`/manga/${slug}/chapter/${chapterNum + 1}`);
+      if (e.key === 'ArrowLeft' && hasPrev && settings.readingDirection === 'ltr') navigate(`/manga/${slug}/chapter/${prevChapter.number}`);
+      if (e.key === 'ArrowRight' && hasNext && settings.readingDirection === 'ltr') navigate(`/manga/${slug}/chapter/${nextChapter.number}`);
       if (e.key === 'h' || e.key === 'H') settings.headerMode === 'sticky' ? readerSettings.update('headerMode', 'hidden') : readerSettings.update('headerMode', 'sticky');
       if (e.key === 'm' || e.key === 'M') setIsMenuOpen(!isMenuOpen);
       if (e.key === 'Escape') setIsMenuOpen(false);
@@ -279,6 +289,15 @@ export default function ChapterReader() {
   };
 
   const isMobile = useIsMobile();
+
+  const getImageFitClass = () => {
+    switch (settings.imageSettings.fitMode) {
+      case 'width': return 'w-full h-auto';
+      case 'height': return 'max-h-[85vh] sm:max-h-[92vh] w-auto';
+      case 'none': return 'max-w-none w-auto h-auto';
+      default: return 'max-w-full h-auto';
+    }
+  };
 
   const prevPage = () => {
     if (settings.displayMode === 'double') {
@@ -452,9 +471,9 @@ export default function ChapterReader() {
                       alt={`Page ${i + 1}`}
                       loading="lazy"
                       referrerPolicy="no-referrer"
-                      className="w-full h-auto shadow-2xl"
+                      className={`${getImageFitClass()} shadow-2xl transition-all duration-300`}
                       style={{ 
-                        maxWidth: settings.imageSettings.limitMaxWidth ? '800px' : 'none',
+                        maxWidth: (settings.imageSettings.fitMode === 'width' || !settings.imageSettings.limitMaxWidth) ? 'none' : '800px',
                       }}
                     />
                   </div>
@@ -467,7 +486,7 @@ export default function ChapterReader() {
                     src={pageUrls[currentPage]}
                     alt={`Page ${currentPage + 1}`}
                     referrerPolicy="no-referrer"
-                    className="max-h-[85vh] w-auto shadow-2xl rounded-lg object-contain max-w-full"
+                    className={`${getImageFitClass()} shadow-2xl rounded-lg object-contain`}
                     onClick={nextPage}
                   />
                 ) : (
@@ -476,7 +495,7 @@ export default function ChapterReader() {
                       src={pageUrls[currentPage]}
                       alt={`Page ${currentPage + 1}`}
                       referrerPolicy="no-referrer"
-                      className={`${isMobile ? 'max-h-none w-full' : 'max-h-[80vh] w-auto'} shadow-2xl rounded-lg md:rounded-l-lg object-contain`}
+                      className={`${isMobile ? 'max-h-none w-full' : getImageFitClass()} shadow-2xl rounded-lg md:rounded-l-lg object-contain`}
                       onClick={nextPage}
                     />
                     {currentPage + 1 < totalPages && (
@@ -484,7 +503,7 @@ export default function ChapterReader() {
                         src={pageUrls[currentPage + 1]}
                         alt={`Page ${currentPage + 2}`}
                         referrerPolicy="no-referrer"
-                        className={`${isMobile ? 'max-h-none w-full' : 'max-h-[80vh] w-auto'} shadow-2xl rounded-lg md:rounded-r-lg object-contain`}
+                        className={`${isMobile ? 'max-h-none w-full' : getImageFitClass()} shadow-2xl rounded-lg md:rounded-r-lg object-contain`}
                         onClick={nextPage}
                       />
                     )}
@@ -534,8 +553,8 @@ export default function ChapterReader() {
               <Button 
                 variant="secondary" 
                 disabled={!hasPrev} 
-                onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)} 
-                className="flex-1 sm:flex-none gap-2 bg-white/10 hover:bg-white/15 text-white border-0 h-12 px-6 rounded-xl font-bold transition-all"
+                onClick={() => navigate(`/manga/${slug}/chapter/${prevChapter?.number}`)} 
+                className="flex-1 sm:flex-none gap-2 bg-white/10 hover:bg-white/15 text-white border-0 h-12 px-6 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Icon icon="ph:arrow-left-bold" className="shrink-0" /> 
                 <span className="hidden sm:inline">Previous Chapter</span>
@@ -550,8 +569,8 @@ export default function ChapterReader() {
               <Button 
                 variant="secondary" 
                 disabled={!hasNext} 
-                onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)} 
-                className="flex-1 sm:flex-none gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 h-12 px-6 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all"
+                onClick={() => navigate(`/manga/${slug}/chapter/${nextChapter?.number}`)} 
+                className="flex-1 sm:flex-none gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 h-12 px-6 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="hidden sm:inline">Next Chapter</span>
                 <span className="inline sm:hidden">Next</span>

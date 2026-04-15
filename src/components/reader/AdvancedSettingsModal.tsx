@@ -1,5 +1,6 @@
 import { Icon } from '@iconify/react';
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import type { DisplayMode, FitMode, ReadingDirection, AdvancedProgressPosition, ImageSettings } from '@/hooks/useReaderSettings';
 
@@ -40,6 +41,7 @@ export default function AdvancedSettingsModal({
   onImageSettingChange,
 }: AdvancedSettingsModalProps) {
   const [activeTab, setActiveTab] = useState<Tab>('layout');
+  const isMobile = useIsMobile();
 
   if (!isOpen) return null;
 
@@ -125,7 +127,7 @@ export default function AdvancedSettingsModal({
                 <label className="text-xs text-gray-500 uppercase font-semibold tracking-wider">Page Display Style</label>
                 <div className="flex gap-2">
                   {displayBtn('single', 'Single Page')}
-                  {displayBtn('double', 'Double Page')}
+                  {!isMobile && displayBtn('double', 'Double Page')}
                   {displayBtn('longstrip', 'Long Strip')}
                 </div>
               </div>

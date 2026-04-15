@@ -51,12 +51,16 @@ const AppLayout = () => {
   const hideShell = isChapterReader || isAdminPanel;
 
   // Site name for loader (e.g. MangaZ -> MZ)
-  const shortName = settings.general.site_name
+  const siteName = settings?.general?.site_name || 'MangaZ';
+  const shortName = siteName
     .split(' ')
+    .filter(Boolean)
     .map(w => w[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || 'MZ';
+    
+  const logoUrl = settings?.general?.logo_url;
 
   if (isLoading) {
     return (
@@ -64,8 +68,8 @@ const AppLayout = () => {
         <div className="relative">
           <div className="w-24 h-24 rounded-3xl bg-primary/20 animate-pulse border border-primary/30 flex items-center justify-center p-4">
             <div className="w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(var(--primary),0.5)] animate-bounce flex items-center justify-center overflow-hidden">
-              {settings.general.logo_url ? (
-                <img src={settings.general.logo_url} alt="Logo" className="w-full h-full object-contain" />
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
               ) : (
                 <span className="text-3xl font-black text-primary-foreground italic">{shortName || 'MZ'}</span>
               )}
