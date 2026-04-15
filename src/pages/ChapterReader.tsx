@@ -137,6 +137,7 @@ export default function ChapterReader() {
   const coinBalance = useUserCoinBalance();
   const tokenBalance = useUserTokenBalance();
   const { isSubscriber } = useHasActiveSubscription();
+  const isMobile = useIsMobile();
 
   const { settings: siteSettings } = useSiteSettings();
   const discordUrl = siteSettings?.general?.discord_url || 'https://discord.gg';
@@ -287,8 +288,6 @@ export default function ChapterReader() {
       window.location.reload();
     } catch (err: any) { sonnerToast.error(err.message || 'Unlock failed'); }
   };
-
-  const isMobile = useIsMobile();
 
   const getImageFitClass = () => {
     switch (settings.fitMode) {

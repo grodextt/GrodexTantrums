@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import PremiumContent from '@/pages/admin/PremiumContent';
 import { StorageSection } from '@/components/admin/StorageSection';
@@ -201,6 +201,7 @@ export default function AdminPanel() {
   }, [settings, settingsLoaded]);
 
   useEffect(() => {
+    // Only redirect after both auth AND role have fully resolved
     if (!loading && !isStaff) navigate('/');
   }, [isStaff, loading, navigate]);
 
@@ -257,10 +258,6 @@ export default function AdminPanel() {
     setUsers(enriched as UserRow[]);
     setUsersLoading(false);
   };
-
-  if (!loading && !isStaff) {
-    return <Navigate to="/" replace />;
-  }
 
   if (loading || !isStaff) {
     return (

@@ -13,7 +13,6 @@ import LoginModal from "@/components/LoginModal";
 import ScrollToTop from "@/components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import SEOHead from "@/components/SEOHead";
-import FloatingAdminBar from "@/components/FloatingAdminBar";
 import Index from "./pages/Index";
 
 const MangaInfo = lazy(() => import("./pages/MangaInfo"));
@@ -94,7 +93,6 @@ const AppLayout = () => {
     <div className="min-h-screen flex flex-col">
       <SEOHead />
       <ScrollToTopOnNavigate />
-      {!isAdminPanel && <FloatingAdminBar />}
       {!hideShell && <Navbar />}
       <main className="flex-1">
         <Suspense fallback={null}>

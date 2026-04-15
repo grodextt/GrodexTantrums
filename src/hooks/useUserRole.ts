@@ -5,18 +5,22 @@ import { useAuth } from '@/contexts/AuthContext';
 export type UserRole = 'admin' | 'moderator' | 'user';
 
 export function useUserRole() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [role, setRole] = useState<UserRole>('user');
-  const [loading, setLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(true);
 
   useEffect(() => {
+    // Don't do anything until the auth context itself has resolved
+    if (authLoading) return;
+
     if (!user) {
       setRole('user');
-      setLoading(false);
+      setRoleLoading(false);
       return;
     }
 
     const check = async () => {
+      setRoleLoading(true);
       try {
         const { data, error } = await supabase
           .from('user_roles')
@@ -32,12 +36,15 @@ export function useUserRole() {
       } catch {
         setRole('user');
       } finally {
-        setLoading(false);
+        setRoleLoading(false);
       }
     };
 
     check();
-  }, [user]);
+  }, [user, authLoading]);
+
+  // loading is true while EITHER auth OR role fetch is pending
+  const loading = authLoading || roleLoading;
 
   return { 
     role, 
