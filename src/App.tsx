@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, Component, ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +14,42 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import SEOHead from "@/components/SEOHead";
 import Index from "./pages/Index";
+
+// Error Boundary to catch render crashes on admin panel
+interface EBState { hasError: boolean; error: Error | null; }
+class AdminErrorBoundary extends Component<{ children: ReactNode }, EBState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6">
+          <div className="max-w-lg w-full bg-[#111] border border-red-900/40 rounded-2xl p-8 space-y-4">
+            <h1 className="text-xl font-bold text-red-400">Admin Panel Error</h1>
+            <p className="text-sm text-gray-400">Something crashed while rendering the Admin Panel.</p>
+            <pre className="text-xs text-red-300 bg-black/60 rounded-lg p-4 overflow-auto max-h-48 whitespace-pre-wrap">
+              {this.state.error?.message}
+              {"\n"}
+              {this.state.error?.stack?.split("\n").slice(0, 6).join("\n")}
+            </pre>
+            <button
+              onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = '/'; }}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium"
+            >
+              Go Home
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const MangaInfo = lazy(() => import("./pages/MangaInfo"));
 const ChapterReader = lazy(() => import("./pages/ChapterReader"));
@@ -108,7 +144,7 @@ const AppLayout = () => {
             <Route path="/settings" element={<UserSettings />} />
             <Route path="/dmca" element={<DMCA />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin" element={<AdminErrorBoundary><AdminPanel /></AdminErrorBoundary>} />
             <Route path="/subscribe" element={<Subscribe />} />
             <Route path="/subscribe/checkout/:planId" element={<SubscribeCheckout />} />
             <Route path="/subscribe/success" element={<SubscribeSuccess />} />
