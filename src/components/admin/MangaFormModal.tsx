@@ -524,50 +524,61 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-2">
                     <FormLabel>Cover Image</FormLabel>
-                    {isManualBlogger && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 text-[10px] gap-1 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                        onClick={() => { setPasteTarget('cover'); setHtmlPasteOpen(true); }}
-                      >
-                        <Icon icon="ph:code-bold" className="w-3 h-3" /> Paste Blogger HTML
-                      </Button>
+                    {isManualBlogger ? (
+                      <div className="space-y-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full gap-2 border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10"
+                          onClick={() => { setPasteTarget('cover'); setHtmlPasteOpen(true); }}
+                        >
+                          <Icon icon="ph:code-bold" className="w-4 h-4" />
+                          Paste Blogger HTML for Cover
+                        </Button>
+                        {coverPreview && <p className="text-[10px] text-muted-foreground truncate">URL: {coverPreview}</p>}
+                      </div>
+                    ) : (
+                      <Input type="file" accept="image/*" onChange={handleCoverChange} />
+                    )}
+                    {coverPreview && (
+                      <div className="relative group w-32 h-48 mt-2">
+                        <img src={coverPreview} alt="Cover preview" className="w-full h-full object-cover rounded-xl border border-border shadow-md" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                           <p className="text-[10px] text-white font-bold">Preview</p>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <Input type="file" accept="image/*" onChange={handleCoverChange} />
-                  {coverPreview && (
-                    <img src={coverPreview} alt="Cover preview" className="w-32 h-48 object-cover rounded border border-border mt-2" />
-                  )}
-                </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FormLabel>Banner Image (optional)</FormLabel>
-                      {/* <span className="bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase">Under Dev</span> */}
-                    </div>
-                    {isManualBlogger && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 text-[10px] gap-1 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-                        onClick={() => { setPasteTarget('banner'); setHtmlPasteOpen(true); }}
-                      >
-                        <Icon icon="ph:code-bold" className="w-3 h-3" /> Paste Blogger HTML
-                      </Button>
+                  <div className="space-y-2">
+                    <FormLabel>Banner Image (optional)</FormLabel>
+                    {isManualBlogger ? (
+                      <div className="space-y-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full gap-2 border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10"
+                          onClick={() => { setPasteTarget('banner'); setHtmlPasteOpen(true); }}
+                        >
+                          <Icon icon="ph:code-bold" className="w-4 h-4" />
+                          Paste Blogger HTML for Banner
+                        </Button>
+                        {bannerPreview && <p className="text-[10px] text-muted-foreground truncate">URL: {bannerPreview}</p>}
+                      </div>
+                    ) : (
+                      <Input type="file" accept="image/*" onChange={handleBannerChange} />
+                    )}
+                    {bannerPreview && (
+                      <div className="relative group w-full h-32 mt-2">
+                        <img src={bannerPreview} alt="Banner preview" className="w-full h-full object-cover rounded-xl border border-border shadow-md" />
+                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                           <p className="text-[10px] text-white font-bold">Preview</p>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <Input type="file" accept="image/*" onChange={handleBannerChange} />
-                  {bannerPreview && (
-                    <img src={bannerPreview} alt="Banner preview" className="w-full h-32 object-cover rounded border border-border mt-2" />
-                  )}
-                </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <FormField
