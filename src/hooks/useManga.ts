@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 type Manga = Tables<"manga"> & { created_by?: string };
 type MangaInsert = TablesInsert<"manga"> & { created_by?: string };
@@ -24,48 +25,77 @@ const uploadFile = async (
     .single();
   
   const storage = storageRow?.value as any;
-  const isBlogger = storage?.provider === 'blogger';
-  const isDiscord = storage?.provider === 'discord';
+  const provider = storage?.provider || 'supabase';
 
-  if (isBlogger || isDiscord) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('path', path);
-
-    const functionName = isBlogger ? 'blogger-upload' : 'discord-upload';
-    const { data: uploadData, error: uploadError } = await supabase.functions.invoke(functionName, {
-      body: formData,
-    });
-
-    if (uploadError) {
-      // Try to extract specific error message from the response if it's a function error
-      let errorMessage = uploadError.message;
-      if (uploadError instanceof Error && 'context' in uploadError) {
-        try {
-          const context = (uploadError as any).context;
-          if (context && typeof context.json === 'function') {
-            const errorBody = await context.json();
-            errorMessage = errorBody.error || errorBody.message || errorMessage;
-            if (errorBody.details) {
-              errorMessage += `: ${JSON.stringify(errorBody.details)}`;
-            }
-          }
-        } catch (e) {
-          console.error("Failed to parse error body", e);
-        }
-      }
-      throw new Error(`Blogger upload failed: ${errorMessage}`);
-    }
-    
-    if (!uploadData?.url) throw new Error('Blogger upload failed: No URL returned');
-
-    return uploadData.url;
-  }
-
-  // Default to Supabase Storage
   const fileExt = file.name.split(".").pop();
   const fileName = `${path}.${fileExt}`;
 
+  if (provider === 'imgbb') {
+    const apiKey = storage?.imgbb_api_key;
+    if (!apiKey) throw new Error("ImgBB API key is not configured.");
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(`ImgBB upload failed: ${data.error?.message || 'Unknown error'}`);
+    }
+
+    return data.data.url;
+  }
+
+  if (provider === 'r2') {
+    const accountId = storage?.r2_account_id;
+    const accessKeyId = storage?.r2_access_key;
+    const secretAccessKey = storage?.r2_secret_key;
+    const bucketName = storage?.r2_bucket_name;
+    let publicUrl = storage?.r2_public_url;
+
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucketName || !publicUrl) {
+      throw new Error("Cloudflare R2 is not fully configured. Missing credentials.");
+    }
+
+    // Ensure publicUrl does not end with a slash
+    if (publicUrl.endsWith('/')) {
+      publicUrl = publicUrl.slice(0, -1);
+    }
+
+    const s3 = new S3Client({
+      region: "auto",
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: bucketName,
+          Key: fileName,
+          Body: buffer,
+          ContentType: file.type,
+        })
+      );
+      
+      return `${publicUrl}/${fileName}`;
+    } catch (error: any) {
+      console.error("R2 Upload Error:", error);
+      throw new Error(`Cloudflare R2 upload failed: ${error.message}`);
+    }
+  }
+
+  // Default to Supabase Storage
   const { error: uploadError } = await supabase.storage
     .from(bucket)
     .upload(fileName, file, { upsert: true });
@@ -83,6 +113,9 @@ const uploadFile = async (
 const deleteFile = async (url: string, bucket: string = "manga-assets") => {
   if (!url) return;
   
+  // ImgBB / R2 URLs might not have this pattern, we just skip deletion for them for now
+  if (!url.includes(bucket)) return;
+
   const path = url.split(`${bucket}/`)[1];
   if (!path) return;
 

@@ -426,18 +426,29 @@ export default function ChapterReader() {
               </div>
             ) : settings.displayMode === 'longstrip' ? (
               pageUrls.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`Page ${i + 1}`}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-auto shadow-2xl"
-                  style={{ 
-                    maxWidth: settings.imageSettings.limitMaxWidth ? '800px' : 'none',
-                    maxHeight: settings.imageSettings.limitMaxHeight ? '90vh' : 'none'
-                  }}
-                />
+                <div key={i} className="w-full relative">
+                  <img
+                    src={url}
+                    alt={`Page ${i + 1}`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-auto shadow-2xl"
+                    style={{ 
+                      maxWidth: settings.imageSettings.limitMaxWidth ? '800px' : 'none',
+                      maxHeight: settings.imageSettings.limitMaxHeight ? '90vh' : 'none'
+                    }}
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      img.style.display = 'none';
+                      const placeholder = img.nextElementSibling as HTMLElement;
+                      if (placeholder) placeholder.style.display = 'flex';
+                    }}
+                  />
+                  <div className="hidden w-full h-48 items-center justify-center bg-white/5 border border-white/10 rounded-lg text-gray-500 text-sm gap-2">
+                    <Icon icon="ph:image-broken-bold" className="w-6 h-6" />
+                    Page {i + 1} failed to load
+                  </div>
+                </div>
               ))
             ) : settings.displayMode === 'single' ? (
               <div className="relative group flex flex-col items-center gap-6 py-10">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -29,6 +30,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 
 type Manga = Tables<"manga">;
 type Chapter = Tables<"chapters">;
@@ -55,10 +57,31 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const [pushToFreeId, setPushToFreeId] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isManualBlogger, setIsManualBlogger] = useState(false);
+  const [htmlPasteOpen, setHtmlPasteOpen] = useState(false);
+  const [pastedHtml, setPastedHtml] = useState('');
+  const [extractedUrls, setExtractedUrls] = useState<string[]>([]);
 
   const { user } = useAuth();
   const { isAdmin, isMod } = useUserRole();
   const { settings } = usePremiumSettings();
+
+  // Detect active storage provider
+  useEffect(() => {
+    const checkProvider = async () => {
+      const { data } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'storage')
+        .single();
+      if (data?.value && (data.value as any)?.provider === 'manual_blogger') {
+        setIsManualBlogger(true);
+      } else {
+        setIsManualBlogger(false);
+      }
+    };
+    checkProvider();
+  }, []);
   const currencyName = settings.coin_system.currency_name;
 
   const canManageChapter = (c: Chapter) => isAdmin || (isMod && c.created_by === user?.id);
@@ -78,6 +101,40 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
     setChapterNumber(""); setChapterTitle(""); setIsPremium(false); setIsSubscription(false);
     setCoinPrice(100); setAutoFreeEnabled(false); setAutoFreeDays(7); setAutoFreeHours(0);
     setPageFiles(null); setShowAddForm(false); setEditingChapter(null);
+    setPastedHtml(''); setExtractedUrls([]);
+  };
+
+  // Extract image src URLs from Blogger HTML
+  const handleExtractFromHtml = () => {
+    if (!pastedHtml.trim()) {
+      toast.error('Please paste some HTML first.');
+      return;
+    }
+    const regex = /<img[^>]+src=["']([^"']+)["']/gi;
+    const urls: string[] = [];
+    let match;
+    while ((match = regex.exec(pastedHtml)) !== null) {
+      // Filter to only include typical Blogger CDN domains
+      const url = match[1];
+      if (url && url.startsWith('http')) {
+        urls.push(url);
+      }
+    }
+    if (urls.length === 0) {
+      toast.error('No image URLs found in the HTML. Make sure you copied the HTML view from Blogger.');
+      return;
+    }
+    setExtractedUrls(urls);
+    toast.success(`Found ${urls.length} image(s) from your HTML!`);
+  };
+
+  const handleConfirmHtml = () => {
+    if (extractedUrls.length === 0) {
+      toast.error('No images extracted yet. Click "Extract Images" first.');
+      return;
+    }
+    setHtmlPasteOpen(false);
+    setPastedHtml('');
   };
 
   const handleEditClick = (chapter: Chapter) => {
@@ -124,11 +181,20 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
     const num = parseFloat(chapterNumber);
     if (isNaN(num)) { toast.error("Chapter number must be a valid number"); return; }
 
-    if (!pageFiles || pageFiles.length === 0) {
-      if (!editingChapter) { toast.error("Please select at least one page image"); return; }
-    }
-
     const files = pageFiles ? Array.from(pageFiles) : [];
+
+    // For manual blogger, we use extracted URLs directly (no file upload needed)
+    if (isManualBlogger) {
+      if (extractedUrls.length === 0 && !editingChapter) {
+        toast.error("Please paste Blogger HTML and extract images first.");
+        return;
+      }
+    } else {
+      if (files.length === 0 && !editingChapter) {
+        toast.error("Please select at least one page image");
+        return;
+      }
+    }
 
     const autoFreeDaysValue = isPremium && autoFreeEnabled ? autoFreeDays + (autoFreeHours / 24) : null;
     const subFreeDays = isSubscription && autoFreeEnabled ? autoFreeDays + (autoFreeHours / 24) : null;
@@ -146,26 +212,48 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
             auto_free_days: autoFreeDaysValue,
             is_subscription: isSubscription,
             subscription_free_release_days: subFreeDays,
+            // For manual blogger: if new URLs provided, use them; otherwise keep existing
+            ...(isManualBlogger && extractedUrls.length > 0 ? { pages: extractedUrls } : {}),
           },
-          pageFiles: files.length > 0 ? files : undefined,
+          pageFiles: isManualBlogger ? undefined : (files.length > 0 ? files : undefined),
           mangaSlug: manga.slug,
           oldPages: editingChapter.pages || undefined,
         });
       } else {
-        await createChapter.mutateAsync({
-          chapter: {
-            manga_id: manga.id,
-            number: num,
-            title: chapterTitle,
-            premium: isPremium,
-            coin_price: isPremium ? coinPrice : null,
-            auto_free_days: autoFreeDaysValue,
-            is_subscription: isSubscription,
-            subscription_free_release_days: subFreeDays,
-          },
-          pageFiles: files,
-          mangaSlug: manga.slug,
-        });
+        if (isManualBlogger) {
+          // Direct DB insert with extracted URLs, no file upload
+          const { error } = await supabase
+            .from('chapters')
+            .insert({
+              manga_id: manga.id,
+              number: num,
+              title: chapterTitle,
+              premium: isPremium,
+              coin_price: isPremium ? coinPrice : null,
+              auto_free_days: autoFreeDaysValue,
+              is_subscription: isSubscription,
+              subscription_free_release_days: subFreeDays,
+              pages: extractedUrls,
+              created_by: user?.id,
+            });
+          if (error) throw error;
+          toast.success('Chapter created successfully with Blogger images!');
+        } else {
+          await createChapter.mutateAsync({
+            chapter: {
+              manga_id: manga.id,
+              number: num,
+              title: chapterTitle,
+              premium: isPremium,
+              coin_price: isPremium ? coinPrice : null,
+              auto_free_days: autoFreeDaysValue,
+              is_subscription: isSubscription,
+              subscription_free_release_days: subFreeDays,
+            },
+            pageFiles: files,
+            mangaSlug: manga.slug,
+          });
+        }
       }
       resetForm();
     } catch (error) {
@@ -472,9 +560,33 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
 
                 <div className="space-y-2">
                   <Label htmlFor="pages">Page Images {editingChapter && "(Leave empty to keep existing pages)"}</Label>
-                  <Input id="pages" type="file" accept="image/*" multiple onChange={(e) => setPageFiles(e.target.files)} />
-                  {pageFiles && <p className="text-sm text-muted-foreground">{pageFiles.length} file(s) selected</p>}
-                  {editingChapter && editingChapter.pages && <p className="text-sm text-muted-foreground">Current: {editingChapter.pages.length} page(s)</p>}
+
+                  {isManualBlogger ? (
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                        <Icon icon="ph:info-bold" className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                          <strong>Manual Blogger mode active.</strong> Upload images in Blogger, switch to HTML view, copy all HTML, then paste it below.
+                        </p>
+                      </div>
+                      <Button type="button" variant="outline" className="w-full gap-2 border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10" onClick={() => setHtmlPasteOpen(true)}>
+                        <Icon icon="ph:code-bold" className="w-4 h-4" />
+                        Paste Blogger HTML
+                        {extractedUrls.length > 0 && (
+                          <span className="ml-auto text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">{extractedUrls.length} images ready</span>
+                        )}
+                      </Button>
+                      {editingChapter?.pages && extractedUrls.length === 0 && (
+                        <p className="text-xs text-muted-foreground">Current: {editingChapter.pages.length} page(s). Paste new HTML to replace them.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <Input id="pages" type="file" accept="image/*" multiple onChange={(e) => setPageFiles(e.target.files)} />
+                      {pageFiles && <p className="text-sm text-muted-foreground">{pageFiles.length} file(s) selected</p>}
+                      {editingChapter && editingChapter.pages && <p className="text-sm text-muted-foreground">Current: {editingChapter.pages.length} page(s)</p>}
+                    </>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -486,6 +598,63 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                 </div>
               </form>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* HTML Paste Modal for Manual Blogger */}
+      <Dialog open={htmlPasteOpen} onOpenChange={setHtmlPasteOpen}>
+        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon icon="ph:file-html-bold" className="w-5 h-5 text-emerald-500" />
+              Paste Blogger HTML
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-muted/30 rounded-xl border border-border/40 text-xs text-muted-foreground space-y-1">
+              <p className="font-semibold text-foreground">How to get Blogger HTML:</p>
+              <ol className="list-decimal list-inside space-y-1 pl-2">
+                <li>Open <strong>blogger.com</strong> and create a new post.</li>
+                <li>Click <strong>Insert Image</strong> and upload all your chapter images.</li>
+                <li>Switch to <strong>HTML view</strong> (the {'<>'} icon in the toolbar).</li>
+                <li>Select all (Ctrl+A) and copy (Ctrl+C).</li>
+                <li>Paste into the box below.</li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Paste HTML here</Label>
+              <Textarea
+                value={pastedHtml}
+                onChange={e => setPastedHtml(e.target.value)}
+                placeholder="<div class='separator'>...<img src='https://blogger.googleusercontent.com/...' /></div>"
+                className="font-mono text-xs min-h-[200px] resize-y"
+              />
+            </div>
+
+            {extractedUrls.length > 0 && (
+              <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
+                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">✓ {extractedUrls.length} image(s) extracted and ready:</p>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {extractedUrls.map((url, i) => (
+                    <p key={i} className="text-[10px] font-mono text-muted-foreground truncate">{i + 1}. {url}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setHtmlPasteOpen(false); }}>Cancel</Button>
+              <Button variant="outline" onClick={handleExtractFromHtml} className="gap-2">
+                <Icon icon="ph:magnifying-glass-bold" className="w-4 h-4" />
+                Extract Images
+              </Button>
+              <Button onClick={handleConfirmHtml} disabled={extractedUrls.length === 0} className="gap-2">
+                <Icon icon="ph:check-bold" className="w-4 h-4" />
+                Use {extractedUrls.length} Image{extractedUrls.length !== 1 ? 's' : ''}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

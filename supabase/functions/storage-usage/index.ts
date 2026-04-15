@@ -60,7 +60,6 @@ serve(async (req) => {
 
       if (!files || files.length === 0) break;
 
-      // Recursively list folders
       for (const file of files) {
         if (file.metadata) {
           allFiles.push({ name: file.name, size: file.metadata.size || 0 });
