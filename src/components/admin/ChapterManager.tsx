@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 type Manga = Tables<"manga">;
 type Chapter = Tables<"chapters">;
@@ -57,7 +57,6 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const [pushToFreeId, setPushToFreeId] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isManualBlogger, setIsManualBlogger] = useState(false);
   const [htmlPasteOpen, setHtmlPasteOpen] = useState(false);
   const [pastedHtml, setPastedHtml] = useState('');
   const [extractedUrls, setExtractedUrls] = useState<string[]>([]);
@@ -66,22 +65,8 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
   const { isAdmin, isMod } = useUserRole();
   const { settings } = usePremiumSettings();
 
-  // Detect active storage provider
-  useEffect(() => {
-    const checkProvider = async () => {
-      const { data } = await supabase
-        .from('site_settings')
-        .select('value')
-        .eq('key', 'storage')
-        .single();
-      if (data?.value && (data.value as any)?.provider === 'manual_blogger') {
-        setIsManualBlogger(true);
-      } else {
-        setIsManualBlogger(false);
-      }
-    };
-    checkProvider();
-  }, []);
+  const { settings: siteSettings } = useSiteSettings();
+  const isManualBlogger = siteSettings.storage.provider === 'manual_blogger';
   const currencyName = settings.coin_system.currency_name;
 
   const canManageChapter = (c: Chapter) => isAdmin || (isMod && c.created_by === user?.id);
@@ -604,7 +589,7 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
 
       {/* HTML Paste Modal for Manual Blogger */}
       <Dialog open={htmlPasteOpen} onOpenChange={setHtmlPasteOpen}>
-        <DialogContent className="max-w-2xl w-[calc(100vw-2rem)]">
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-full overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Icon icon="ph:file-html-bold" className="w-5 h-5 text-emerald-500" />
@@ -636,9 +621,11 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
             {extractedUrls.length > 0 && (
               <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2">
                 <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">✓ {extractedUrls.length} image(s) extracted and ready:</p>
-                <div className="max-h-32 overflow-y-auto space-y-1">
+                <div className="max-h-32 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
                   {extractedUrls.map((url, i) => (
-                    <p key={i} className="text-[10px] font-mono text-muted-foreground truncate">{i + 1}. {url}</p>
+                    <p key={i} className="text-[10px] font-mono text-muted-foreground break-all">
+                      <span className="text-emerald-500 font-bold mr-1">{i + 1}.</span> {url}
+                    </p>
                   ))}
                 </div>
               </div>

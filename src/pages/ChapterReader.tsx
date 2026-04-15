@@ -173,7 +173,7 @@ export default function ChapterReader() {
     enabled: !!currentChapter?.id,
   });
 
-  const pageUrls = securePages.filter(Boolean);
+  const pageUrls = (Array.isArray(securePages) ? securePages : []).filter(Boolean);
   const totalPages = pageUrls.length;
   const maxChapter = chapters.length > 0 ? Math.max(...chapters.map(c => c.number)) : 0;
   const hasPrev = chapterNum > 1;

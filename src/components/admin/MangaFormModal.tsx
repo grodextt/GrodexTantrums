@@ -33,6 +33,8 @@ import { useCreateManga, useUpdateManga } from "@/hooks/useManga";
 import { Tables } from "@/integrations/supabase/types";
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { toast } from "sonner";
 
 type Manga = Tables<"manga">;
 
@@ -94,6 +96,12 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string>("");
   const [bannerPreview, setBannerPreview] = useState<string>("");
+  const [htmlPasteOpen, setHtmlPasteOpen] = useState(false);
+  const [pastedHtml, setPastedHtml] = useState('');
+  const [pasteTarget, setPasteTarget] = useState<'cover' | 'banner'>('cover');
+
+  const { settings: siteSettings } = useSiteSettings();
+  const isManualBlogger = siteSettings.storage.provider === 'manual_blogger';
 
   const createManga = useCreateManga();
   const updateManga = useUpdateManga();
@@ -212,6 +220,35 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
     }
   };
 
+  const handleHtmlPaste = () => {
+    const urls: string[] = [];
+    const regex = /<img[^>]+src="([^">]+)"/g;
+    let match;
+    while ((match = regex.exec(pastedHtml)) !== null) {
+      let url = match[1];
+      // Convert to permanent blogger link if it's a blogger link
+      if (url.includes('blogger.googleusercontent.com')) {
+        url = url.split('=')[0] + '=s0';
+      }
+      urls.push(url);
+    }
+
+    if (urls.length > 0) {
+      if (pasteTarget === 'cover') {
+        setCoverPreview(urls[0]);
+        setCoverFile(null); // Clear file as we use URL now
+      } else {
+        setBannerPreview(urls[0]);
+        setBannerFile(null);
+      }
+      toast.success(`Extracted image from HTML`);
+      setHtmlPasteOpen(false);
+      setPastedHtml('');
+    } else {
+      toast.error('No image URLs found in the pasted HTML');
+    }
+  };
+
   const onSubmit = async (values: MangaFormValues) => {
     const mangaData = {
       title: values.title,
@@ -228,8 +265,8 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
       pinned: values.pinned,
       featured: values.featured,
       trending: values.trending,
-      cover_url: manga?.cover_url || "",
-      banner_url: manga?.banner_url,
+      cover_url: coverPreview || manga?.cover_url || "",
+      banner_url: bannerPreview || manga?.banner_url,
     } as any;
 
     let savedMangaId = manga?.id;
@@ -286,7 +323,8 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
   const isLoading = createManga.isPending || updateManga.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{manga ? "Edit Manga" : "Add New Manga"}</DialogTitle>
@@ -487,21 +525,47 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                 </div>
 
                 <div className="space-y-2">
-                  <FormLabel>Cover Image</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Cover Image</FormLabel>
+                    {isManualBlogger && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 text-[10px] gap-1 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                        onClick={() => { setPasteTarget('cover'); setHtmlPasteOpen(true); }}
+                      >
+                        <Icon icon="ph:code-bold" className="w-3 h-3" /> Paste Blogger HTML
+                      </Button>
+                    )}
+                  </div>
                   <Input type="file" accept="image/*" onChange={handleCoverChange} />
                   {coverPreview && (
-                    <img src={coverPreview} alt="Cover preview" className="w-32 h-48 object-cover rounded" />
+                    <img src={coverPreview} alt="Cover preview" className="w-32 h-48 object-cover rounded border border-border mt-2" />
                   )}
                 </div>
 
-                <div className="space-y-2 opacity-50 relative pointer-events-none">
-                  <div className="flex items-center gap-2">
-                    <FormLabel>Banner Image (optional)</FormLabel>
-                    <span className="bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase">Under Dev</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Banner Image (optional)</FormLabel>
+                      {/* <span className="bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase">Under Dev</span> */}
+                    </div>
+                    {isManualBlogger && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 text-[10px] gap-1 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+                        onClick={() => { setPasteTarget('banner'); setHtmlPasteOpen(true); }}
+                      >
+                        <Icon icon="ph:code-bold" className="w-3 h-3" /> Paste Blogger HTML
+                      </Button>
+                    )}
                   </div>
-                  <Input type="file" accept="image/*" disabled={true} onChange={handleBannerChange} />
+                  <Input type="file" accept="image/*" onChange={handleBannerChange} />
                   {bannerPreview && (
-                    <img src={bannerPreview} alt="Banner preview" className="w-full h-32 object-cover rounded" />
+                    <img src={bannerPreview} alt="Banner preview" className="w-full h-32 object-cover rounded border border-border mt-2" />
                   )}
                 </div>
 
@@ -842,6 +906,41 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+
+      {/* HTML Paste Dialog */}
+      <Dialog open={htmlPasteOpen} onOpenChange={setHtmlPasteOpen}>
+        <DialogContent className="max-w-xl border-border bg-card w-[95vw] sm:w-full overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-bold text-emerald-500">
+              <Icon icon="ph:code-bold" className="w-5 h-5" />
+              Paste Blogger HTML ({pasteTarget === 'cover' ? 'Cover' : 'Banner'})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-xs text-emerald-600 dark:text-emerald-400">
+              Paste the full HTML from your Blogger post. The system will extract the <strong>first</strong> image it finds.
+            </div>
+            <div className="space-y-2">
+              <Label>Blogger HTML</Label>
+              <Textarea
+                value={pastedHtml}
+                onChange={(e) => setPastedHtml(e.target.value)}
+                placeholder="<div dir='ltr' ... > <a ... > <img ... /> </a> </div>"
+                className="min-h-[200px] font-mono text-xs rounded-xl border-border bg-background break-all"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleHtmlPaste} className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-white shadow-lg shadow-emerald-500/20">
+                Extract & Set Image
+              </Button>
+              <Button variant="outline" onClick={() => setHtmlPasteOpen(false)} className="rounded-xl border-border hover:bg-muted">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
