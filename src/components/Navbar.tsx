@@ -36,7 +36,7 @@ export default function Navbar() {
     ...(isAuthenticated && premiumSettings.premium_config.enable_subscriptions ? [{ path: '/subscribe', label: subName, icon: 'mdi:latest', highlight: true }] : [])
   ];
 
-  const siteName = settings.general.site_name || '';
+  const siteName = settings?.general?.site_name || 'MangaZ';
   const isActive = (path: string) => location.pathname === path;
   const isSubPage = location.pathname.startsWith('/manga/');
 

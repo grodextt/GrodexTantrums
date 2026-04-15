@@ -136,8 +136,8 @@ export default function LatestCard({ manga }: LatestCardProps) {
   }
 
   const hasPremiumAndFree = premiumChapters.length > 0 && freeChapters.length > 0;
-  const iconUrl = settings.coin_system.currency_icon_url;
-  const subBadgeLabel = settings.subscription_settings?.badge_label || 'Early Access';
+  const iconUrl = settings?.coin_system?.currency_icon_url;
+  const subBadgeLabel = settings?.subscription_settings?.badge_label || 'Early Access';
 
   return (
     <div className="flex gap-3 pr-3 rounded-lg border border-border/40 bg-card/60 hover:bg-card/80 transition-colors group overflow-hidden">

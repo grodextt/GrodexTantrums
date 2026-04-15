@@ -174,7 +174,7 @@ export default function ReaderMenuPanel({
           <div className="flex items-center gap-1 px-3 mt-3">
             <button
               disabled={!prevChapter}
-              onClick={() => handleChapterNav(prevChapter!.number)}
+              onClick={() => prevChapter && handleChapterNav(prevChapter.number)}
               className="w-8 h-9 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <Icon icon="ph:caret-left-bold" className="w-4 h-4" />
@@ -188,7 +188,7 @@ export default function ReaderMenuPanel({
             </button>
             <button
               disabled={!nextChapter}
-              onClick={() => handleChapterNav(nextChapter!.number)}
+              onClick={() => nextChapter && handleChapterNav(nextChapter.number)}
               className="w-8 h-9 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <Icon icon="ph:caret-right-bold" className="w-4 h-4" />

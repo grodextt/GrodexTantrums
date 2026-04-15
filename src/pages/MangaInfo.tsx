@@ -100,10 +100,10 @@ export default function MangaInfo() {
 
   // Social links from settings
   const discordUrl = (settings.general as any)?.discord_url || 'https://discord.gg';
-  const donationUrl = (settings.general as any)?.donation_url || '';
-  const donationName = (settings.general as any)?.donation_name || 'Patreon';
-  const donationIconUrl = (settings.general as any)?.donation_icon_url || '';
-  const siteName = settings.general.site_name;
+  const donationUrl = (settings?.general as any)?.donation_url || '';
+  const donationName = (settings?.general as any)?.donation_name || 'Patreon';
+  const donationIconUrl = (settings?.general as any)?.donation_icon_url || '';
+  const siteName = settings?.general?.site_name || 'MangaHub';
 
   useEffect(() => {
     if (manga && manga.content_warnings && manga.content_warnings.length > 0 && !warningAcknowledged) {

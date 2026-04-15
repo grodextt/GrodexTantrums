@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import PremiumContent from '@/pages/admin/PremiumContent';
 import { StorageSection } from '@/components/admin/StorageSection';
@@ -258,15 +258,17 @@ export default function AdminPanel() {
     setUsersLoading(false);
   };
 
-  if (loading) {
+  if (!loading && !isStaff) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (loading || !isStaff) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
       </div>
     );
   }
-
-  if (!isStaff) return null;
 
   const adminTabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <Icon icon="ph:layout-bold" className="w-4 h-4" /> },

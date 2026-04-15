@@ -115,7 +115,7 @@ export default function ChapterReader() {
   const navigate = useNavigate();
   const { data: manga, isLoading: mangaLoading } = useMangaBySlug(slug || '');
   const { data: chapters = [] } = useMangaChapters(manga?.id);
-  const chapterNum = parseInt(chapterId || '1');
+  const chapterNum = Number(chapterId || '1');
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -159,10 +159,10 @@ export default function ChapterReader() {
 
   const sortedChapters = [...chapters].sort((a, b) => a.number - b.number);
   const currentChapterIndex = sortedChapters.findIndex(c => c.number === chapterNum);
-  const currentChapter = sortedChapters[currentChapterIndex];
+  const currentChapter = currentChapterIndex !== -1 ? sortedChapters[currentChapterIndex] : null;
   
   const prevChapter = currentChapterIndex > 0 ? sortedChapters[currentChapterIndex - 1] : null;
-  const nextChapter = currentChapterIndex < sortedChapters.length - 1 ? sortedChapters[currentChapterIndex + 1] : null;
+  const nextChapter = currentChapterIndex !== -1 && currentChapterIndex < sortedChapters.length - 1 ? sortedChapters[currentChapterIndex + 1] : null;
 
   const hasPrev = !!prevChapter;
   const hasNext = !!nextChapter;
@@ -291,10 +291,10 @@ export default function ChapterReader() {
   const isMobile = useIsMobile();
 
   const getImageFitClass = () => {
-    switch (settings.imageSettings.fitMode) {
+    switch (settings.fitMode) {
       case 'width': return 'w-full h-auto';
       case 'height': return 'max-h-[85vh] sm:max-h-[92vh] w-auto';
-      case 'none': return 'max-w-none w-auto h-auto';
+      case 'nolimit': return 'max-w-none w-auto h-auto';
       default: return 'max-w-full h-auto';
     }
   };
@@ -473,7 +473,7 @@ export default function ChapterReader() {
                       referrerPolicy="no-referrer"
                       className={`${getImageFitClass()} shadow-2xl transition-all duration-300`}
                       style={{ 
-                        maxWidth: (settings.imageSettings.fitMode === 'width' || !settings.imageSettings.limitMaxWidth) ? 'none' : '800px',
+                        maxWidth: (settings.fitMode === 'width' || !settings.imageSettings.limitMaxWidth) ? 'none' : '800px',
                       }}
                     />
                   </div>

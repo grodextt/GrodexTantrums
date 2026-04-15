@@ -79,7 +79,7 @@ const AppLayout = () => {
         </div>
         <div className="mt-10 space-y-3 text-center">
           <h2 className="text-white font-black tracking-tighter text-2xl uppercase italic drop-shadow-lg">
-            {settings.general.site_name}
+            {siteName}
           </h2>
           <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mx-auto border border-white/5">
             <div className="h-full bg-primary animate-loading-bar" />
