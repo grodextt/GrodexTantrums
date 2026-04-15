@@ -131,6 +131,9 @@ export default function AdminPanel() {
     google_client_secret: '',
     google_ads_client_id: '',
     google_ads_slot: '',
+    admin_bar_text: '',
+    admin_bar_icon_light: '',
+    admin_bar_icon_dark: '',
   });
 
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -184,6 +187,9 @@ export default function AdminPanel() {
         google_client_secret: adminData.seo?.google_client_secret || '',
         google_ads_client_id: adminData.seo?.google_ads_client_id || '',
         google_ads_slot: adminData.seo?.google_ads_slot || '',
+        admin_bar_text: adminData.general?.admin_bar_text || settings?.general?.admin_bar_text || '',
+        admin_bar_icon_light: adminData.general?.admin_bar_icon_light || settings?.general?.admin_bar_icon_light || '',
+        admin_bar_icon_dark: adminData.general?.admin_bar_icon_dark || settings?.general?.admin_bar_icon_dark || '',
       }));
       setSettingsLoaded(true);
     };
@@ -340,6 +346,9 @@ export default function AdminPanel() {
             donation_name: settingsForm.donation_name,
             donation_url: settingsForm.donation_url,
             donation_icon_url: settingsForm.donation_icon_url,
+            admin_bar_text: settingsForm.admin_bar_text,
+            admin_bar_icon_light: settingsForm.admin_bar_icon_light,
+            admin_bar_icon_dark: settingsForm.admin_bar_icon_dark,
           },
         }),
         updateSettings.mutateAsync({
@@ -431,6 +440,9 @@ export default function AdminPanel() {
         google_client_secret: (settings.seo as any)?.google_client_secret || '',
         google_ads_client_id: (settings.seo as any)?.google_ads_client_id || '',
         google_ads_slot: (settings.seo as any)?.google_ads_slot || '',
+        admin_bar_text: settings.general.admin_bar_text || '',
+        admin_bar_icon_light: settings.general.admin_bar_icon_light || '',
+        admin_bar_icon_dark: settings.general.admin_bar_icon_dark || '',
       });
     }
   };
@@ -1147,21 +1159,23 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Social Links */}
+                {/* Social & Donation */}
                 <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:link-bold" className="w-4 h-4" /> Social Links</h3>
+                  <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:link-bold" className="w-4 h-4" /> Support & Social</h3>
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium mb-1 block">Discord URL</label>
                       <Input value={settingsForm.discord_url} onChange={e => setSettingsForm(s => ({ ...s, discord_url: e.target.value }))} className="rounded-xl bg-background" placeholder="https://discord.gg/..." />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Donation Name (e.g. Patreon, Ko-fi)</label>
-                      <Input value={settingsForm.donation_name} onChange={e => setSettingsForm(s => ({ ...s, donation_name: e.target.value }))} className="rounded-xl bg-background" placeholder="Patreon" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Donation URL</label>
-                      <Input value={settingsForm.donation_url} onChange={e => setSettingsForm(s => ({ ...s, donation_url: e.target.value }))} className="rounded-xl bg-background" placeholder="https://..." />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Donation Name</label>
+                        <Input value={settingsForm.donation_name} onChange={e => setSettingsForm(s => ({ ...s, donation_name: e.target.value }))} className="rounded-xl bg-background" placeholder="Patreon" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Donation URL</label>
+                        <Input value={settingsForm.donation_url} onChange={e => setSettingsForm(s => ({ ...s, donation_url: e.target.value }))} className="rounded-xl bg-background" placeholder="https://..." />
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-1 block">Donation Icon URL</label>
@@ -1169,6 +1183,78 @@ export default function AdminPanel() {
                       <p className="text-xs text-muted-foreground mt-1.5">You can use an image URL or an Iconify ID like `ph:coffee-bold`.</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Admin Bar Config */}
+                <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:shield-chevron-bold" className="w-4 h-4 text-rose-500" /> Admin Bar Configuration</h3>
+                    <div className="text-[10px] font-bold py-0.5 px-2 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20 uppercase tracking-widest">Global</div>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Customize the floating navigation bar that appears for administrators on the main site.</p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block flex items-center gap-2">
+                        <Icon icon="ph:text-t-bold" className="w-4 h-4" /> Bar Text
+                      </label>
+                      <Input 
+                        value={settingsForm.admin_bar_text} 
+                        onChange={e => setSettingsForm(s => ({ ...s, admin_bar_text: e.target.value }))} 
+                        className="rounded-xl bg-background" 
+                        placeholder="e.g. Staff Area" 
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium mb-1 block flex items-center gap-2">
+                          <div className="w-3 h-3 rounded bg-white border border-border" /> Light Mode Icon
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white border border-border flex items-center justify-center overflow-hidden shrink-0">
+                            {settingsForm.admin_bar_icon_light ? (
+                              <img src={settingsForm.admin_bar_icon_light} alt="Light icon" className="w-full h-full object-contain" />
+                            ) : (
+                              <Icon icon="ph:image-bold" className="w-4 h-4 text-gray-400" />
+                            )}
+                          </div>
+                          <Input 
+                            value={settingsForm.admin_bar_icon_light} 
+                            onChange={e => setSettingsForm(s => ({ ...s, admin_bar_icon_light: e.target.value }))} 
+                            className="rounded-xl bg-background text-xs h-9" 
+                            placeholder="Image URL" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium mb-1 block flex items-center gap-2">
+                          <div className="w-3 h-3 rounded bg-[#0a0a0a] border border-white/20" /> Dark Mode Icon
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-[#0a0a0a] border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                            {settingsForm.admin_bar_icon_dark ? (
+                              <img src={settingsForm.admin_bar_icon_dark} alt="Dark icon" className="w-full h-full object-contain" />
+                            ) : (
+                              <Icon icon="ph:image-bold" className="w-4 h-4 text-gray-600" />
+                            )}
+                          </div>
+                          <Input 
+                            value={settingsForm.admin_bar_icon_dark} 
+                            onChange={e => setSettingsForm(s => ({ ...s, admin_bar_icon_dark: e.target.value }))} 
+                            className="rounded-xl bg-background text-xs h-9" 
+                            placeholder="Image URL" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <Button className="rounded-xl shadow-lg shadow-primary/20" onClick={handleSaveSettings}>Save General Settings</Button>
+                  <Button variant="outline" className="rounded-xl" onClick={handleResetSettings}>Reset</Button>
                 </div>
               </div>
             )}

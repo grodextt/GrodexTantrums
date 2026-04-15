@@ -17,6 +17,7 @@ import { useTrackView } from '@/hooks/useTrackView';
 import { useReaderSettings } from '@/hooks/useReaderSettings';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Reader Components
 import ReaderHeader from '@/components/reader/ReaderHeader';
@@ -277,6 +278,24 @@ export default function ChapterReader() {
     } catch (err: any) { sonnerToast.error(err.message || 'Unlock failed'); }
   };
 
+  const isMobile = useIsMobile();
+
+  const prevPage = () => {
+    if (settings.displayMode === 'double') {
+      setCurrentPage(p => Math.max(0, p - 2));
+    } else {
+      setCurrentPage(p => Math.max(0, p - 1));
+    }
+  };
+
+  const nextPage = () => {
+    if (settings.displayMode === 'double') {
+      setCurrentPage(p => Math.min(totalPages - 1, p + 2));
+    } else {
+      setCurrentPage(p => Math.min(totalPages - 1, p + 1));
+    }
+  };
+
   return (
     <div className={`min-h-screen bg-[#0f1117] text-gray-100 selection:bg-primary/30 ${settings.imageSettings.greyscale ? 'grayscale' : ''} ${settings.imageSettings.dim ? 'brightness-75' : ''}`}>
       {/* Header Integration */}
@@ -405,7 +424,7 @@ export default function ChapterReader() {
                   <span className="flex items-center gap-1.5"><Icon icon="ph:ticket-bold" className="w-3.5 h-3.5" /> Tickets: {tokenBalance}</span>
                 </div>
               ) : (
-                <Button onClick={() => navigate('/login')} className="w-full h-14 rounded-2xl text-base font-bold">Sign in to Unlock</Button>
+                <Button onClick={() => setShowLoginModal(true)} className="w-full h-14 rounded-2xl text-base font-bold">Sign in to Unlock</Button>
               )}
               
               <Link to={`/manga/${manga.slug}`} className="block text-sm text-gray-500 hover:text-white transition-colors">Back to Chapter List</Link>
@@ -416,8 +435,8 @@ export default function ChapterReader() {
              <Icon icon="ph:spinner-bold" className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className={`mx-auto flex flex-col items-center ${settings.displayMode === 'longstrip' ? '' : 'min-h-[80vh] justify-center'}`}
-               style={{ gap: `${settings.stripMargin}px`, maxWidth: settings.fitMode === 'width' ? '900px' : settings.fitMode === 'height' ? '60vh' : 'none' }}>
+          <div className={`mx-auto flex flex-col items-center max-w-full overflow-x-hidden ${settings.displayMode === 'longstrip' ? '' : 'min-h-[80vh] justify-center'}`}
+               style={{ gap: `${settings.stripMargin}px` }}>
             
             {pageUrls.length === 0 ? (
               <div className="py-20 text-center text-muted-foreground">
@@ -425,119 +444,173 @@ export default function ChapterReader() {
                 {pagesError && <p className="text-red-400 mt-2">There was an error loading the pages.</p>}
               </div>
             ) : settings.displayMode === 'longstrip' ? (
-              pageUrls.map((url, i) => (
-                <div key={i} className="w-full relative">
-                  <img
-                    src={url}
-                    alt={`Page ${i + 1}`}
-                    loading="lazy"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-auto shadow-2xl"
-                    style={{ 
-                      maxWidth: settings.imageSettings.limitMaxWidth ? '800px' : 'none',
-                      maxHeight: settings.imageSettings.limitMaxHeight ? '90vh' : 'none'
-                    }}
-                    onError={(e) => {
-                      const img = e.currentTarget;
-                      img.style.display = 'none';
-                      const placeholder = img.nextElementSibling as HTMLElement;
-                      if (placeholder) placeholder.style.display = 'flex';
-                    }}
-                  />
-                  <div className="hidden w-full h-48 items-center justify-center bg-white/5 border border-white/10 rounded-lg text-gray-500 text-sm gap-2">
-                    <Icon icon="ph:image-broken-bold" className="w-6 h-6" />
-                    Page {i + 1} failed to load
+              <div className="flex flex-col items-center w-full" style={{ gap: `${settings.stripMargin}px` }}>
+                {pageUrls.map((url, i) => (
+                  <div key={i} className="w-full relative flex justify-center">
+                    <img
+                      src={url}
+                      alt={`Page ${i + 1}`}
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-auto shadow-2xl"
+                      style={{ 
+                        maxWidth: settings.imageSettings.limitMaxWidth ? '800px' : 'none',
+                      }}
+                    />
                   </div>
-                </div>
-              ))
-            ) : settings.displayMode === 'single' ? (
-              <div className="relative group flex flex-col items-center gap-6 py-10">
-                <img
-                  src={pageUrls[currentPage]}
-                  alt={`Page ${currentPage + 1}`}
-                  referrerPolicy="no-referrer"
-                  className="max-h-[85vh] w-auto shadow-2xl rounded-lg"
-                  onClick={() => settings.readingDirection === 'ltr' ? (currentPage < totalPages - 1 && setCurrentPage(currentPage + 1)) : (currentPage > 0 && setCurrentPage(currentPage - 1))}
-                />
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0}>Prev</Button>
-                  <span className="text-sm font-bold">{currentPage + 1} / {totalPages}</span>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage === totalPages - 1}>Next</Button>
-                </div>
+                ))}
               </div>
             ) : (
-              /* Double page mode */
-              <div className="flex flex-col items-center gap-8 py-10">
-                <div className="flex gap-1 justify-center max-w-[95vw]">
-                  <img src={pageUrls[currentPage]} referrerPolicy="no-referrer" className="max-h-[80vh] w-auto shadow-xl rounded-l-lg" />
-                  {currentPage + 1 < totalPages && <img src={pageUrls[currentPage + 1]} referrerPolicy="no-referrer" className="max-h-[80vh] w-auto shadow-xl rounded-r-lg" />}
-                </div>
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(0, p - 2))} disabled={currentPage === 0}>Prev</Button>
-                  <span className="text-sm font-bold">Pages {currentPage + 1}-{Math.min(currentPage + 2, totalPages)} / {totalPages}</span>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 2))} disabled={currentPage >= totalPages - 2}>Next</Button>
+              <div className="relative group flex flex-col items-center gap-10 py-10 w-full">
+                {settings.displayMode === 'single' ? (
+                  <img
+                    src={pageUrls[currentPage]}
+                    alt={`Page ${currentPage + 1}`}
+                    referrerPolicy="no-referrer"
+                    className="max-h-[85vh] w-auto shadow-2xl rounded-lg object-contain max-w-full"
+                    onClick={nextPage}
+                  />
+                ) : (
+                  <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 md:gap-1 justify-center max-w-full px-4`}>
+                    <img
+                      src={pageUrls[currentPage]}
+                      alt={`Page ${currentPage + 1}`}
+                      referrerPolicy="no-referrer"
+                      className={`${isMobile ? 'max-h-none w-full' : 'max-h-[80vh] w-auto'} shadow-2xl rounded-lg md:rounded-l-lg object-contain`}
+                      onClick={nextPage}
+                    />
+                    {currentPage + 1 < totalPages && (
+                      <img
+                        src={pageUrls[currentPage + 1]}
+                        alt={`Page ${currentPage + 2}`}
+                        referrerPolicy="no-referrer"
+                        className={`${isMobile ? 'max-h-none w-full' : 'max-h-[80vh] w-auto'} shadow-2xl rounded-lg md:rounded-r-lg object-contain`}
+                        onClick={nextPage}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* Navigation Controls Overlay */}
+                <div className="mt-4 flex items-center justify-center gap-6 px-4">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={prevPage} 
+                    disabled={currentPage === 0}
+                    className="rounded-full w-14 h-14 bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                  >
+                    <Icon icon="ph:caret-left-bold" className="w-6 h-6" />
+                  </Button>
+                  
+                  <div className="px-6 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                    <span className="text-white font-bold tracking-widest text-sm">
+                      {settings.displayMode === 'double' 
+                        ? `${currentPage + 1}${currentPage + 1 < totalPages ? `-${currentPage + 2}` : ''} / ${totalPages}`
+                        : `${currentPage + 1} / ${totalPages}`
+                      }
+                    </span>
+                  </div>
+
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={nextPage} 
+                    disabled={currentPage >= totalPages - 1}
+                    className="rounded-full w-14 h-14 bg-white/5 border-white/10 hover:bg-white/10 text-white shadow-lg shadow-primary/20"
+                  >
+                    <Icon icon="ph:caret-right-bold" className="w-6 h-6" />
+                  </Button>
                 </div>
               </div>
             )}
           </div>
         )}
-      </main>
 
-      {/* Reader Nav & Comments Footer */}
-      {!isLocked && !isSubLocked && (
-        <div className="max-w-[1000px] mx-auto py-12 px-4 space-y-8">
-          {/* Bottom chapter nav */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 shadow-md">
-            <Button variant="secondary" disabled={!hasPrev} onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)} className="gap-2 bg-[#272b36] hover:bg-[#323846] text-white border-0 h-11 px-6 rounded-lg font-bold">
-              <Icon icon="ph:arrow-left-bold" /> Previous Chapter
-            </Button>
-            <div className="text-center hidden md:block">
-              <p className="text-sm text-gray-400 font-bold tracking-widest uppercase mb-1">End of Chapter</p>
-              <p className="text-base font-bold text-white">Next: Chapter {chapterNum + 1}</p>
-            </div>
-            <Button variant="secondary" disabled={!hasNext} onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)} className="gap-2 bg-[#272b36] hover:bg-[#323846] text-white border-0 h-11 px-6 rounded-lg font-bold">
-              Next Chapter <Icon icon="ph:arrow-right-bold" />
-            </Button>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-xl bg-[#1e2330] border border-white/5 overflow-hidden shadow-xl relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -ml-8 -mb-8 pointer-events-none" />
-            
-            <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
-              <div className="w-12 h-12 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
-                <Icon icon="ph:star-fill" className="w-6 h-6 text-yellow-500" />
+        {!isLocked && !isSubLocked && (
+          <div className="max-w-4xl mx-auto py-16 px-4 space-y-12">
+            {/* Bottom chapter nav */}
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 shadow-2xl backdrop-blur-sm gap-4">
+              <Button 
+                variant="secondary" 
+                disabled={!hasPrev} 
+                onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum - 1}`)} 
+                className="flex-1 sm:flex-none gap-2 bg-white/10 hover:bg-white/15 text-white border-0 h-12 px-6 rounded-xl font-bold transition-all"
+              >
+                <Icon icon="ph:arrow-left-bold" className="shrink-0" /> 
+                <span className="hidden sm:inline">Previous Chapter</span>
+                <span className="inline sm:hidden">Prev</span>
+              </Button>
+              
+              <div className="hidden lg:flex flex-col items-center">
+                <span className="text-[10px] uppercase tracking-[0.2em] font-black text-white/30 mb-0.5">You are reading</span>
+                <span className="text-sm font-bold text-white/90">Chapter {chapterNum}</span>
               </div>
-              <div>
-                <p className="text-lg font-bold text-white mb-0.5">Please support us!</p>
-                <p className="text-sm text-gray-400 font-medium">Liked the chapter? Help us keep going ❤️</p>
-              </div>
+
+              <Button 
+                variant="secondary" 
+                disabled={!hasNext} 
+                onClick={() => navigate(`/manga/${slug}/chapter/${chapterNum + 1}`)} 
+                className="flex-1 sm:flex-none gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 h-12 px-6 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all"
+              >
+                <span className="hidden sm:inline">Next Chapter</span>
+                <span className="inline sm:hidden">Next</span>
+                <Icon icon="ph:arrow-right-bold" className="shrink-0" />
+              </Button>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto relative z-10 sm:justify-center md:justify-end">
-              {donationUrl && (
-                <Button variant="outline" className="gap-2 h-11 px-5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500 whitespace-nowrap bg-transparent" onClick={() => window.open(donationUrl, '_blank')}>
-                   {donationIconUrl.includes('http') ? (
-                     <img src={donationIconUrl} alt={donationName} className="w-4 h-4 object-contain" />
-                   ) : (
-                     <Icon icon={donationIconUrl || 'ph:coffee-bold'} className="w-4 h-4" />
-                   )}
-                   {donationName}
+            {/* Support Heart */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl bg-white/5 border border-white/5 overflow-hidden shadow-xl relative backdrop-blur-sm">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl -ml-8 -mb-8 pointer-events-none" />
+              
+              <div className="flex items-center gap-4 relative z-10 w-full md:w-auto">
+                <div className="w-12 h-12 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center shrink-0">
+                  <Icon icon="ph:star-fill" className="w-6 h-6 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-white mb-0.5">Please support us!</p>
+                  <p className="text-sm text-white/40 font-medium">Liked the chapter? Help us keep going ❤️</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full md:w-auto relative z-10 sm:justify-center md:justify-end">
+                {donationUrl && (
+                  <Button 
+                    variant="outline" 
+                    className="gap-2 h-11 px-5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-500 whitespace-nowrap bg-transparent rounded-xl" 
+                    onClick={() => window.open(donationUrl, '_blank')}
+                  >
+                    {donationIconUrl.includes('http') ? (
+                      <img src={donationIconUrl} alt={donationName} className="w-4 h-4 object-contain" />
+                    ) : (
+                      <Icon icon={donationIconUrl || 'ph:coffee-bold'} className="w-4 h-4" />
+                    )}
+                    {donationName}
+                  </Button>
+                )}
+                <Button 
+                  onClick={() => window.open(discordUrl, '_blank')} 
+                  className="gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white h-11 px-6 border-0 rounded-xl"
+                >
+                  <Icon icon="ic:baseline-discord" className="w-5 h-5" />
+                  Join Discord
                 </Button>
-              )}
-              <Button onClick={() => window.open(discordUrl, '_blank')} className="gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white h-11 px-4 border-0">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-                Join Discord
-              </Button>
-              <Button size="icon" variant="secondary" className="h-11 w-11 shrink-0 bg-white/5 hover:bg-white/10 text-white border-0" onClick={handleShare}>
-                <Icon icon="ph:share-network-bold" className="w-5 h-5" />
-              </Button>
+                <Button 
+                  size="icon" 
+                  variant="secondary" 
+                  className="h-11 w-11 shrink-0 bg-white/10 hover:bg-white/15 text-white border-0 rounded-xl" 
+                  onClick={handleShare}
+                >
+                  <Icon icon="ph:share-network-bold" className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
-          </div>
 
-          <CommentSection mangaId={manga.id} contextType="chapter" contextId={currentChapter.id} />
-        </div>
-      )}
+            <CommentSection mangaId={manga.id} contextType="chapter" contextId={currentChapter.id} />
+          </div>
+        )}
+      </main>
 
       {/* Reader Menu Panel */}
       <ReaderMenuPanel

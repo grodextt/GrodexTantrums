@@ -13,6 +13,7 @@ import LoginModal from "@/components/LoginModal";
 import ScrollToTop from "@/components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import SEOHead from "@/components/SEOHead";
+import FloatingAdminBar from "@/components/FloatingAdminBar";
 import Index from "./pages/Index";
 
 const MangaInfo = lazy(() => import("./pages/MangaInfo"));
@@ -44,27 +45,42 @@ function ScrollToTopOnNavigate() {
 
 const AppLayout = () => {
   const location = useLocation();
-  const { isLoading } = useSiteSettings();
+  const { settings, isLoading } = useSiteSettings();
   const isChapterReader = /^\/manga\/[^/]+\/chapter\//.test(location.pathname);
   const isAdminPanel = location.pathname.startsWith('/admin');
   const hideShell = isChapterReader || isAdminPanel;
+
+  // Site name for loader (e.g. MangaZ -> MZ)
+  const shortName = settings.general.site_name
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center z-[9999]">
         <div className="relative">
-          <div className="w-20 h-20 rounded-2xl bg-primary/20 animate-pulse border border-primary/30 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-xl bg-primary shadow-[0_0_30px_rgba(var(--primary),0.4)] animate-bounce flex items-center justify-center">
-              <span className="text-2xl font-black text-primary-foreground italic">MZ</span>
+          <div className="w-24 h-24 rounded-3xl bg-primary/20 animate-pulse border border-primary/30 flex items-center justify-center p-4">
+            <div className="w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(var(--primary),0.5)] animate-bounce flex items-center justify-center overflow-hidden">
+              {settings.general.logo_url ? (
+                <img src={settings.general.logo_url} alt="Logo" className="w-full h-full object-contain" />
+              ) : (
+                <span className="text-3xl font-black text-primary-foreground italic">{shortName || 'MZ'}</span>
+              )}
             </div>
           </div>
-          <div className="absolute -inset-4 bg-primary/10 blur-3xl animate-pulse rounded-full -z-1" />
+          <div className="absolute -inset-6 bg-primary/20 blur-[50px] animate-pulse rounded-full -z-10" />
         </div>
-        <div className="mt-8 space-y-2 text-center">
-          <h2 className="text-white font-black tracking-tighter text-xl uppercase italic">MangaZ</h2>
-          <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mx-auto">
+        <div className="mt-10 space-y-3 text-center">
+          <h2 className="text-white font-black tracking-tighter text-2xl uppercase italic drop-shadow-lg">
+            {settings.general.site_name}
+          </h2>
+          <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mx-auto border border-white/5">
             <div className="h-full bg-primary animate-loading-bar" />
           </div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-bold animate-pulse">Loading Content</p>
         </div>
       </div>
     );
@@ -74,6 +90,7 @@ const AppLayout = () => {
     <div className="min-h-screen flex flex-col">
       <SEOHead />
       <ScrollToTopOnNavigate />
+      {!isAdminPanel && <FloatingAdminBar />}
       {!hideShell && <Navbar />}
       <main className="flex-1">
         <Suspense fallback={null}>
