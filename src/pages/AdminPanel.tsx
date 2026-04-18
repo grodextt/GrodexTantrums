@@ -1165,8 +1165,6 @@ export default function AdminPanel() {
                       </div>
                     </div>
                   </div>
-
-                  </div>
                 </div>
 
                 {/* Footer */}
@@ -1435,11 +1433,11 @@ export default function AdminPanel() {
                 <Icon icon="ph:arrow-counter-clockwise-bold" className="w-4 h-4" /> Reset
               </Button>
             </div>
-              </div>
-            </div>
           </div>
-        )}
-      </main>
+        </div>
+      </div>
+    )}
+  </main>
 
       <MangaFormModal open={mangaFormOpen} onOpenChange={handleMangaFormClose} manga={editingManga || undefined} />
       <ChapterManager open={chapterManagerOpen} onOpenChange={setChapterManagerOpen} manga={selectedManga} />
