@@ -209,44 +209,28 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
           oldPages: editingChapter.pages || undefined,
         });
       } else {
-        if (isManualBlogger) {
-          // Direct DB insert with extracted URLs, no file upload
-          const { error } = await supabase
-            .from('chapters')
-            .insert({
-              manga_id: manga.id,
-              number: num,
-              title: chapterTitle,
-              premium: isPremium,
-              coin_price: isPremium ? coinPrice : null,
-              auto_free_days: autoFreeDaysValue,
-              is_subscription: isSubscription,
-              subscription_free_release_days: subFreeDays,
-              pages: extractedUrls,
-              created_by: user?.id,
-            });
-          if (error) throw error;
-          toast.success('Chapter created successfully with Blogger images!');
-        } else {
-          await createChapter.mutateAsync({
-            chapter: {
-              manga_id: manga.id,
-              number: num,
-              title: chapterTitle,
-              premium: isPremium,
-              coin_price: isPremium ? coinPrice : null,
-              auto_free_days: autoFreeDaysValue,
-              is_subscription: isSubscription,
-              subscription_free_release_days: subFreeDays,
-            },
-            pageFiles: files,
-            mangaSlug: manga.slug,
-          });
-        }
+        // Uniform use of hook for both manual blogger and standard upload
+        await createChapter.mutateAsync({
+          chapter: {
+            manga_id: manga.id,
+            number: num,
+            title: chapterTitle,
+            premium: isPremium,
+            coin_price: isPremium ? coinPrice : null,
+            auto_free_days: autoFreeDaysValue,
+            is_subscription: isSubscription,
+            subscription_free_release_days: subFreeDays,
+            // Pass pages directly if manual blogger
+            ...(isManualBlogger ? { pages: extractedUrls } : {}),
+          },
+          pageFiles: isManualBlogger ? [] : files,
+          mangaSlug: manga.slug,
+        });
       }
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save chapter:", error);
+      toast.error(error.message || "Failed to save chapter. Check your connection.");
     }
   };
 

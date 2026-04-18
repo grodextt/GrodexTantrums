@@ -315,6 +315,7 @@ export const useCreateChapter = () => {
       pageFiles: File[];
       mangaSlug: string;
     }) => {
+      const pages: string[] = [];
       // Upload all page images (if any files provided)
       if (pageFiles && pageFiles.length > 0) {
         for (let i = 0; i < pageFiles.length; i++) {
