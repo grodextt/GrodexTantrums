@@ -29,7 +29,7 @@ interface ReaderSettings {
   imageSettings: ImageSettings;
 }
 
-const STORAGE_KEY = 'mangaz-reader-settings';
+const STORAGE_KEY = 'grodextt-reader-settings';
 
 const defaultSettings: ReaderSettings = {
   headerMode: 'sticky',

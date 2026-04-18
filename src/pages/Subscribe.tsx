@@ -35,7 +35,7 @@ export default function SubscribePage() {
   const showSubCount = premiumSettings?.subscription_settings?.show_subscriber_count ?? true;
   const bonusCoinsEnabled = premiumSettings?.subscription_settings?.bonus_coins_enabled ?? true;
   const doubleDailyLogin = premiumSettings?.subscription_settings?.double_daily_login_enabled ?? true;
-  const siteName = siteSettings?.general?.site_name || 'MangaZ';
+  const siteName = siteSettings?.general?.site_name || 'Grodex Tantrums';
 
   const handleSubscribe = (planId: string) => {
     if (!user) {

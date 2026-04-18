@@ -110,7 +110,7 @@ serve(async (req) => {
           intent: "CAPTURE",
           purchase_units: [purchaseUnit],
           application_context: {
-            brand_name: "MangaZ",
+            brand_name: "Grodex Tantrums",
             landing_page: "LOGIN",
             user_action: "PAY_NOW",
             shipping_preference: "NO_SHIPPING",

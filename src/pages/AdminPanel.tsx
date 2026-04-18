@@ -156,8 +156,8 @@ export default function AdminPanel() {
       
       setSettingsForm(prev => ({
         ...prev,
-        site_name: adminData.general?.site_name ?? settings?.general?.site_name ?? 'MangaZ',
-        site_title: adminData.general?.site_title ?? settings?.general?.site_title ?? 'MangaZ',
+        site_name: adminData.general?.site_name ?? settings?.general?.site_name ?? 'Grodex Tantrums',
+        site_title: adminData.general?.site_title ?? settings?.general?.site_title ?? 'Grodex Tantrums',
         site_title_suffix: adminData.general?.site_title_suffix ?? settings?.general?.site_title_suffix ?? '- Read Manga',
         site_description: adminData.general?.site_description ?? settings?.general?.site_description ?? '',
         footer_text: adminData.general?.footer_text ?? settings?.general?.footer_text ?? '',
@@ -891,7 +891,7 @@ export default function AdminPanel() {
                         <div className="space-y-3 pt-2 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
                           <ol className="text-xs space-y-4 text-muted-foreground list-decimal pl-4">
                             <li>Go to the <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">Google Cloud Console</a>.</li>
-                            <li>Create a new project (or select an existing one). Give it a name like <strong>"MangaZ Auth"</strong>.</li>
+                            <li>Create a new project (or select an existing one). Give it a name like <strong>"Grodex Tantrums Auth"</strong>.</li>
                             <li>In the left sidebar, navigate to <strong>APIs & Services → OAuth consent screen</strong>.</li>
                             <li>Configure the consent screen:
                               <ul className="list-disc pl-4 mt-1 space-y-1">

@@ -1,8 +1,8 @@
 # GrodexTT - Professional Manga & Scanlation Platform 📚
 
-MangaZ is a next-generation, high-performance manga reading and scanlation management platform. Designed with a "Premium-First" philosophy, it combines a sleek, distraction-free reader with a robust monetization engine and an enterprise-grade admin dashboard.
+Grodex Tantrums is a next-generation, high-performance manga reading and scanlation management platform. Designed with a "Premium-First" philosophy, it combines a sleek, distraction-free reader with a robust monetization engine and an enterprise-grade admin dashboard.
 
-![MangaZ Platform Banner](public/assets/images/banner.webp)
+![Grodex Tantrums Platform Banner](public/assets/images/banner.webp)
 
 ---
 
