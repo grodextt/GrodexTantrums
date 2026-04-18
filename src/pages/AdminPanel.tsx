@@ -134,11 +134,7 @@ export default function AdminPanel() {
     extra_head_scripts: '',
     google_client_id: '',
     google_client_secret: '',
-    google_ads_client_id: '',
     google_ads_slot: '',
-    admin_bar_text: '',
-    admin_bar_icon_light: '',
-    admin_bar_icon_dark: '',
   });
 
   const [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -195,11 +191,7 @@ export default function AdminPanel() {
         extra_head_scripts: adminData.seo?.extra_head_scripts ?? settings?.seo?.extra_head_scripts ?? '',
         google_client_id: adminData.seo?.google_client_id ?? '',
         google_client_secret: adminData.seo?.google_client_secret ?? '',
-        google_ads_client_id: adminData.seo?.google_ads_client_id ?? '',
         google_ads_slot: adminData.seo?.google_ads_slot ?? '',
-        admin_bar_text: adminData.general?.admin_bar_text ?? settings?.general?.admin_bar_text ?? 'Admin Panel',
-        admin_bar_icon_light: adminData.general?.admin_bar_icon_light ?? settings?.general?.admin_bar_icon_light ?? '',
-        admin_bar_icon_dark: adminData.general?.admin_bar_icon_dark ?? settings?.general?.admin_bar_icon_dark ?? '',
       }));
       setSettingsLoaded(true);
     };
@@ -1302,6 +1294,32 @@ export default function AdminPanel() {
                         <h2 className="text-white font-black tracking-tight text-xl uppercase italic">
                           {settingsForm.loader_name || settingsForm.site_name || 'Grodex Tantrums'}
                         </h2>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-card border border-border rounded-2xl p-5 space-y-4 shadow-sm">
+                  <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:browser-bold" className="w-4 h-4 text-primary" /> Browser Tab Configuration</h3>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground ml-1 uppercase">Tab Title</label>
+                        <Input 
+                          value={settingsForm.site_title} 
+                          onChange={e => setSettingsForm(s => ({ ...s, site_title: e.target.value }))} 
+                          className="rounded-xl bg-background" 
+                          placeholder="e.g. MangaHub" 
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground ml-1 uppercase">Title Suffix</label>
+                        <Input 
+                          value={settingsForm.site_title_suffix} 
+                          onChange={e => setSettingsForm(s => ({ ...s, site_title_suffix: e.target.value }))} 
+                          className="rounded-xl bg-background" 
+                          placeholder="e.g. - Read Manga" 
+                        />
                       </div>
                     </div>
                   </div>

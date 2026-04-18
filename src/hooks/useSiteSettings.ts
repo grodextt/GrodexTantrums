@@ -17,9 +17,6 @@ export interface GeneralSettings {
   donation_name?: string;
   donation_url?: string;
   donation_icon_url?: string;
-  admin_bar_text?: string;
-  admin_bar_icon_light?: string;
-  admin_bar_icon_dark?: string;
 }
 
 export interface AnnouncementSettings {
@@ -83,9 +80,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     favicon_url: '',
     loader_name: 'Grodex Tantrums',
     loader_logo_url: '',
-    admin_bar_text: 'Admin Panel',
-    admin_bar_icon_light: '',
-    admin_bar_icon_dark: '',
+    discord_url: '',
   },
   announcements: { message: '' },
   upload: { max_size_mb: 10, allowed_formats: 'jpg, png, webp' },
