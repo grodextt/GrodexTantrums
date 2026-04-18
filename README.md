@@ -1,4 +1,4 @@
-# MangaZ V1 - Professional Manga & Scanlation Platform 📚
+# GrodexTT - Professional Manga & Scanlation Platform 📚
 
 MangaZ is a next-generation, high-performance manga reading and scanlation management platform. Designed with a "Premium-First" philosophy, it combines a sleek, distraction-free reader with a robust monetization engine and an enterprise-grade admin dashboard.
 
@@ -7,7 +7,7 @@ MangaZ is a next-generation, high-performance manga reading and scanlation manag
 ---
 
 ## 🌟 Vision & Design
-MangaZ isn't just a reader; it's an ecosystem for scanlation groups and content creators. Built with **React**, **Vite**, and **Tailwind CSS**, it leverages **Supabase** for a serverless yet powerful backend, ensuring lightning-fast performance across any device.
+GrodexTT isn't just a reader; it's an ecosystem for scanlation groups and content creators. Built with **React**, **Vite**, and **Tailwind CSS**, it leverages **Supabase** for a serverless yet powerful backend, ensuring lightning-fast performance across any device.
 
 - **Mobile Optimized**: A fluid, responsive UI designed for reading on the go.
 - **Visual Excellence**: Modern typography (Outfit/Inter), consistent HSL color palettes, and glassmorphism effects.
