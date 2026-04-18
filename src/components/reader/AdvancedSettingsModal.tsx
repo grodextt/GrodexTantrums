@@ -15,6 +15,7 @@ interface AdvancedSettingsModalProps {
   advancedProgressPosition: AdvancedProgressPosition;
   imageSettings: ImageSettings;
   onDisplayModeChange: (mode: DisplayMode) => void;
+  onFitModeChange: (mode: FitMode) => void;
   onReadingDirectionChange: (dir: ReadingDirection) => void;
   onStripMarginChange: (val: number) => void;
   onShowTipsChange: (val: boolean) => void;
@@ -148,13 +149,38 @@ export default function AdvancedSettingsModal({
                   </button>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs text-gray-500 uppercase font-semibold tracking-wider">Reading Direction</label>
-                <div className="flex gap-2">
-                  {dirBtn('ltr', 'Left To Right')}
-                  {dirBtn('rtl', 'Right To Left')}
+              {displayMode !== 'double' && (
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase font-semibold tracking-wider">Image Fit</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onFitModeChange('height')}
+                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        fitMode === 'height' ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >
+                      Fit Height
+                    </button>
+                    <button
+                      onClick={() => onFitModeChange('width')}
+                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        fitMode === 'width' ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >
+                      Fit Width
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
+              {displayMode === 'double' && (
+                <div className="space-y-2">
+                  <label className="text-xs text-gray-500 uppercase font-semibold tracking-wider">Reading Direction</label>
+                  <div className="flex gap-2">
+                    {dirBtn('ltr', 'Left To Right')}
+                    {dirBtn('rtl', 'Right To Left')}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-xs text-gray-500 uppercase font-semibold tracking-wider">Progress Bar Position</label>
                 <div className="flex gap-2 flex-wrap">

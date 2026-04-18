@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 
 export type HeaderMode = 'sticky' | 'hidden';
 export type DisplayMode = 'longstrip' | 'single' | 'double';
-export type FitMode = 'height' | 'width' | 'nolimit';
+export type FitMode = 'height' | 'width';
 export type ReadingDirection = 'rtl' | 'ltr';
 export type ProgressPosition = 'bottom' | 'left' | 'none';
 export type AdvancedProgressPosition = 'top' | 'bottom' | 'left' | 'right' | 'none';
@@ -91,7 +91,7 @@ export function useReaderSettings() {
 
   const cycleFitMode = useCallback(() => {
     setSettings(prev => {
-      const modes: FitMode[] = ['height', 'width', 'nolimit'];
+      const modes: FitMode[] = ['height', 'width'];
       const idx = modes.indexOf(prev.fitMode);
       return { ...prev, fitMode: modes[(idx + 1) % modes.length] };
     });

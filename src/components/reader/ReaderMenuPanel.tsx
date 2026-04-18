@@ -110,7 +110,6 @@ export default function ReaderMenuPanel({
   const fitModeInfo = {
     height: { label: 'Fit Height', icon: <Icon icon="ph:arrows-out-line-vertical-bold" className="w-4 h-4" /> },
     width: { label: 'Fit Width', icon: <Icon icon="ph:arrows-out-line-horizontal-bold" className="w-4 h-4" /> },
-    nolimit: { label: 'No Limit', icon: <Icon icon="ph:corners-out-bold" className="w-4 h-4" /> },
   }[settings.fitMode];
 
   const directionInfo = settings.readingDirection === 'rtl'
@@ -280,14 +279,18 @@ export default function ReaderMenuPanel({
               <span>{displayModeInfo.label}</span>
               {displayModeInfo.icon}
             </button>
-            <button onClick={cycleFitMode} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-              <span>{fitModeInfo.label}</span>
-              {fitModeInfo.icon}
-            </button>
-            <button onClick={cycleReadingDirection} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
-              <span>{directionInfo.label}</span>
-              {directionInfo.icon}
-            </button>
+            {settings.displayMode !== 'double' && (
+              <button onClick={cycleFitMode} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                <span>{fitModeInfo.label}</span>
+                {fitModeInfo.icon}
+              </button>
+            )}
+            {settings.displayMode === 'double' && (
+              <button onClick={cycleReadingDirection} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                <span>{directionInfo.label}</span>
+                {directionInfo.icon}
+              </button>
+            )}
             <button onClick={cycleProgressPosition} className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
               <span>{progressInfo.label}</span>
               {progressInfo.icon}
@@ -332,6 +335,7 @@ export default function ReaderMenuPanel({
         advancedProgressPosition={settings.advancedProgressPosition}
         imageSettings={settings.imageSettings}
         onDisplayModeChange={(m) => update('displayMode', m)}
+        onFitModeChange={(f) => update('fitMode', f)}
         onReadingDirectionChange={(d) => update('readingDirection', d)}
         onStripMarginChange={(v) => update('stripMargin', v)}
         onShowTipsChange={(v) => update('showTips', v)}

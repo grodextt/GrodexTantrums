@@ -429,8 +429,8 @@ export const ChapterManager = ({ open, onOpenChange, manga }: ChapterManagerProp
                     <Input id="chapter-number" type="number" step="0.1" value={chapterNumber} onChange={(e) => setChapterNumber(e.target.value)} placeholder="1" required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="chapter-title">Chapter Title</Label>
-                    <Input id="chapter-title" value={chapterTitle} onChange={(e) => setChapterTitle(e.target.value)} placeholder="The Beginning" required />
+                    <Label htmlFor="chapter-title">Chapter Title (Optional)</Label>
+                    <Input id="chapter-title" value={chapterTitle} onChange={(e) => setChapterTitle(e.target.value)} placeholder="e.g. The Beginning (Optional)" />
                   </div>
                 </div>
 

@@ -293,7 +293,6 @@ export default function ChapterReader() {
     switch (settings.fitMode) {
       case 'width': return 'w-full h-auto';
       case 'height': return 'max-h-[85vh] sm:max-h-[92vh] w-auto';
-      case 'nolimit': return 'max-w-none w-auto h-auto';
       default: return 'max-w-full h-auto';
     }
   };
@@ -489,12 +488,12 @@ export default function ChapterReader() {
                     onClick={nextPage}
                   />
                 ) : (
-                  <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2 md:gap-1 justify-center max-w-full px-4`}>
+                  <div className={`flex ${isMobile ? 'flex-col' : (settings.readingDirection === 'rtl' ? 'flex-row-reverse' : 'flex-row')} gap-2 md:gap-1 justify-center max-w-full px-4`}>
                     <img
                       src={pageUrls[currentPage]}
                       alt={`Page ${currentPage + 1}`}
                       referrerPolicy="no-referrer"
-                      className={`${isMobile ? 'max-h-none w-full' : getImageFitClass()} shadow-2xl rounded-lg md:rounded-l-lg object-contain`}
+                      className={`${isMobile ? 'max-h-none w-full' : getImageFitClass()} shadow-2xl rounded-lg ${settings.readingDirection === 'rtl' ? 'md:rounded-r-lg' : 'md:rounded-l-lg'} object-contain`}
                       onClick={nextPage}
                     />
                     {currentPage + 1 < totalPages && (
@@ -502,7 +501,7 @@ export default function ChapterReader() {
                         src={pageUrls[currentPage + 1]}
                         alt={`Page ${currentPage + 2}`}
                         referrerPolicy="no-referrer"
-                        className={`${isMobile ? 'max-h-none w-full' : getImageFitClass()} shadow-2xl rounded-lg md:rounded-r-lg object-contain`}
+                        className={`${isMobile ? 'max-h-none w-full' : getImageFitClass()} shadow-2xl rounded-lg ${settings.readingDirection === 'rtl' ? 'md:rounded-l-lg' : 'md:rounded-r-lg'} object-contain`}
                         onClick={nextPage}
                       />
                     )}
