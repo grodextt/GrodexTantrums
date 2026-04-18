@@ -1111,10 +1111,20 @@ export default function AdminPanel() {
 
             {/* General */}
             {settingsSubTab === 'general' && (
-              <div className="space-y-4">
+              <div className="space-y-4 pb-20">
                 <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
                   <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:globe-bold" className="w-4 h-4" /> Basic Site Details</h3>
-                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Site Name</label>
+                      <Input value={settingsForm.site_name} onChange={e => setSettingsForm(s => ({ ...s, site_name: e.target.value }))} className="rounded-xl bg-background" placeholder="e.g. MangaHub" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Site Description</label>
+                      <Input value={settingsForm.site_description} onChange={e => setSettingsForm(s => ({ ...s, site_description: e.target.value }))} className="rounded-xl bg-background" placeholder="Site tagline for SEO" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-2">
                     <div className="space-y-3 flex-1 w-full">
                       <label className="text-sm font-medium mb-1 block">Site Logo</label>
                       <div className="flex items-center gap-3">
@@ -1162,54 +1172,6 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium mb-1 block">Site Name</label>
-                        <Input value={settingsForm.site_name} onChange={e => setSettingsForm(s => ({ ...s, site_name: e.target.value }))} className="rounded-xl bg-background" placeholder="e.g. MangaHub" />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium mb-1 block">Site Description</label>
-                        <Input value={settingsForm.site_description} onChange={e => setSettingsForm(s => ({ ...s, site_description: e.target.value }))} className="rounded-xl bg-background" placeholder="Site tagline for SEO" />
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                        <Icon icon="ph:browser-bold" className="w-4 h-4" /> Browser Tab Configuration
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-muted-foreground ml-1">Tab Title</label>
-                          <Input 
-                            value={settingsForm.site_title} 
-                            onChange={e => setSettingsForm(s => ({ ...s, site_title: e.target.value }))} 
-                            className="rounded-xl bg-background border-primary/20" 
-                            placeholder="e.g. MangaHub" 
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-muted-foreground ml-1">Title Suffix</label>
-                          <Input 
-                            value={settingsForm.site_title_suffix} 
-                            onChange={e => setSettingsForm(s => ({ ...s, site_title_suffix: e.target.value }))} 
-                            className="rounded-xl bg-background border-primary/20" 
-                            placeholder="e.g. - Read Manga" 
-                          />
-                        </div>
-                      </div>
-                      <div className="mt-2 text-[11px] bg-background/50 p-2.5 rounded-xl border border-border/50">
-                        <p className="text-muted-foreground font-medium">Tab Preview:</p>
-                        <div className="mt-1 flex items-center gap-2 bg-background border border-border px-3 py-1.5 rounded-lg w-fit shadow-sm">
-                          <div className="w-4 h-4 rounded-sm bg-secondary flex items-center justify-center overflow-hidden">
-                            {settingsForm.favicon_url ? <img src={settingsForm.favicon_url} className="w-full h-full object-contain" /> : <div className="w-2 h-2 bg-primary rounded-full" />}
-                          </div>
-                          <span className="text-xs font-semibold truncate max-w-[200px]">
-                            {settingsForm.site_title || settingsForm.site_name || 'MangaHub'} {settingsForm.site_title_suffix}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
@@ -1258,76 +1220,44 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Admin Bar Config */}
                 <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:shield-chevron-bold" className="w-4 h-4 text-rose-500" /> Admin Bar Configuration</h3>
-                    <div className="text-[10px] font-bold py-0.5 px-2 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20 uppercase tracking-widest">Global</div>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Customize the floating navigation bar that appears for administrators on the main site.</p>
+                  <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:browser-bold" className="w-4 h-4 text-primary" /> Browser Tab Configuration</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Customize how your website appears in browser tabs and search results.</p>
                   
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1 block flex items-center gap-2">
-                        <Icon icon="ph:text-t-bold" className="w-4 h-4" /> Bar Text
-                      </label>
-                      <Input 
-                        value={settingsForm.admin_bar_text} 
-                        onChange={e => setSettingsForm(s => ({ ...s, admin_bar_text: e.target.value }))} 
-                        className="rounded-xl bg-background" 
-                        placeholder="e.g. Staff Area" 
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground ml-1 uppercase tracking-wider">Tab Title</label>
+                        <Input 
+                          value={settingsForm.site_title} 
+                          onChange={e => setSettingsForm(s => ({ ...s, site_title: e.target.value }))} 
+                          className="rounded-xl bg-background" 
+                          placeholder="e.g. MangaHub" 
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-muted-foreground ml-1 uppercase tracking-wider">Title Suffix</label>
+                        <Input 
+                          value={settingsForm.site_title_suffix} 
+                          onChange={e => setSettingsForm(s => ({ ...s, site_title_suffix: e.target.value }))} 
+                          className="rounded-xl bg-background" 
+                          placeholder="e.g. - Read Manga" 
+                        />
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium mb-1 block flex items-center gap-2">
-                          <div className="w-3 h-3 rounded bg-white border border-border" /> Light Mode Icon
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-white border border-border flex items-center justify-center overflow-hidden shrink-0">
-                            {settingsForm.admin_bar_icon_light ? (
-                              <img src={settingsForm.admin_bar_icon_light} alt="Light icon" className="w-full h-full object-contain" />
-                            ) : (
-                              <Icon icon="ph:image-bold" className="w-4 h-4 text-gray-400" />
-                            )}
-                          </div>
-                          <Input 
-                            value={settingsForm.admin_bar_icon_light} 
-                            onChange={e => setSettingsForm(s => ({ ...s, admin_bar_icon_light: e.target.value }))} 
-                            className="rounded-xl bg-background text-xs h-9" 
-                            placeholder="Image URL" 
-                          />
+                    <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Live Preview</p>
+                      <div className="flex items-center gap-3 bg-background border border-border px-4 py-2 rounded-lg w-fit shadow-sm">
+                        <div className="w-5 h-5 rounded bg-secondary flex items-center justify-center overflow-hidden ring-1 ring-border/50">
+                          {settingsForm.favicon_url ? <img src={settingsForm.favicon_url} className="w-full h-full object-contain" /> : <div className="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />}
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium mb-1 block flex items-center gap-2">
-                          <div className="w-3 h-3 rounded bg-[#0a0a0a] border border-white/20" /> Dark Mode Icon
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-[#0a0a0a] border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                            {settingsForm.admin_bar_icon_dark ? (
-                              <img src={settingsForm.admin_bar_icon_dark} alt="Dark icon" className="w-full h-full object-contain" />
-                            ) : (
-                              <Icon icon="ph:image-bold" className="w-4 h-4 text-gray-600" />
-                            )}
-                          </div>
-                          <Input 
-                            value={settingsForm.admin_bar_icon_dark} 
-                            onChange={e => setSettingsForm(s => ({ ...s, admin_bar_icon_dark: e.target.value }))} 
-                            className="rounded-xl bg-background text-xs h-9" 
-                            placeholder="Image URL" 
-                          />
-                        </div>
+                        <span className="text-xs font-bold truncate max-w-[250px] text-foreground/90 italic">
+                          {settingsForm.site_title || settingsForm.site_name || 'MangaHub'} {settingsForm.site_title_suffix}
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button className="rounded-xl shadow-lg shadow-primary/20" onClick={handleSaveSettings}>Save General Settings</Button>
-                  <Button variant="outline" className="rounded-xl" onClick={handleResetSettings}>Reset</Button>
                 </div>
               </div>
             )}
