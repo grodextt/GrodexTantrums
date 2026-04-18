@@ -352,9 +352,6 @@ export default function AdminPanel() {
             donation_name: settingsForm.donation_name,
             donation_url: settingsForm.donation_url,
             donation_icon_url: settingsForm.donation_icon_url,
-            admin_bar_text: settingsForm.admin_bar_text,
-            admin_bar_icon_light: settingsForm.admin_bar_icon_light,
-            admin_bar_icon_dark: settingsForm.admin_bar_icon_dark,
           },
         }),
         updateSettings.mutateAsync({
@@ -451,9 +448,6 @@ export default function AdminPanel() {
         google_client_secret: (settings.seo as any)?.google_client_secret || '',
         google_ads_client_id: (settings.seo as any)?.google_ads_client_id || '',
         google_ads_slot: (settings.seo as any)?.google_ads_slot || '',
-        admin_bar_text: settings.general.admin_bar_text || '',
-        admin_bar_icon_light: settings.general.admin_bar_icon_light || '',
-        admin_bar_icon_dark: settings.general.admin_bar_icon_dark || '',
       });
     }
   };
