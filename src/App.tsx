@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { Icon } from "@iconify/react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -50,14 +51,16 @@ const AppLayout = () => {
   const hideShell = isChapterReader || isAdminPanel;
 
   // Site name for loader (e.g. MangaZ -> MZ)
-  const siteName = settings?.general?.site_name || 'MangaZ';
+  const siteName = settings?.general?.site_name;
   const shortName = siteName
-    .split(' ')
-    .filter(Boolean)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'MZ';
+    ? siteName
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+    : '';
     
   const logoUrl = settings?.general?.logo_url;
 
@@ -69,17 +72,21 @@ const AppLayout = () => {
             <div className="w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(var(--primary),0.5)] animate-bounce flex items-center justify-center overflow-hidden">
               {logoUrl ? (
                 <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+              ) : shortName ? (
+                <span className="text-3xl font-black text-primary-foreground italic">{shortName}</span>
               ) : (
-                <span className="text-3xl font-black text-primary-foreground italic">{shortName || 'MZ'}</span>
+                <Icon icon="ph:shield-check-bold" className="w-8 h-8 text-primary-foreground animate-pulse" />
               )}
             </div>
           </div>
           <div className="absolute -inset-6 bg-primary/20 blur-[50px] animate-pulse rounded-full -z-10" />
         </div>
         <div className="mt-10 space-y-3 text-center">
-          <h2 className="text-white font-black tracking-tighter text-2xl uppercase italic drop-shadow-lg">
-            {siteName}
-          </h2>
+          {siteName && (
+            <h2 className="text-white font-black tracking-tighter text-2xl uppercase italic drop-shadow-lg">
+              {siteName}
+            </h2>
+          )}
           <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mx-auto border border-white/5">
             <div className="h-full bg-primary animate-loading-bar" />
           </div>

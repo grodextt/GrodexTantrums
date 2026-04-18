@@ -63,8 +63,8 @@ const SEOHead = () => {
   return (
     <Helmet>
       {/* Primary Meta Tags */}
-      <title>{general.site_name} - Read Manga Online & Manhwa</title>
-      <meta name="title" content={general.site_name} />
+      <title>{`${general.site_title || general.site_name}${general.site_title_suffix || ''}`}</title>
+      <meta name="title" content={general.site_title || general.site_name} />
       <meta name="description" content={general.site_description} />
       <meta name="robots" content={seo.robots_meta || 'index, follow'} />
       <meta name="author" content={general.site_name} />
@@ -72,14 +72,14 @@ const SEOHead = () => {
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />
       <meta property="og:url" content={window.location.origin} />
-      <meta property="og:title" content={`${general.site_name} - Read Manga Online`} />
+      <meta property="og:title" content={`${general.site_title || general.site_name}${general.site_title_suffix || ''}`} />
       <meta property="og:description" content={general.site_description} />
       <meta property="og:image" content={general.logo_url || '/og-image.png'} />
 
       {/* Twitter */}
       <meta property="twitter:card" content="summary_large_image" />
       <meta property="twitter:url" content={window.location.origin} />
-      <meta property="twitter:title" content={`${general.site_name} - Read Manga Online`} />
+      <meta property="twitter:title" content={`${general.site_title || general.site_name}${general.site_title_suffix || ''}`} />
       <meta property="twitter:description" content={general.site_description} />
       <meta property="twitter:image" content={general.logo_url || '/og-image.png'} />
 
@@ -94,8 +94,10 @@ const SEOHead = () => {
       )}
       
       {/* Favicon / Branding */}
-      {general.logo_url ? (
-        <link rel="icon" type="image/x-icon" href={general.logo_url} />
+      {general.favicon_url ? (
+        <link rel="icon" href={general.favicon_url} />
+      ) : general.logo_url ? (
+        <link rel="icon" href={general.logo_url} />
       ) : (
         <link rel="icon" type="image/svg+xml" href="/vite.svg" />
       )}

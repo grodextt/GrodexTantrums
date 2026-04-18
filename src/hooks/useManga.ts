@@ -311,20 +311,23 @@ export const useCreateChapter = () => {
       pageFiles,
       mangaSlug,
     }: {
-      chapter: Omit<ChapterInsert, "pages">;
+      chapter: Partial<ChapterInsert>;
       pageFiles: File[];
       mangaSlug: string;
     }) => {
-      const pages: string[] = [];
-
-      // Upload all page images
-      for (let i = 0; i < pageFiles.length; i++) {
-        const file = pageFiles[i];
-        const pageUrl = await uploadFile(
-          file,
-          `chapters/${mangaSlug}/ch${chapter.number}/page${i + 1}`
-        );
-        pages.push(pageUrl);
+      // Upload all page images (if any files provided)
+      if (pageFiles && pageFiles.length > 0) {
+        for (let i = 0; i < pageFiles.length; i++) {
+          const file = pageFiles[i];
+          const pageUrl = await uploadFile(
+            file,
+            `chapters/${mangaSlug}/ch${chapter.number}/page${i + 1}`
+          );
+          pages.push(pageUrl);
+        }
+      } else if ((chapter as any).pages) {
+        // Use provided URLs (Blogger mode)
+        pages.push(...(chapter as any).pages);
       }
 
       const { data, error } = await supabase
@@ -382,14 +385,14 @@ export const useUpdateChapter = () => {
       mangaSlug: string;
       oldPages?: string[];
     }) => {
-      let pages = chapter.pages;
+      let pages = chapter.pages || [];
 
       // If new page files provided, replace all pages
       if (pageFiles && pageFiles.length > 0) {
         // Delete old pages
         if (oldPages) {
           for (const pageUrl of oldPages) {
-            await deleteFile(pageUrl);
+            await deleteFile(pageUrl).catch(() => {}); // ignore delete errors
           }
         }
 
@@ -403,6 +406,9 @@ export const useUpdateChapter = () => {
           );
           pages.push(pageUrl);
         }
+      } else if (!chapter.pages) {
+        // If no files and no change to pages in chapter object, keep existing
+        pages = oldPages || [];
       }
 
       const { data, error } = await supabase

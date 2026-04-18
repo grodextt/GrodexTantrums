@@ -351,7 +351,7 @@ export function StorageSection({ settingsForm, setSettingsForm }: StorageSection
                 <li>Upload all your chapter images using their "Insert Image" button.</li>
                 <li>Switch the post view to <strong>HTML View</strong>.</li>
                 <li>Copy all the HTML.</li>
-                <li>In MangaZ Chapter Manager, click <strong>Paste HTML</strong> and paste it there. The system will automatically extract all permanent image links.</li>
+                <li>In Chapter Manager, click <strong>Paste HTML</strong> and paste it there. The system will automatically extract all permanent image links.</li>
               </ol>
           </div>
         )}

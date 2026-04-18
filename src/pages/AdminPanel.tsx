@@ -100,10 +100,13 @@ export default function AdminPanel() {
   // Settings form state
   const [settingsForm, setSettingsForm] = useState({
     site_name: '',
+    site_title: '',
+    site_title_suffix: '',
     site_description: '',
     footer_text: '',
     footer_tagline: '',
     logo_url: '',
+    favicon_url: '',
     discord_url: '',
     donation_name: 'Patreon',
     donation_url: '',
@@ -155,11 +158,14 @@ export default function AdminPanel() {
       
       setSettingsForm(prev => ({
         ...prev,
-        site_name: adminData.general?.site_name ?? settings?.general?.site_name ?? 'MangaHub',
+        site_name: adminData.general?.site_name ?? settings?.general?.site_name ?? 'MangaZ',
+        site_title: adminData.general?.site_title ?? settings?.general?.site_title ?? 'MangaZ',
+        site_title_suffix: adminData.general?.site_title_suffix ?? settings?.general?.site_title_suffix ?? '- Read Manga',
         site_description: adminData.general?.site_description ?? settings?.general?.site_description ?? '',
         footer_text: adminData.general?.footer_text ?? settings?.general?.footer_text ?? '',
         footer_tagline: adminData.general?.footer_tagline ?? settings?.general?.footer_tagline ?? '',
         logo_url: adminData.general?.logo_url ?? settings?.general?.logo_url ?? '',
+        favicon_url: adminData.general?.favicon_url ?? settings?.general?.favicon_url ?? '',
         discord_url: adminData.general?.discord_url ?? settings?.general?.discord_url ?? '',
         donation_name: adminData.general?.donation_name ?? settings?.general?.donation_name ?? 'Patreon',
         donation_url: adminData.general?.donation_url ?? settings?.general?.donation_url ?? '',
@@ -337,10 +343,13 @@ export default function AdminPanel() {
           key: 'general',
           value: {
             site_name: settingsForm.site_name,
+            site_title: settingsForm.site_title,
+            site_title_suffix: settingsForm.site_title_suffix,
             site_description: settingsForm.site_description,
             footer_text: settingsForm.footer_text,
             footer_tagline: settingsForm.footer_tagline,
             logo_url: settingsForm.logo_url,
+            favicon_url: settingsForm.favicon_url,
             discord_url: settingsForm.discord_url,
             donation_name: settingsForm.donation_name,
             donation_url: settingsForm.donation_url,
@@ -408,10 +417,13 @@ export default function AdminPanel() {
     if (settings) {
       setSettingsForm({
         site_name: settings.general.site_name,
+        site_title: settings.general.site_title || settings.general.site_name,
+        site_title_suffix: settings.general.site_title_suffix || '- Read Manga',
         site_description: settings.general.site_description,
         footer_text: settings.general.footer_text,
         footer_tagline: settings.general.footer_tagline,
         logo_url: settings.general.logo_url || '',
+        favicon_url: settings.general.favicon_url || '',
         discord_url: settings.general.discord_url || '',
         donation_name: settings.general.donation_name || 'Patreon',
         donation_url: settings.general.donation_url || '',
@@ -1102,39 +1114,101 @@ export default function AdminPanel() {
               <div className="space-y-4">
                 <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
                   <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:globe-bold" className="w-4 h-4" /> Basic Site Details</h3>
-                  <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-xl">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
-                      {settingsForm.logo_url ? (
-                        <img src={settingsForm.logo_url} alt="Logo" className="w-full h-full object-contain" />
-                      ) : (
-                        <Icon icon="ph:image-bold" className="w-5 h-5 text-primary" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate">{settingsForm.site_name || 'Not set'}</p>
-                      <p className="text-xs text-muted-foreground truncate">{settingsForm.site_description || 'No description'}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="space-y-3 flex-1 w-full">
                       <label className="text-sm font-medium mb-1 block">Site Logo</label>
                       <div className="flex items-center gap-3">
-                        {settingsForm.logo_url && (
-                          <img src={settingsForm.logo_url} alt="Current logo" className="w-10 h-10 rounded-lg object-contain bg-muted" />
-                        )}
-                        <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm">
-                          <Icon icon="ph:upload-simple-bold" className="w-4 h-4" /> {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                        <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
+                          {settingsForm.logo_url ? (
+                            <img src={settingsForm.logo_url} alt="Logo" className="w-full h-full object-contain" />
+                          ) : (
+                            <Icon icon="ph:image-bold" className="w-6 h-6 text-primary" />
+                          )}
+                        </div>
+                        <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm font-semibold shadow-sm">
+                          <Icon icon="ph:upload-simple-bold" className="w-4 h-4 text-primary" /> {logoUploading ? 'Uploading...' : 'Upload Logo'}
                           <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={logoUploading} />
                         </label>
                       </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Site Name</label>
-                      <Input value={settingsForm.site_name} onChange={e => setSettingsForm(s => ({ ...s, site_name: e.target.value }))} className="rounded-xl bg-background" />
+
+                    <div className="space-y-3 flex-1 w-full">
+                      <label className="text-sm font-medium mb-1 block">Favicon (Tab Icon)</label>
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-16 rounded-xl bg-secondary/30 flex items-center justify-center overflow-hidden shrink-0 border border-border/50">
+                          {settingsForm.favicon_url ? (
+                            <img src={settingsForm.favicon_url} alt="Favicon" className="w-full h-full object-contain p-2" />
+                          ) : (
+                            <Icon icon="ph:browser-bold" className="w-6 h-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm font-semibold shadow-sm">
+                          <Icon icon="ph:upload-simple-bold" className="w-4 h-4 text-primary" /> {logoUploading ? 'Uploading...' : 'Upload Favicon'}
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setLogoUploading(true);
+                            try {
+                              const url = await uploadToStorage(file, `site/favicon-${Date.now()}`);
+                              setSettingsForm(s => ({ ...s, favicon_url: url }));
+                              toast.success('Favicon uploaded! Click Save to apply.');
+                            } catch (err: any) {
+                              toast.error(`Favicon upload failed: ${err.message}`);
+                            }
+                            setLogoUploading(false);
+                          }} disabled={logoUploading} />
+                        </label>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1 block">Site Description</label>
-                      <Input value={settingsForm.site_description} onChange={e => setSettingsForm(s => ({ ...s, site_description: e.target.value }))} className="rounded-xl bg-background" />
+                  </div>
+
+                  <div className="space-y-4 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Site Name</label>
+                        <Input value={settingsForm.site_name} onChange={e => setSettingsForm(s => ({ ...s, site_name: e.target.value }))} className="rounded-xl bg-background" placeholder="e.g. MangaHub" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Site Description</label>
+                        <Input value={settingsForm.site_description} onChange={e => setSettingsForm(s => ({ ...s, site_description: e.target.value }))} className="rounded-xl bg-background" placeholder="Site tagline for SEO" />
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl space-y-4">
+                      <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                        <Icon icon="ph:browser-bold" className="w-4 h-4" /> Browser Tab Configuration
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-muted-foreground ml-1">Tab Title</label>
+                          <Input 
+                            value={settingsForm.site_title} 
+                            onChange={e => setSettingsForm(s => ({ ...s, site_title: e.target.value }))} 
+                            className="rounded-xl bg-background border-primary/20" 
+                            placeholder="e.g. MangaHub" 
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-muted-foreground ml-1">Title Suffix</label>
+                          <Input 
+                            value={settingsForm.site_title_suffix} 
+                            onChange={e => setSettingsForm(s => ({ ...s, site_title_suffix: e.target.value }))} 
+                            className="rounded-xl bg-background border-primary/20" 
+                            placeholder="e.g. - Read Manga" 
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[11px] bg-background/50 p-2.5 rounded-xl border border-border/50">
+                        <p className="text-muted-foreground font-medium">Tab Preview:</p>
+                        <div className="mt-1 flex items-center gap-2 bg-background border border-border px-3 py-1.5 rounded-lg w-fit shadow-sm">
+                          <div className="w-4 h-4 rounded-sm bg-secondary flex items-center justify-center overflow-hidden">
+                            {settingsForm.favicon_url ? <img src={settingsForm.favicon_url} className="w-full h-full object-contain" /> : <div className="w-2 h-2 bg-primary rounded-full" />}
+                          </div>
+                          <span className="text-xs font-semibold truncate max-w-[200px]">
+                            {settingsForm.site_title || settingsForm.site_name || 'MangaHub'} {settingsForm.site_title_suffix}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,10 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export default function PrivacyPolicy() {
+  const { settings } = useSiteSettings();
+  const siteName = settings?.general?.site_name || 'the platform';
+
   return (
     <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-12 max-w-3xl mx-auto min-h-screen animate-in fade-in duration-500">
       <div className="space-y-12">
@@ -15,7 +19,7 @@ export default function PrivacyPolicy() {
             <section className="space-y-3">
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">01. Overview</h2>
               <p>
-                MangaZ operates as a digital scanlation platform. This document outlines our commitment to your privacy 
+                {siteName} operates as a digital scanlation platform. This document outlines our commitment to your privacy 
                 while navigating our services. We prioritize data minimization and user anonymity.
               </p>
             </section>
@@ -44,7 +48,7 @@ export default function PrivacyPolicy() {
               <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">04. Third-Party Integration</h2>
               <p>
                 Financial transactions are processed exclusively through secure external gateways (Stripe, PayPal, Cryptomus). 
-                MangaZ does not store or process raw financial data on its infrastructure.
+                {siteName} does not store or process raw financial data on its infrastructure.
               </p>
             </section>
 
@@ -66,7 +70,7 @@ export default function PrivacyPolicy() {
 
             <footer className="pt-8 border-t border-border/40">
               <p className="text-[10px] text-muted-foreground/60 leading-normal">
-                MangaZ reserves the right to modify this policy. Continued use of the platform constitutes 
+                {siteName} reserves the right to modify this policy. Continued use of the platform constitutes 
                 acceptance of refined terms.
               </p>
             </footer>

@@ -3,12 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { cachedFetch } from '@/lib/cachedFetch';
 
 export interface GeneralSettings {
-// ... (omitting unchanged interfaces for brevity in thinking, but will include in the tool call)
   site_name: string;
+  site_title: string;
+  site_title_suffix?: string;
   site_description: string;
   footer_text: string;
   footer_tagline: string;
   logo_url?: string;
+  favicon_url?: string;
   discord_url?: string;
   donation_name?: string;
   donation_url?: string;
@@ -71,9 +73,12 @@ export interface SiteSettings {
 const DEFAULT_SETTINGS: SiteSettings = {
   general: {
     site_name: 'MangaZ',
+    site_title: 'MangaZ',
+    site_title_suffix: '- Read Manga',
     site_description: 'Read the latest manga, manhwa and manhua online for free.',
     footer_text: 'MangaZ',
     footer_tagline: 'Your favorite place to read manga.',
+    favicon_url: '',
     admin_bar_text: 'Admin Panel',
     admin_bar_icon_light: '',
     admin_bar_icon_dark: '',
@@ -97,9 +102,11 @@ export const useSiteSettings = () => {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['site-settings'],
     queryFn: async () => {
-      const data = await cachedFetch<{ key: string; value: any }[]>('site_settings', {
-        select: 'key, value'
-      });
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('key, value');
+
+      if (error) throw error;
 
       const result = { ...DEFAULT_SETTINGS };
       for (const row of (data || [])) {

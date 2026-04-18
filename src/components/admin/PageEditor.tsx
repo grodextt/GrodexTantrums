@@ -227,9 +227,7 @@ export function PageEditor({
                 {pages.length}
               </span>
             </p>
-            {!isManualBlogger && (
-              <p className="text-[10px] text-muted-foreground">Drag cards to reorder • Pencil to replace • × to delete</p>
-            )}
+            <p className="text-[10px] text-muted-foreground">Drag cards to reorder • {isManualBlogger ? "Pencil to edit URL" : "Pencil to replace"} • &times; to delete</p>
           </div>
 
           {/* Blogger URL add bar */}
@@ -284,7 +282,7 @@ export function PageEditor({
               {pages.map((url, i) => (
                 <div
                   key={i}
-                  draggable={!isManualBlogger}
+                  draggable
                   onDragStart={() => handleDragStart(i)}
                   onDragOver={e => handleDragOver(e, i)}
                   onDrop={() => handleDrop(i)}
@@ -314,11 +312,9 @@ export function PageEditor({
                   )}
 
                   {/* Drag overlay icon */}
-                  {!isManualBlogger && (
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                       <Icon icon="ph:arrows-out-cardinal-bold" className="w-8 h-8 text-white drop-shadow" />
                     </div>
-                  )}
 
                   {/* Controls */}
                   <div className="absolute top-1 left-1 right-1 flex justify-between gap-1">

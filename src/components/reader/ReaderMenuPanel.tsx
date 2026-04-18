@@ -55,6 +55,7 @@ export default function ReaderMenuPanel({
   const [showPagePanel, setShowPagePanel] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showReportInput, setShowReportInput] = useState(false);
+  const [reportText, setReportText] = useState('');
   const isMobile = useIsMobile();
   const sortedChapters = [...chapters].sort((a, b) => a.number - b.number);
   const currentChapterIndex = sortedChapters.findIndex(c => c.number === currentChapterNum);
