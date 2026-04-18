@@ -11,6 +11,8 @@ export interface GeneralSettings {
   footer_tagline: string;
   logo_url?: string;
   favicon_url?: string;
+  loader_name?: string;
+  loader_logo_url?: string;
   discord_url?: string;
   donation_name?: string;
   donation_url?: string;
@@ -72,13 +74,15 @@ export interface SiteSettings {
 
 const DEFAULT_SETTINGS: SiteSettings = {
   general: {
-    site_name: 'MangaZ',
-    site_title: 'MangaZ',
-    site_title_suffix: '- Read Manga',
-    site_description: 'Read the latest manga, manhwa and manhua online for free.',
-    footer_text: 'MangaZ',
-    footer_tagline: 'Your favorite place to read manga.',
+    site_name: 'Grodex Tantrums',
+    site_title: 'Grodex Tantrums',
+    site_title_suffix: '',
+    site_description: 'Read the latest manga online.',
+    footer_text: 'Grodex Tantrums',
+    footer_tagline: 'Your gateway to manga.',
     favicon_url: '',
+    loader_name: 'Grodex Tantrums',
+    loader_logo_url: '',
     admin_bar_text: 'Admin Panel',
     admin_bar_icon_light: '',
     admin_bar_icon_dark: '',

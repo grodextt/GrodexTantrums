@@ -50,19 +50,18 @@ const AppLayout = () => {
   const isAdminPanel = location.pathname.startsWith('/admin');
   const hideShell = isChapterReader || isAdminPanel;
 
-  // Site name for loader (e.g. MangaZ -> MZ)
-  const siteName = settings?.general?.site_name;
-  const shortName = siteName
-    ? siteName
-      .split(' ')
-      .filter(Boolean)
-      .map(w => w[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-    : '';
-    
-  const logoUrl = settings?.general?.logo_url;
+  // Site branding for loader
+  const siteBrandName = settings?.general?.loader_name || settings?.general?.site_name || 'Grodex Tantrums';
+  const loaderLogo = settings?.general?.loader_logo_url;
+  
+  // Generate initials for logo fallback
+  const initials = siteBrandName
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   if (isLoading) {
     return (
@@ -70,23 +69,19 @@ const AppLayout = () => {
         <div className="relative">
           <div className="w-24 h-24 rounded-3xl bg-primary/20 animate-pulse border border-primary/30 flex items-center justify-center p-4">
             <div className="w-16 h-16 rounded-2xl bg-primary shadow-[0_0_40px_rgba(var(--primary),0.5)] animate-bounce flex items-center justify-center overflow-hidden">
-              {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
-              ) : shortName ? (
-                <span className="text-3xl font-black text-primary-foreground italic">{shortName}</span>
+              {loaderLogo ? (
+                <img src={loaderLogo} alt="Logo" className="w-full h-full object-contain" />
               ) : (
-                <Icon icon="ph:shield-check-bold" className="w-8 h-8 text-primary-foreground animate-pulse" />
+                <span className="text-3xl font-black text-primary-foreground italic">{initials}</span>
               )}
             </div>
           </div>
           <div className="absolute -inset-6 bg-primary/20 blur-[50px] animate-pulse rounded-full -z-10" />
         </div>
         <div className="mt-10 space-y-3 text-center">
-          {siteName && (
-            <h2 className="text-white font-black tracking-tighter text-2xl uppercase italic drop-shadow-lg">
-              {siteName}
-            </h2>
-          )}
+          <h2 className="text-white font-black tracking-tighter text-2xl uppercase italic drop-shadow-lg">
+            {siteBrandName}
+          </h2>
           <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden mx-auto border border-white/5">
             <div className="h-full bg-primary animate-loading-bar" />
           </div>

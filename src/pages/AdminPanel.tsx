@@ -107,6 +107,8 @@ export default function AdminPanel() {
     footer_tagline: '',
     logo_url: '',
     favicon_url: '',
+    loader_name: '',
+    loader_logo_url: '',
     discord_url: '',
     donation_name: 'Patreon',
     donation_url: '',
@@ -166,6 +168,8 @@ export default function AdminPanel() {
         footer_tagline: adminData.general?.footer_tagline ?? settings?.general?.footer_tagline ?? '',
         logo_url: adminData.general?.logo_url ?? settings?.general?.logo_url ?? '',
         favicon_url: adminData.general?.favicon_url ?? settings?.general?.favicon_url ?? '',
+        loader_name: adminData.general?.loader_name ?? settings?.general?.loader_name ?? '',
+        loader_logo_url: adminData.general?.loader_logo_url ?? settings?.general?.loader_logo_url ?? '',
         discord_url: adminData.general?.discord_url ?? settings?.general?.discord_url ?? '',
         donation_name: adminData.general?.donation_name ?? settings?.general?.donation_name ?? 'Patreon',
         donation_url: adminData.general?.donation_url ?? settings?.general?.donation_url ?? '',
@@ -350,6 +354,8 @@ export default function AdminPanel() {
             footer_tagline: settingsForm.footer_tagline,
             logo_url: settingsForm.logo_url,
             favicon_url: settingsForm.favicon_url,
+            loader_name: settingsForm.loader_name,
+            loader_logo_url: settingsForm.loader_logo_url,
             discord_url: settingsForm.discord_url,
             donation_name: settingsForm.donation_name,
             donation_url: settingsForm.donation_url,
@@ -424,6 +430,8 @@ export default function AdminPanel() {
         footer_tagline: settings.general.footer_tagline,
         logo_url: settings.general.logo_url || '',
         favicon_url: settings.general.favicon_url || '',
+        loader_name: settings.general.loader_name || '',
+        loader_logo_url: settings.general.loader_logo_url || '',
         discord_url: settings.general.discord_url || '',
         donation_name: settings.general.donation_name || 'Patreon',
         donation_url: settings.general.donation_url || '',
@@ -1221,40 +1229,79 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-                  <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:browser-bold" className="w-4 h-4 text-primary" /> Browser Tab Configuration</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Customize how your website appears in browser tabs and search results.</p>
+                  <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:spinner-bold" className="w-4 h-4 text-primary" /> Loader Configuration</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Customize the branding of the initial loading screen (splash screen).</p>
                   
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-muted-foreground ml-1 uppercase tracking-wider">Tab Title</label>
+                  <div className="space-y-5">
+                    <div className="flex flex-col sm:flex-row gap-6">
+                      <div className="space-y-3 flex-1">
+                        <label className="text-sm font-medium mb-1 block">Loader Name</label>
                         <Input 
-                          value={settingsForm.site_title} 
-                          onChange={e => setSettingsForm(s => ({ ...s, site_title: e.target.value }))} 
+                          value={settingsForm.loader_name} 
+                          onChange={e => setSettingsForm(s => ({ ...s, loader_name: e.target.value }))} 
                           className="rounded-xl bg-background" 
                           placeholder="e.g. MangaHub" 
                         />
+                        <p className="text-[10px] text-muted-foreground italic">Defaults to Site Name if empty.</p>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-muted-foreground ml-1 uppercase tracking-wider">Title Suffix</label>
-                        <Input 
-                          value={settingsForm.site_title_suffix} 
-                          onChange={e => setSettingsForm(s => ({ ...s, site_title_suffix: e.target.value }))} 
-                          className="rounded-xl bg-background" 
-                          placeholder="e.g. - Read Manga" 
-                        />
+
+                      <div className="space-y-3 flex-1">
+                        <label className="text-sm font-medium mb-1 block">Loader Logo</label>
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 rounded-xl bg-muted border border-border/50 flex items-center justify-center overflow-hidden shrink-0">
+                            {settingsForm.loader_logo_url ? (
+                              <img src={settingsForm.loader_logo_url} alt="Loader logo" className="w-full h-full object-contain" />
+                            ) : (
+                              <Icon icon="ph:image-bold" className="w-6 h-6 text-muted-foreground" />
+                            )}
+                          </div>
+                          <label className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-background cursor-pointer hover:bg-muted/50 transition-colors text-sm font-semibold shadow-sm">
+                            <Icon icon="ph:upload-simple-bold" className="w-4 h-4 text-primary" /> {logoUploading ? 'Uploading...' : 'Upload Logo'}
+                            <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setLogoUploading(true);
+                              try {
+                                const url = await uploadToStorage(file, `site/loader-logo-${Date.now()}`);
+                                setSettingsForm(s => ({ ...s, loader_logo_url: url }));
+                                toast.success('Loader logo uploaded!');
+                              } catch (err: any) {
+                                toast.error(`Upload failed: ${err.message}`);
+                              }
+                              setLogoUploading(false);
+                            }} disabled={logoUploading} />
+                          </label>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground italic">If no logo is set, the system will automatically generate one using the first letters of the Loader Name.</p>
                       </div>
                     </div>
 
-                    <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Live Preview</p>
-                      <div className="flex items-center gap-3 bg-background border border-border px-4 py-2 rounded-lg w-fit shadow-sm">
-                        <div className="w-5 h-5 rounded bg-secondary flex items-center justify-center overflow-hidden ring-1 ring-border/50">
-                          {settingsForm.favicon_url ? <img src={settingsForm.favicon_url} className="w-full h-full object-contain" /> : <div className="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />}
+                    <div className="bg-[#0a0a0a] p-8 rounded-2xl border border-white/5 relative overflow-hidden group">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 text-center">Loader Preview</p>
+                      
+                      <div className="flex flex-col items-center justify-center gap-6">
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-2xl bg-primary/20 animate-pulse border border-primary/30 flex items-center justify-center p-3">
+                            <div className="w-14 h-14 rounded-xl bg-primary shadow-[0_0_30px_rgba(var(--primary),0.5)] flex items-center justify-center overflow-hidden">
+                              {settingsForm.loader_logo_url ? (
+                                <img src={settingsForm.loader_logo_url} alt="Logo" className="w-full h-full object-contain" />
+                              ) : (
+                                <span className="text-2xl font-black text-primary-foreground italic">
+                                  {(settingsForm.loader_name || settingsForm.site_name || 'Grodex Tantrums')
+                                    .split(' ')
+                                    .filter(Boolean)
+                                    .map(w => w[0])
+                                    .join('')
+                                    .toUpperCase()
+                                    .slice(0, 2)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-xs font-bold truncate max-w-[250px] text-foreground/90 italic">
-                          {settingsForm.site_title || settingsForm.site_name || 'MangaHub'} {settingsForm.site_title_suffix}
-                        </span>
+                        <h2 className="text-white font-black tracking-tight text-xl uppercase italic">
+                          {settingsForm.loader_name || settingsForm.site_name || 'Grodex Tantrums'}
+                        </h2>
                       </div>
                     </div>
                   </div>
