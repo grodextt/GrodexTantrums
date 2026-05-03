@@ -56,6 +56,7 @@ export interface TokenSystemSettings {
   comment_streak_enabled: boolean;
   comment_streak_reward: number;
   comment_streak_days: number;
+  enable_tokens_ui: boolean;
 }
 
 export interface SubscriptionSettings {
@@ -126,6 +127,7 @@ const DEFAULTS: AllPremiumSettings = {
     comment_streak_enabled: true,
     comment_streak_reward: 1,
     comment_streak_days: 3,
+    enable_tokens_ui: true,
   },
   subscription_settings: {
     subscription_name: '',

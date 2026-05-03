@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Chapter } from "@/types/manga";
+import { filterVisibleChapters } from "@/lib/chapterVisibility";
 
 interface ChapterListModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const ChapterListModal = ({
   const { user } = useAuth();
   const currencyName = settings.coin_system.currency_name;
   const currencyIconUrl = settings.coin_system.currency_icon_url;
+  const visibleChapters = filterVisibleChapters(chapters as any, settings?.premium_config) as Chapter[];
 
   const { data: userUnlocks = [] } = useQuery({
     queryKey: ['user-chapter-unlocks-modal', user?.id],
@@ -65,13 +67,13 @@ const ChapterListModal = ({
       <DialogContent className="max-w-2xl max-h-[85vh] w-[calc(100vw-2rem)] p-0 gap-0 bg-card border-border">
         <DialogHeader className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3">
           <DialogTitle className="text-base font-bold">
-            Chapter List ({chapters.length} chapters)
+            Chapter List ({visibleChapters.length} chapters)
           </DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-[60vh] px-3 sm:px-4 pb-4">
           <div className="space-y-2">
-            {chapters.map((chapter) => {
+            {visibleChapters.map((chapter) => {
               const isCurrent = currentChapterNumber === chapter.number;
               const isPremium = !!chapter.premium;
               const unlockRecord = getUnlockStatus(chapter.id);

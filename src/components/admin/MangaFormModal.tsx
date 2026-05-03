@@ -326,22 +326,27 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{manga ? "Edit Manga" : "Add New Manga"}</DialogTitle>
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl border-border/50 shadow-2xl">
+        <DialogHeader className="pr-10">
+          <DialogTitle className="text-xl sm:text-2xl font-bold line-clamp-2 leading-tight">
+            {manga ? `Edit: ${manga.title}` : "Add New Manga"}
+          </DialogTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            {manga ? `Manga ID: ${manga.id}` : "Fill in the details below to create a new series"}
+          </p>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="basic">Basic Information</TabsTrigger>
-                <TabsTrigger value="classification">Classification</TabsTrigger>
-                <TabsTrigger value="discord">Discord Notifications</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-xl">
+                <TabsTrigger value="basic" className="rounded-lg py-2.5 text-xs sm:text-sm">Basic Info</TabsTrigger>
+                <TabsTrigger value="classification" className="rounded-lg py-2.5 text-xs sm:text-sm">Classification</TabsTrigger>
+                <TabsTrigger value="discord" className="rounded-lg py-2.5 text-xs sm:text-sm">Discord</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="basic" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+              <TabsContent value="basic" className="space-y-5 mt-6 animate-in fade-in-50 duration-300">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="title"
@@ -392,7 +397,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                 />
 
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="type"
@@ -442,7 +447,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="author"
@@ -486,7 +491,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="rating"
@@ -630,9 +635,10 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                   render={() => (
                     <FormItem>
                       <div className="mb-4">
-                        <FormLabel className="text-base">Genres</FormLabel>
+                        <FormLabel className="text-base font-semibold">Genres</FormLabel>
+                        <p className="text-xs text-muted-foreground">Select all relevant genres for this series</p>
                       </div>
-                      <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto p-4 border rounded-lg">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-[40vh] overflow-y-auto p-4 border rounded-2xl bg-muted/5">
                         {GENRES.map((genre) => (
                           <FormField
                             key={genre}
@@ -676,12 +682,12 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                   render={() => (
                     <FormItem>
                       <div className="mb-4">
-                        <FormLabel className="text-base">Content Warnings</FormLabel>
-                        <p className="text-sm text-muted-foreground">
+                        <FormLabel className="text-base font-semibold">Content Warnings</FormLabel>
+                        <p className="text-xs text-muted-foreground">
                           Users will see a warning popup when visiting this manga
                         </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border rounded-2xl bg-muted/5">
                         {CONTENT_WARNINGS.map((warning) => (
                           <FormField
                             key={warning}

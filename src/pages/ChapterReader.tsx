@@ -113,8 +113,8 @@ function DetailedCountdown({ targetDate, onExpired }: { targetDate: string; onEx
 export default function ChapterReader() {
   const { slug, chapterId } = useParams<{ slug: string; chapterId: string }>();
   const navigate = useNavigate();
-  const { data: manga, isLoading: mangaLoading } = useMangaBySlug(slug || '');
-  const { data: chapters = [] } = useMangaChapters(manga?.id);
+  const { data: manga, isLoading: mangaLoading, isFetched: mangaFetched } = useMangaBySlug(slug || '');
+  const { data: chapters = [], isLoading: chaptersLoading, isFetched: chaptersFetched } = useMangaChapters(manga?.id);
   const chapterNum = Number(chapterId || '1');
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -230,7 +230,14 @@ export default function ChapterReader() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [chapterNum, slug, hasPrev, hasNext, settings, readerSettings, isMenuOpen]);
 
-  if (mangaLoading) {
+  // Wait until BOTH manga + chapters queries have settled before deciding "not found".
+  // Otherwise we briefly render the not-found screen while chapters are still loading.
+  const stillLoading =
+    mangaLoading ||
+    !mangaFetched ||
+    (!!manga && (chaptersLoading || !chaptersFetched));
+
+  if (stillLoading) {
     return (
       <div className="min-h-screen bg-[#0f1117] flex items-center justify-center">
         <Icon icon="ph:spinner-bold" className="w-8 h-8 animate-spin text-primary" />
@@ -256,7 +263,16 @@ export default function ChapterReader() {
   const isSubFreeRelease = currentChapter.subscription_free_release_at && new Date(currentChapter.subscription_free_release_at).getTime() <= Date.now();
   const isLocked = !!currentChapter.premium && !isFreeRelease && pageUrls.length === 0 && !isUnlocked && (premiumSettings?.premium_config?.enable_coins ?? true);
   const isSubLocked = !!currentChapter.is_subscription && !isSubFreeRelease && !isSubscriber && pageUrls.length === 0;
-  const showAdminBypassBanner = !!currentChapter.is_subscription && !isSubFreeRelease && !isSubscriber && pageUrls.length > 0 && (isAdmin || isMod);
+  const isStaffViewer = isAdmin || isMod;
+  const showSubBypassBanner =
+    !!currentChapter.is_subscription && !isSubFreeRelease && !isSubscriber && pageUrls.length > 0 && isStaffViewer;
+  const showPremiumBypassBanner =
+    !currentChapter.is_subscription &&
+    !!currentChapter.premium &&
+    !isFreeRelease &&
+    !isUnlocked &&
+    pageUrls.length > 0 &&
+    isStaffViewer;
   
   const coinPrice = currentChapter.coin_price ?? 100;
   const subName = premiumSettings?.subscription_settings?.subscription_name || 'Subscription';
@@ -336,11 +352,19 @@ export default function ChapterReader() {
 
       {/* Main Content Area */}
       <main className="w-full">
-        {showAdminBypassBanner && (
+        {showSubBypassBanner && (
           <div className="bg-amber-500/10 border-b border-amber-500/20 text-center py-2 px-4 shadow-sm animate-in slide-in-from-top fade-in relative z-40">
             <p className="text-amber-500 text-sm font-semibold flex items-center justify-center gap-2">
               <Icon icon="ph:shield-warning-bold" className="w-4 h-4" />
               Admin Bypass Active: This chapter is Early Access and locked for normal users, but you have access because you are an admin.
+            </p>
+          </div>
+        )}
+        {showPremiumBypassBanner && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 text-center py-2 px-4 shadow-sm animate-in slide-in-from-top fade-in relative z-40">
+            <p className="text-amber-500 text-sm font-semibold flex items-center justify-center gap-2">
+              <Icon icon="ph:coins-bold" className="w-4 h-4" />
+              Admin Bypass Active: This chapter is Premium (Coin-Locked) and locked for normal users, but you have access because you are an admin.
             </p>
           </div>
         )}

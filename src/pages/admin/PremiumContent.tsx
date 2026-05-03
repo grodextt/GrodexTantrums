@@ -71,6 +71,7 @@ export default function PremiumContent() {
   const [commentStreakEnabled, setCommentStreakEnabled] = useState(true);
   const [commentStreakReward, setCommentStreakReward] = useState(1);
   const [commentStreakDays, setCommentStreakDays] = useState(3);
+  const [enableTokensUi, setEnableTokensUi] = useState(true);
 
   // Load settings
   useEffect(() => {
@@ -112,6 +113,7 @@ export default function PremiumContent() {
       setCommentStreakEnabled(t.comment_streak_enabled);
       setCommentStreakReward(t.comment_streak_reward);
       setCommentStreakDays(t.comment_streak_days);
+      setEnableTokensUi(t.enable_tokens_ui ?? true);
     }
   }, [settings]);
 
@@ -205,6 +207,7 @@ export default function PremiumContent() {
           comment_streak_enabled: commentStreakEnabled,
           comment_streak_reward: commentStreakReward,
           comment_streak_days: commentStreakDays,
+          enable_tokens_ui: enableTokensUi,
         },
       });
       toast.success('Token system settings saved');
@@ -799,6 +802,18 @@ export default function PremiumContent() {
       {/* ─── TOKEN SYSTEM TAB ─── */}
       {subTab === 'tokens' && (
         <div className="space-y-4">
+          {/* Master UI toggle */}
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <h3 className="font-semibold flex items-center gap-2"><Icon icon="ph:ticket-bold" className="w-4 h-4" /> Token Features</h3>
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+              <div className="pr-3">
+                <p className="text-sm font-medium">Enable Token UI</p>
+                <p className="text-xs text-muted-foreground">Show the ticket button in the profile menu, the ticket counter in the comment section, and the Earn Tokens page.</p>
+              </div>
+              <Switch checked={enableTokensUi} onCheckedChange={setEnableTokensUi} />
+            </div>
+          </div>
+
           <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
             <div>
               <h3 className="font-semibold flex items-center gap-2 text-base"><Icon icon="ph:gift-bold" className="w-4 h-4" /> Daily Check-in Reward</h3>

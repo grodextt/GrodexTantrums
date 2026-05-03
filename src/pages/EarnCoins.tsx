@@ -7,10 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Navigate } from 'react-router-dom';
 
 export default function EarnCoins() {
   const { user, isAuthenticated, setShowLoginModal } = useAuth();
   const { settings } = usePremiumSettings();
+  const tokensUiEnabled = settings.token_settings.enable_tokens_ui ?? true;
   const queryClient = useQueryClient();
   const [claiming, setClaiming] = useState(false);
 
@@ -138,6 +140,10 @@ export default function EarnCoins() {
   const commentStreak = profile?.consecutive_comment_days ?? 0;
   const streakProgress = Math.min(commentStreak, streakDays);
   const streakComplete = streakProgress >= streakDays;
+
+  if (!tokensUiEnabled) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-10 max-w-6xl mx-auto">

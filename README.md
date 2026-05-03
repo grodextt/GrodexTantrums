@@ -1,101 +1,61 @@
-# GrodexTT - Professional Manga & Scanlation Platform 📚
+# 🌌 Grodex Tantrums
 
-Grodex Tantrums is a next-generation, high-performance manga reading and scanlation management platform. Designed with a "Premium-First" philosophy, it combines a sleek, distraction-free reader with a robust monetization engine and an enterprise-grade admin dashboard.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Supabase](https://img.shields.io/badge/Backend-Supabase-green.svg)](https://supabase.com)
+[![Next.js](https://img.shields.io/badge/Frontend-Vite-blue.svg)](https://vitejs.dev)
 
-![Grodex Tantrums Platform Banner](public/assets/images/banner.webp)
-
----
-
-## 🌟 Vision & Design
-GrodexTT isn't just a reader; it's an ecosystem for scanlation groups and content creators. Built with **React**, **Vite**, and **Tailwind CSS**, it leverages **Supabase** for a serverless yet powerful backend, ensuring lightning-fast performance across any device.
-
-- **Mobile Optimized**: A fluid, responsive UI designed for reading on the go.
-- **Visual Excellence**: Modern typography (Outfit/Inter), consistent HSL color palettes, and glassmorphism effects.
-- **Dark Mode Native**: A curated "High-Contrast Dark" theme that prioritizes reader comfort.
-- **Micro-Animations**: Smooth transitions and interactive elements powered by Framer Motion.
+**Grodex Tantrums** is a premium, high-performance Manga/Manhwa/Manhua reading platform built for speed, security, and an unparalleled user experience. Featuring a sleek glassmorphic design and a robust administrative suite.
 
 ---
 
-## 🚀 Key Features
+## ✨ Key Features
 
-### 📖 Immersive Reading Experience
-- **Advanced Reader Settings**: Toggle between Long Strip, Single Page, and Double Page modes. Includes greyscale mode, dimming controls, and custom strip margins.
-- **Reading Progress**: Automatically tracks your last read chapter and page.
-- **Smart Early Access**: Dynamic badges that automatically transition from "Early Access" to "Free" based on adjustable release timers (Subscription vs. Free Release dates).
-- **Library Management**: One-click bookmarking with a dedicated user dashboard to track your collection.
+### 📖 For Readers
+- **Ultimate Reading Experience**: Modern, lightning-fast chapter reader with vertical/horizontal scroll modes and customizable zoom.
+- **Premium Content Gating**: Support for Coin and Token-based chapter unlocks.
+- **Advanced Subscription System**: Flexible plans (Free, Pro, Premium) with automatic perk distribution.
+- **User Engagement**: Comments, likes, bookmarks, and detailed reading history.
+- **IP Protection**: Built-in DDoS resilience and IP-based rate limiting.
+- **Daily Rewards**: Secure daily check-in system with coin/token awards.
 
-### 💰 Monetization & Economy System
-- **Cryptomus Integration**: Fully integrated white-labeled crypto payment gateway. Accept **USDT (BEP-20/BSC)** and other cryptocurrencies with zero-redirect checkout.
-- **Tiered Subscriptions**: Customizable subscription plans (e.g., Weekly, Monthly, Yearly) with custom names, prices, and benefit descriptions.
-- **Coin System**: A virtual currency system for unlocking individual premium chapters. Support for custom currency names and icons.
-- **Stripe & PayPal**: Traditional payment support for Global users.
-- **In-Site Checkout**: Professional payment modals with dynamically generated QR codes and real-time transaction polling.
-
-### 🛡️ Enterprise-Grade Admin Panel
-- **Manga Management**: Effortless title creation, chapter uploads, and metadata editing.
-- **Multi-Cloud Storage**: Integrated support for **Google Cloud (Blogger)**, **Imgur**, and **Supabase Storage** for unlimited horizontal scaling.
-- **User Management**: Granular control over user roles (Admin, Moderator, Subscriber), balance adjustments, and manual subscription granting.
-- **Site Configuration**: Real-time control over global settings, payment toggles, and UI branding through a centralized dashboard.
-- **Discord Webhooks**: Automatically notify your community when new chapters are published.
-- **Audit Logs**: Deep security tracking for administrative actions.
+### 🛠 For Administrators
+- **Comprehensive Dashboard**: Real-time stats for site views, revenue, and storage usage.
+- **Centralized Content Management**: 
+  - One-click Manga and Chapter creation.
+  - Support for multiple storage providers (Supabase, ImgBB, Cloudflare R2, Google Blogger CDN).
+  - Bulk image uploading and automatic optimization.
+- **Advanced Discord Integration**: Automated notifications for new releases with customizable templates and role pings.
+- **Security Control**: IP blocking, role management, and granular permission controls.
+- **Site Branding**: Dynamic theme customization directly from the admin panel.
 
 ---
 
-## 🔒 Security & Hardening
+## 🏗 Technology Stack
 
-MangaZ includes several levels of production-grade security:
-1. **Row Level Security (RLS)**: Sensitive tables like `site_settings`, `user_roles`, and `audit_logs` are locked behind strict "Admin-only" policies.
-2. **Database Triggers**: Critical fields (like `coin_balance` and `token_balance`) are protected by `BEFORE UPDATE` triggers to prevent unauthorized modifications by non-admin users.
-3. **Internalized Logic**: Key payment configurations (Client IDs, Secret Keys) are stored in a secured `premium_general` setting that is never exposed to the public frontend.
-4. **JWT Verification**: All Edge Functions strictly verify user identity before processing requests.
-
----
-
-## 📸 Platform Showcases
-
-### 💳 Seamless Payments
-The platform features a native, white-labeled checkout experience. Everything stays within MangaZ to ensure trust and conversion.
-
-![Cryptomus Checkout Modal](public/assets/images/checkout.png)
-
-### 💎 Premium Membership
-Offering tiers of access to your readers has never been easier. The subscription system is fully synced with the UI, including custom badges in comments and the navbar.
-
-![Subscription Page](public/assets/images/subscription.png)
+- **Frontend**: Vite + React + TypeScript
+- **Styling**: Tailwind CSS + Shadcn UI + Framer Motion
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
+- **Image Hosting**: Hybrid solution supporting Blogger API, ImgBB, and R2.
+- **Payments**: Integrated support for USDT, PayPal, Razorpay, and Stripe.
 
 ---
 
-## 🏗️ Technical Stack
+## 🛡 Security & Resilience
 
-| Component | Technology |
-| :--- | :--- |
-| **Frontend** | React 18, Vite, TypeScript |
-| **Styling** | Tailwind CSS, shadcn/ui |
-| **Backend** | Supabase (PostgreSQL, Auth, RLS) |
-| **Logic** | Deno-based Edge Functions |
-| **Payments** | Cryptomus, Stripe, PayPal |
-| **Optimization** | Manual Chunking, Build Minification |
+- **RLS (Row Level Security)**: Granular access control at the database level.
+- **Hardened Edge Functions**: Serverless logic with JWT verification and admin-only execution policies.
+- **Global CDN**: Low-latency image delivery via Google and Cloudflare edge networks.
+- **Automated Gating**: Chapters automatically transition from Premium to Free based on administrative timing rules.
 
 ---
 
-## 📜 Updates & Changelog (Recent)
+## 🎨 Branding & Design
 
-### Version 1.2
-- **NEW**: Full security migration with RLS hardening and database triggers.
-- **NEW**: Refactored Chapter Badge logic to support dual release dates (Sub-free vs. Public-free).
-- **NEW**: Integrated Cryptomus for USDT (BSC) payments with automatic balance crediting.
-- **CLEANUP**: Removed legacy NOWPayments and Razorpay integrations for a cleaner codebase.
-- **CLEANUP**: Optimized build configuration for faster load times.
-- **UI**: Added a professional Privacy Policy page and improved the DMCA accessibility.
+Grodex Tantrums utilizes a **Deep Space Dark Mode** aesthetic:
+- **Primary Color**: `#9b87f5` (Vibrant Indigo)
+- **Background**: `#0a0a0a` with subtle glassmorphic overlays.
+- **Typography**: Inter / Outfit for a modern, readable interface.
 
 ---
 
-## ⚖️ License & Proprietary Notice
-
-**© 2026. All Rights Reserved.**
-
-This software is **proprietary and confidential**. It is NOT open source. Any unauthorized copying, modification, distribution, or use of this software without explicit permission from the copyright holder is strictly prohibited. 
-
-MangaZ is the intellectual property of its creator. The copyright holder reserves the right to claim damages in the event of license violations or intellectual property theft.
-
-**Repository ownership**: [akuzenaiarts-cloud/MangaZ](https://github.com/akuzenaiarts-cloud/MangaZ)
+*Built with ❤️ by the Grodex Team.*

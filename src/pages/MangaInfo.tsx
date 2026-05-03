@@ -20,6 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useTrackView } from '@/hooks/useTrackView';
 import { formatDistanceToNow } from 'date-fns';
+import { filterVisibleChapters } from '@/lib/chapterVisibility';
 
 const GENRE_EMOJI: Record<string, string> = {
   Action: '⚔️', Fantasy: '🔮', Adventure: '🧭', Drama: '🎲', Romance: '❤️',
@@ -128,7 +129,8 @@ export default function MangaInfo() {
     );
   }
 
-  const sortedChapters = [...chapters].sort((a, b) =>
+  const filteredChapters = filterVisibleChapters(chapters, premiumSettings?.premium_config);
+  const sortedChapters = [...filteredChapters].sort((a, b) =>
     sortDesc ? b.number - a.number : a.number - b.number
   );
   const visibleChapters = expanded ? sortedChapters : sortedChapters.slice(0, 9);
@@ -346,7 +348,7 @@ export default function MangaInfo() {
             </div>
 
             <div className="relative">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {visibleChapters.map((ch, idx) => {
                   const chDate = formatDistanceToNow(new Date(ch.created_at), { addSuffix: true });
                   const isFreeRelease = ch.free_release_at ? new Date(ch.free_release_at).getTime() <= Date.now() : false;

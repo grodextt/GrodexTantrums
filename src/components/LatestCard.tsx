@@ -4,9 +4,11 @@ import { MangaWithChapters } from '@/hooks/useAllManga';
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import TypeBadge from './TypeBadge';
 import { formatDistanceToNow } from 'date-fns';
+import { filterVisibleChapters } from '@/lib/chapterVisibility';
 
 interface LatestCardProps {
   manga: MangaWithChapters;
+  sortMode?: 'recent' | 'number';
 }
 
 function formatRelativeDate(dateStr: string): string {
@@ -96,11 +98,16 @@ function SectionDivider() {
   return <div className="border-t-2 border-border/70 my-1" />;
 }
 
-export default function LatestCard({ manga }: LatestCardProps) {
+export default function LatestCard({ manga, sortMode = 'recent' }: LatestCardProps) {
   const { settings } = usePremiumSettings();
-  const chapters = manga.chapters || [];
-  const sortByDate = (a: ChapterEntry, b: ChapterEntry) =>
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  const chapters = filterVisibleChapters(
+    manga.chapters || [],
+    settings?.premium_config,
+  );
+  const sortChapters = (a: ChapterEntry, b: ChapterEntry) =>
+    sortMode === 'number'
+      ? b.number - a.number
+      : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
   const now = Date.now();
   const allPremium = chapters.filter(ch => {
@@ -111,7 +118,7 @@ export default function LatestCard({ manga }: LatestCardProps) {
     const isPremActive = !isSubActive && !!ch.premium && (!ch.free_release_at || new Date(ch.free_release_at).getTime() > now);
     
     return isSubActive || isPremActive;
-  }).sort(sortByDate);
+  }).sort(sortChapters);
 
   const allFree = chapters.filter(ch => {
     const isSubExpired = !!ch.is_subscription && !!ch.subscription_free_release_at && new Date(ch.subscription_free_release_at).getTime() <= now;
@@ -119,7 +126,7 @@ export default function LatestCard({ manga }: LatestCardProps) {
     const isFreeBase = !ch.premium && !ch.is_subscription;
     
     return isFreeBase || isSubExpired || isPremExpired;
-  }).sort(sortByDate);
+  }).sort(sortChapters);
 
   let premiumChapters: ChapterEntry[];
   let freeChapters: ChapterEntry[];

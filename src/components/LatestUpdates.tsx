@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useAllManga, MangaWithChapters } from '@/hooks/useAllManga';
@@ -23,6 +23,14 @@ const TAB_LABELS: Record<string, string> = {
 export default function LatestUpdates() {
   const { data: allManga = [], isLoading } = useAllManga();
   const [activeTab, setActiveTab] = useState<string>('All Series');
+  const [sortMode, setSortMode] = useState<'recent' | 'number'>(() => {
+    if (typeof window === 'undefined') return 'recent';
+    return (localStorage.getItem('latest-updates-sort') as 'recent' | 'number') || 'recent';
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('latest-updates-sort', sortMode); } catch {}
+  }, [sortMode]);
 
   const getLatestChapterDate = (m: MangaWithChapters) => {
     const chapters = m.chapters || [];
@@ -42,9 +50,43 @@ export default function LatestUpdates() {
       <div className="mb-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-extrabold whitespace-nowrap">Latest Updates</h2>
-          <Link to="/latest" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground shrink-0">
-            View all &gt;
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <div
+              role="group"
+              aria-label="Sort chapters"
+              className="inline-flex items-center bg-secondary/60 rounded-lg p-0.5 border border-border/40"
+            >
+              <button
+                type="button"
+                onClick={() => setSortMode('recent')}
+                aria-pressed={sortMode === 'recent'}
+                title="Sort by upload time"
+                className={`inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
+                  sortMode === 'recent'
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon icon="ph:clock-bold" className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortMode('number')}
+                aria-pressed={sortMode === 'number'}
+                title="Sort by chapter number"
+                className={`inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
+                  sortMode === 'number'
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon icon="ph:list-numbers-bold" className="w-4 h-4" />
+              </button>
+            </div>
+            <Link to="/latest" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              View all &gt;
+            </Link>
+          </div>
         </div>
         <div className="bg-secondary/60 rounded-2xl px-1 py-1 grid grid-cols-2 sm:flex sm:items-center gap-1">
           {FILTER_TABS.map(tab => (
@@ -74,7 +116,7 @@ export default function LatestUpdates() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {filtered.slice(0, 16).map(manga => (
-            <LatestCard key={manga.id} manga={manga} />
+            <LatestCard key={manga.id} manga={manga} sortMode={sortMode} />
           ))}
         </div>
       )}

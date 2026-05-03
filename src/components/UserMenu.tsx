@@ -106,29 +106,37 @@ export default function UserMenu() {
           </div>
 
           {/* Balance Card — matching reference screenshot */}
-          {(premiumSettings.premium_config.enable_coins) && (
-            <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2">
-              <p className="text-[11px] font-bold text-muted-foreground text-center mb-2.5 uppercase tracking-widest">Your Balance</p>
-              <div className={`grid ${premiumSettings.premium_config.enable_coins ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
-                {premiumSettings.premium_config.enable_coins && (
-                  <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                      <CurrencyIcon className="w-5 h-5 text-amber-500" />
+          {(() => {
+            const showCoins = premiumSettings.premium_config.enable_coins;
+            const showTokens = premiumSettings.token_settings.enable_tokens_ui ?? true;
+            if (!showCoins && !showTokens) return null;
+            const cols = showCoins && showTokens ? 'grid-cols-2' : 'grid-cols-1';
+            return (
+              <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2">
+                <p className="text-[11px] font-bold text-muted-foreground text-center mb-2.5 uppercase tracking-widest">Your Balance</p>
+                <div className={`grid ${cols} gap-2`}>
+                  {showCoins && (
+                    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                        <CurrencyIcon className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <span className="text-lg font-bold text-foreground leading-none">{coinBalance}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">{currencyName}</span>
                     </div>
-                    <span className="text-lg font-bold text-foreground leading-none">{coinBalance}</span>
-                    <span className="text-[10px] text-muted-foreground font-medium">{currencyName}</span>
-                  </div>
-                )}
-                <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                    <Icon icon="ph:ticket-bold" className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="text-lg font-bold text-foreground leading-none">{tokenBalance}</span>
-                  <span className="text-[10px] text-muted-foreground font-medium">Tickets</span>
+                  )}
+                  {showTokens && (
+                    <div className="flex flex-col items-center gap-1.5 rounded-xl bg-background/60 border border-border/30 py-3 px-2">
+                      <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                        <Icon icon="ph:ticket-bold" className="w-5 h-5 text-primary" />
+                      </div>
+                      <span className="text-lg font-bold text-foreground leading-none">{tokenBalance}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">Tickets</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* User Type Card */}
           <div className="rounded-xl border border-border/40 bg-muted/30 p-3 mb-2 flex flex-col justify-center items-center text-center">
@@ -158,7 +166,7 @@ export default function UserMenu() {
                 </Button>
               </Link>
             )}
-            {premiumSettings.token_settings.comment_streak_enabled && (
+            {(premiumSettings.token_settings.enable_tokens_ui ?? true) && (
               <Link to="/earn" onClick={close}>
                 <Button variant="ghost" className="w-full justify-start gap-2.5 rounded-xl h-10 hover:bg-muted text-sm font-medium">
                   <Icon icon="ph:ticket-bold" className="w-4 h-4" /> Earn Tickets
