@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
@@ -6,12 +6,6 @@ import { useSubscriptionPlans, useSubscriptionStats, useHasActiveSubscription } 
 import { usePremiumSettings } from '@/hooks/usePremiumSettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-
-const PLAN_COLORS = [
-  { border: 'border-blue-500/30', bg: 'bg-blue-500/5', accent: 'text-blue-500', glow: 'shadow-blue-500/10', btnBg: 'bg-blue-600 hover:bg-blue-500' },
-  { border: 'border-purple-500/30', bg: 'bg-purple-500/5', accent: 'text-purple-500', glow: 'shadow-purple-500/10', btnBg: 'bg-purple-600 hover:bg-purple-500' },
-  { border: 'border-amber-500/30', bg: 'bg-amber-500/5', accent: 'text-amber-500', glow: 'shadow-amber-500/10', btnBg: 'bg-amber-600 hover:bg-amber-500' },
-];
 
 const FAQ = [
   { q: 'What happens when my subscription expires?', a: 'You lose access to subscriber-only chapters. Any bonus coins you received are yours to keep. Chapters that have passed their free release date remain accessible.' },
@@ -22,13 +16,20 @@ const FAQ = [
 
 export default function SubscribePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setShowLoginModal } = useAuth();
   const { data: plans = [], isLoading: plansLoading } = useSubscriptionPlans();
   const { data: stats } = useSubscriptionStats();
   const { isSubscriber, subscription } = useHasActiveSubscription();
   const { settings: premiumSettings } = usePremiumSettings();
   const { settings: siteSettings } = useSiteSettings();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const subName = premiumSettings?.subscription_settings?.subscription_name || 'Subscription';
   const badgeLabel = premiumSettings?.subscription_settings?.badge_label || 'Early Access';
@@ -39,231 +40,296 @@ export default function SubscribePage() {
 
   const handleSubscribe = (planId: string) => {
     if (!user) {
-      navigate('/login');
+      setShowLoginModal(true);
       return;
     }
-    // TODO: integrate payment flow in Phase 4
     navigate(`/subscribe/checkout/${planId}`);
   };
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-gray-100">
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-primary/30 overflow-x-hidden">
+      {/* Dynamic Background Elements */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+      </div>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-20 left-1/4 w-72 h-72 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute top-40 right-1/4 w-56 h-56 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none" />
+      <section className="relative pt-32 pb-24 px-6 z-10 overflow-hidden">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md shadow-[0_0_20px_rgba(var(--primary),0.1)]">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{badgeLabel} Active</span>
+            </div>
 
-        <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-16 text-center space-y-8">
-          <div className="flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 w-fit mx-auto">
-            <Icon icon="mdi:new-releases" className="w-4 h-4 text-purple-400" />
-            <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">{badgeLabel}</span>
-          </div>
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] uppercase italic">
+              Level Up Your <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-primary bg-[length:200%_auto] animate-gradient-x">
+                Reading Experience
+              </span>
+            </h1>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
-            Join <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">{siteName} {subName}</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Get early access to the latest chapters before anyone else. Support the creators and enjoy exclusive subscriber benefits.
-          </p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed font-medium">
+              Join the elite circle of {siteName}. Get instant access to {badgeLabel} chapters, exclusive rewards, and direct impact on your favorite series.
+            </p>
 
-          {isSubscriber && subscription && (
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <Icon icon="ph:check-circle-fill" className="w-6 h-6 text-emerald-500" />
-              <div className="text-left">
-                <p className="text-sm font-bold text-emerald-400">Active Subscriber</p>
-                <p className="text-xs text-gray-400">
-                  Expires {new Date(subscription.expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </p>
+            <div className="flex flex-wrap gap-4 pt-4">
+              <Button 
+                size="lg" 
+                className="h-16 px-10 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-wider text-sm shadow-[0_0_30px_rgba(var(--primary),0.4)] hover:scale-[1.02] transition-all duration-300"
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Explore Plans
+                <Icon icon="ph:arrow-right-bold" className="ml-2 w-5 h-5" />
+              </Button>
+              <div className="flex -space-x-3 items-center ml-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="w-10 h-10 rounded-full border-2 border-[#050505] bg-muted overflow-hidden">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+                <span className="pl-6 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                  {stats?.activeSubscribers || '500'}+ Members
+                </span>
               </div>
             </div>
-          )}
-        </div>
-      </section>
-
-      {/* Stats Bar */}
-      <section className="max-w-4xl mx-auto px-6 pb-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {showSubCount && (
-            <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
-              <p className="text-2xl font-black text-purple-400">{stats?.activeSubscribers || 0}</p>
-              <p className="text-xs text-gray-500 font-medium mt-1">Active Members</p>
-            </div>
-          )}
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
-            <p className="text-2xl font-black text-blue-400">{stats?.subscriptionChapters || 0}</p>
-            <p className="text-xs text-gray-500 font-medium mt-1">{badgeLabel} Chapters</p>
           </div>
-          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 text-center">
-            <p className="text-2xl font-black text-amber-400">24/7</p>
-            <p className="text-xs text-gray-500 font-medium mt-1">Instant Access</p>
-          </div>
-        </div>
-      </section>
 
-      {/* Benefits */}
-      <section className="max-w-4xl mx-auto px-6 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-8">Why Subscribe?</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[
-            { icon: 'ph:lightning-bold', title: 'Early Access', desc: 'Read new chapters the moment they drop, before free release.', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-            ...(bonusCoinsEnabled ? [{ icon: 'ph:coins-bold', title: 'Bonus Coins', desc: 'Get bonus coins with every subscription purchase.', color: 'text-amber-400', bg: 'bg-amber-500/10' }] : []),
-            ...(doubleDailyLogin ? [{ icon: 'ph:star-bold', title: '2× Daily Rewards', desc: 'Double your daily login rewards while subscribed.', color: 'text-blue-400', bg: 'bg-blue-500/10' }] : []),
-            { icon: 'ph:heart-bold', title: 'Support Creators', desc: 'Your subscription directly supports the artists and translators.', color: 'text-rose-400', bg: 'bg-rose-500/10' },
-            { icon: 'ph:shield-check-bold', title: 'No Ads', desc: 'Enjoy an ad-free reading experience.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-            { icon: 'ph:clock-countdown-bold', title: 'Countdown Timers', desc: 'See exactly when chapters become free for everyone.', color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-          ].map((b, i) => (
-            <div key={i} className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors space-y-3">
-              <div className={`w-10 h-10 rounded-xl ${b.bg} flex items-center justify-center`}>
-                <Icon icon={b.icon} className={`w-5 h-5 ${b.color}`} />
+          <div className="relative animate-in fade-in zoom-in duration-1000 delay-300 hidden lg:block">
+            <div className="relative z-10 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-700 bg-black/40 backdrop-blur-xl group">
+              <img 
+                src="C:\Users\Dreqi\.gemini\antigravity\brain\42a9bd35-fd53-4934-66-427b5b92644b\subscribe_hero_bg_1778938560331.png" 
+                alt="Premium" 
+                className="w-full aspect-[4/5] object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+              <div className="absolute bottom-8 left-8 right-8 p-6 rounded-3xl bg-white/5 backdrop-blur-2xl border border-white/10 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <Icon icon="ph:crown-fill" className="text-white w-4 h-4" />
+                  </div>
+                  <span className="font-black text-sm uppercase tracking-widest">{subName} Status</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Unlock thousands of premium panels instantly.</p>
               </div>
-              <h3 className="font-bold text-sm">{b.title}</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">{b.desc}</p>
             </div>
-          ))}
+            {/* Glow effects around the image */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/30 blur-[60px] animate-pulse" />
+            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 blur-[60px] animate-pulse" />
+          </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-black">Choose Your Plan</h2>
-          <p className="text-gray-400 mt-2">Cancel anytime. Keep your bonus coins forever.</p>
-        </div>
+      {/* Benefits Grid */}
+      <section className="py-24 px-6 relative z-10">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter">Subscriber Perks</h2>
+            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full" />
+          </div>
 
-        {plansLoading ? (
-          <div className="text-center py-12 text-gray-500">
-            <Icon icon="ph:spinner-bold" className="w-8 h-8 animate-spin mx-auto" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { icon: 'ph:lightning-fill', title: 'Lightning Early Access', desc: 'Read the latest updates 24-48 hours before everyone else.', color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+              { icon: 'ph:coins-fill', title: 'Monthly Bonus Tickets', desc: 'Receive recurring coin bonuses to unlock archive content.', color: 'text-amber-400', bg: 'bg-amber-400/10' },
+              { icon: 'ph:sparkle-fill', title: 'VIP Community Badge', desc: 'Stand out in the comments with a unique glowing supporter badge.', color: 'text-primary', bg: 'bg-primary/10' },
+              { icon: 'ph:shield-star-fill', title: 'Ad-Free Reading', desc: 'A completely clean and immersive reading experience.', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+              { icon: 'ph:rocket-launch-fill', title: 'Direct Creator Support', desc: 'Help us acquire new series and support the hard-working teams.', color: 'text-rose-400', bg: 'bg-rose-500/10' },
+              { icon: 'ph:monitor-play-fill', title: 'HD Quality Panels', desc: 'Access ultra-high resolution images for the best viewing experience.', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+            ].map((perk, i) => (
+              <div key={i} className="group p-8 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-500 hover:-translate-y-2">
+                <div className={`w-14 h-14 rounded-2xl ${perk.bg} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg`}>
+                  <Icon icon={perk.icon} className={`w-7 h-7 ${perk.color}`} />
+                </div>
+                <h3 className="text-xl font-bold mb-3 uppercase tracking-tight">{perk.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed font-medium">{perk.desc}</p>
+              </div>
+            ))}
           </div>
-        ) : plans.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <Icon icon="ph:info-bold" className="w-8 h-8 mx-auto mb-3" />
-            <p className="text-sm">No subscription plans available yet. Check back soon!</p>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 px-6 relative z-10 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <div className="text-center space-y-6 max-w-2xl mx-auto">
+            <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">Choose Your Power</h2>
+            <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Flexible plans for every type of reader</p>
           </div>
-        ) : (
-          <div className={`grid gap-6 ${plans.length === 1 ? 'max-w-sm mx-auto' : plans.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-            {plans.map((plan, idx) => {
-              const c = PLAN_COLORS[idx % PLAN_COLORS.length];
-              const isPopular = idx === Math.min(1, plans.length - 1);
-              return (
-                <div
-                  key={plan.id}
-                  className={`relative rounded-3xl border ${c.border} ${c.bg} p-7 space-y-6 transition-all hover:scale-[1.02] shadow-lg ${c.glow} ${isPopular ? 'ring-2 ring-purple-500/30' : ''}`}
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {plansLoading ? (
+              [1, 2, 3].map(i => <div key={i} className="h-[500px] rounded-[3rem] bg-white/[0.02] animate-pulse border border-white/5" />)
+            ) : (
+              plans.map((plan, idx) => {
+                const isPopular = idx === 1 || plans.length === 1;
+                return (
+                  <div 
+                    key={plan.id}
+                    className={`relative p-10 rounded-[3rem] border transition-all duration-500 flex flex-col group ${
+                      isPopular 
+                        ? 'bg-gradient-to-b from-primary/20 to-primary/5 border-primary/50 shadow-[0_0_50px_rgba(var(--primary),0.15)] scale-105 z-20' 
+                        : 'bg-white/[0.02] border-white/5 hover:border-white/20 z-10 hover:scale-[1.02]'
+                    }`}
+                  >
+                    {isPopular && (
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] shadow-xl">
+                        Champion Choice
+                      </div>
+                    )}
+
+                    <div className="mb-10">
+                      <h3 className={`text-2xl font-black uppercase tracking-tight mb-2 ${isPopular ? 'text-primary' : 'text-white'}`}>
+                        {plan.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{plan.duration_days} Days Access</p>
+                    </div>
+
+                    <div className="flex items-baseline gap-1 mb-8">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase align-top mt-2">$</span>
+                      <span className="text-6xl font-black tracking-tighter">{Math.floor(Number(plan.price_usd))}</span>
+                      <span className="text-2xl font-black text-muted-foreground/50">.{(Number(plan.price_usd) % 1).toFixed(2).split('.')[1]}</span>
+                    </div>
+
+                    <div className="flex-1 space-y-4 mb-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                          <Icon icon="ph:check-bold" className="text-emerald-500 w-3 h-3" />
+                        </div>
+                        <span className="text-sm font-bold text-foreground/80 uppercase tracking-tight">Instant {badgeLabel}</span>
+                      </div>
+                      {plan.bonus_coins > 0 && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center">
+                            <Icon icon="ph:check-bold" className="text-amber-500 w-3 h-3" />
+                          </div>
+                          <span className="text-sm font-bold text-foreground/80 uppercase tracking-tight">+{plan.bonus_coins} Bonus Tickets</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center">
+                          <Icon icon="ph:check-bold" className="text-blue-500 w-3 h-3" />
+                        </div>
+                        <span className="text-sm font-bold text-foreground/80 uppercase tracking-tight">HD Chapter Access</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
+                          <Icon icon="ph:check-bold" className="text-primary w-3 h-3" />
+                        </div>
+                        <span className="text-sm font-bold text-foreground/80 uppercase tracking-tight">VIP Profile Badge</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => handleSubscribe(plan.id)}
+                      disabled={isSubscriber}
+                      className={`h-16 rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-300 ${
+                        isPopular 
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:scale-[1.03] active:scale-95' 
+                          : 'bg-white/10 hover:bg-white/20 text-white'
+                      }`}
+                    >
+                      {isSubscriber ? 'Already Active' : 'Start Journey'}
+                    </Button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ & Trust */}
+      <section className="py-24 px-6 relative z-10">
+        <div className="max-w-4xl mx-auto space-y-24">
+          {/* Trust Banner */}
+          <div className="p-12 rounded-[3rem] bg-gradient-to-r from-primary/20 to-blue-600/10 border border-white/5 text-center relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
+            <div className="relative z-10 space-y-6">
+              <h2 className="text-3xl font-black uppercase italic tracking-tighter">Secure & Trusted Payments</h2>
+              <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest max-w-md mx-auto">We use industry-standard encryption to protect your transactions.</p>
+              <div className="flex flex-wrap justify-center gap-8 opacity-40 hover:opacity-100 transition-opacity duration-500">
+                <Icon icon="logos:paypal" className="h-8 w-auto filter grayscale hover:grayscale-0 transition-all" />
+                <Icon icon="logos:visa" className="h-6 w-auto filter grayscale hover:grayscale-0 transition-all" />
+                <Icon icon="logos:bitcoin" className="h-8 w-auto filter grayscale hover:grayscale-0 transition-all" />
+                <Icon icon="logos:tether" className="h-8 w-auto filter grayscale hover:grayscale-0 transition-all" />
+              </div>
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div className="space-y-12">
+            <div className="text-center">
+              <h2 className="text-3xl font-black uppercase italic tracking-tighter">Common Inquiries</h2>
+            </div>
+            <div className="grid gap-4">
+              {FAQ.map((faq, i) => (
+                <div 
+                  key={i} 
+                  className={`rounded-3xl border transition-all duration-300 ${
+                    openFaq === i ? 'bg-white/5 border-primary/30' : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                  }`}
                 >
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-purple-600 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
-                      Most Popular
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between p-6 text-left"
+                  >
+                    <span className="font-bold text-sm uppercase tracking-tight">{faq.q}</span>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-300 ${openFaq === i ? 'bg-primary rotate-45' : 'bg-white/5'}`}>
+                      <Icon icon="ph:plus-bold" className={`w-4 h-4 ${openFaq === i ? 'text-white' : 'text-muted-foreground'}`} />
+                    </div>
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-6 pb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <p className="text-sm text-muted-foreground leading-relaxed font-medium">{faq.a}</p>
                     </div>
                   )}
-
-                  <div>
-                    <h3 className={`text-xl font-black ${c.accent}`}>{plan.name}</h3>
-                    {plan.description && <p className="text-xs text-gray-400 mt-1">{plan.description}</p>}
-                  </div>
-
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-white">${Number(plan.price_usd).toFixed(2)}</span>
-                    <span className="text-sm text-gray-500">/ {plan.duration_days} days</span>
-                  </div>
-
-                  <ul className="space-y-2.5">
-                    <li className="flex items-center gap-2 text-sm text-gray-300">
-                      <Icon icon="ph:check-circle-fill" className={`w-4 h-4 ${c.accent} shrink-0`} /> Full {badgeLabel} access
-                    </li>
-                    {plan.bonus_coins > 0 && bonusCoinsEnabled && (
-                      <li className="flex items-center gap-2 text-sm text-gray-300">
-                        <Icon icon="ph:check-circle-fill" className={`w-4 h-4 ${c.accent} shrink-0`} /> +{plan.bonus_coins} Bonus Coins
-                      </li>
-                    )}
-                    {doubleDailyLogin && (
-                      <li className="flex items-center gap-2 text-sm text-gray-300">
-                        <Icon icon="ph:check-circle-fill" className={`w-4 h-4 ${c.accent} shrink-0`} /> 2× Daily Rewards
-                      </li>
-                    )}
-                    <li className="flex items-center gap-2 text-sm text-gray-300">
-                      <Icon icon="ph:check-circle-fill" className={`w-4 h-4 ${c.accent} shrink-0`} /> Support Creators
-                    </li>
-                  </ul>
-
-                  <Button
-                    onClick={() => handleSubscribe(plan.id)}
-                    disabled={isSubscriber}
-                    className={`w-full h-12 rounded-xl font-bold text-base text-white ${c.btnBg} shadow-lg transition-all`}
-                  >
-                    {isSubscriber ? 'Already Subscribed' : 'Subscribe Now'}
-                  </Button>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        )}
-      </section>
-
-      {/* How it works */}
-      <section className="max-w-4xl mx-auto px-6 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-10">How It Works</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {[
-            { step: '01', title: 'Choose a Plan', desc: 'Pick the duration that works best for you.', icon: 'ph:cursor-click-bold' },
-            { step: '02', title: 'Complete Payment', desc: 'Pay securely with PayPal or USDT.', icon: 'ph:credit-card-bold' },
-            { step: '03', title: 'Start Reading', desc: 'Instantly unlock all subscriber-only chapters.', icon: 'ph:book-open-bold' },
-          ].map((s, i) => (
-            <div key={i} className="text-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto">
-                <Icon icon={s.icon} className="w-7 h-7 text-purple-400" />
-              </div>
-              <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em]">Step {s.step}</p>
-              <h3 className="font-bold text-lg">{s.title}</h3>
-              <p className="text-sm text-gray-400">{s.desc}</p>
-            </div>
-          ))}
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-6 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
-        <div className="space-y-3">
-          {FAQ.map((faq, i) => (
-            <div key={i} className="rounded-2xl border border-white/5 bg-white/[0.02] overflow-hidden">
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between p-5 text-left"
+      {/* Final CTA */}
+      <section className="py-24 px-6 relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative rounded-[4rem] bg-[#0a0a0a] border border-white/5 p-12 md:p-24 overflow-hidden text-center space-y-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-blue-600/10" />
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/20 blur-[120px] rounded-full" />
+            
+            <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+              <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none">
+                Don't Miss <br /> The Next Big Release
+              </h2>
+              <p className="text-lg text-muted-foreground font-medium">Join thousands of others who are already enjoying the premium experience. Your favorite stories are waiting.</p>
+              <Button 
+                size="lg" 
+                className="h-16 px-12 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-sm hover:bg-white/90 hover:scale-[1.02] transition-all shadow-xl shadow-white/10"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
-                <span className="font-semibold text-sm pr-4">{faq.q}</span>
-                <Icon
-                  icon={openFaq === i ? 'ph:minus-bold' : 'ph:plus-bold'}
-                  className="w-4 h-4 text-gray-400 shrink-0"
-                />
-              </button>
-              {openFaq === i && (
-                <div className="px-5 pb-5 -mt-1">
-                  <p className="text-sm text-gray-400 leading-relaxed">{faq.a}</p>
-                </div>
-              )}
+                Back To Top
+              </Button>
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
-      {/* Footer CTA */}
-      <section className="max-w-4xl mx-auto px-6 pb-20">
-        <div className="rounded-3xl bg-gradient-to-br from-purple-900/30 to-blue-900/20 border border-purple-500/10 p-10 sm:p-14 text-center space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-          <h2 className="text-3xl font-black relative z-10">Ready to get started?</h2>
-          <p className="text-gray-400 relative z-10 max-w-md mx-auto">Join {stats?.activeSubscribers || 0}+ members and start reading subscriber-only content today.</p>
-          <Button
-            onClick={() => {
-              const el = document.querySelector('#pricing');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-              else window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="relative z-10 h-14 px-10 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold text-base shadow-lg shadow-purple-500/20"
-          >
-            View Plans
-          </Button>
-        </div>
-      </section>
+      {/* Inline styles for custom animations */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-x {
+          animation: gradient-x 5s ease infinite;
+        }
+      `}} />
     </div>
   );
 }
