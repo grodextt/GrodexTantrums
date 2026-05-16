@@ -5,6 +5,13 @@ import { useSubscriptionPlans, useSubscriptionStats, useHasActiveSubscription } 
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
+const FAQ = [
+  { q: "What is the nature of The Ascension?", a: "It is an exclusive tier granting uninterrupted, pristine access to our entire catalog." },
+  { q: "Are transactions secure?", a: "All transactions are heavily encrypted and processed via industry-leading secure gateways." },
+  { q: "Can I sever my connection?", a: "Yes. You may cancel your passage at any time, retaining access until the end of your billing cycle." },
+  { q: "Do the stipends roll over?", a: "Monthly tokens are credited to your account and remain yours to spend indefinitely." }
+];
+
 const MANIFESTO = [
   { title: "The Sanctuary", description: "Your reading environment is sacred. We strip away all advertisements, banners, and interruptions to provide a pure, unadulterated connection with the story." },
   { title: "The Vault", description: "Gain absolute access to the deepest archives. No more waiting. No more locked doors. The entire library is yours to explore." },
@@ -153,6 +160,26 @@ export default function SubscribePage() {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-32 px-8 max-w-4xl mx-auto">
+        <h2 className="text-xs font-bold tracking-[0.4em] uppercase text-[#cba677] mb-16 text-center">Inquiries</h2>
+        <div className="space-y-4">
+          {FAQ.map((faq, i) => (
+            <details key={i} className="group border border-[#222] bg-[#0a0a0a] open:border-[#cba677]/30 transition-colors duration-300">
+              <summary className="flex justify-between items-center cursor-pointer p-8 list-none outline-none [&::-webkit-details-marker]:hidden">
+                <span className="text-lg text-white font-light tracking-wide">{faq.q}</span>
+                <span className="text-[#cba677] group-open:rotate-45 transition-transform duration-300">
+                  <Icon icon="ph:plus-light" className="w-6 h-6" />
+                </span>
+              </summary>
+              <div className="px-8 pb-8 text-[#888] leading-relaxed border-t border-[#222]/50 pt-6 mt-2">
+                {faq.a}
+              </div>
+            </details>
+          ))}
         </div>
       </section>
 

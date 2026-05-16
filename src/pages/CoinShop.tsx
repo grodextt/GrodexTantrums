@@ -11,9 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 
 const PAYMENT_METHODS = [
-  { id: 'stripe', label: 'Card / Stripe', icon: 'ph:credit-card-bold' },
-  { id: 'paypal', label: 'PayPal', icon: 'ph:wallet-bold' },
-  { id: 'usdt', label: 'USDT', icon: 'ph:currency-circle-dollar-bold' },
+  { id: 'stripe', label: 'Credit Card', icon: 'ph:credit-card-light' },
+  { id: 'paypal', label: 'PayPal', icon: 'ph:paypal-logo-light' },
+  { id: 'usdt', label: 'Crypto (USDT)', icon: 'ph:currency-circle-dollar-light' },
 ] as const;
 
 declare global {
@@ -36,21 +36,17 @@ export default function CoinShop() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { premium_config: general, premium_general, coin_system } = settings;
+  const { premium_config: general, coin_system } = settings || {};
   const {
-    currency_name: currencyName,
+    currency_name: currencyName = 'Coins',
     currency_icon_url: currencyIconUrl,
-    badge_bg_color = '#E8D47E',
-    badge_text_color = '#A57C1B',
-    badge_padding_x = 12,
-    badge_padding_y = 3,
-    badge_icon_size = 14,
-  } = coin_system;
+  } = coin_system || {};
   
-  const baseAmount = coin_system.base_amount || 50;
-  const basePrice = coin_system.base_price || 0.99;
+  const baseAmount = coin_system?.base_amount || 50;
+  const basePrice = coin_system?.base_price || 0.99;
 
   const activeMethods = useMemo(() => {
+    if (!general) return [];
     return PAYMENT_METHODS.filter(m => {
       if (m.id === 'stripe') return general.enable_stripe;
       if (m.id === 'paypal') return general.enable_paypal;
@@ -83,7 +79,7 @@ export default function CoinShop() {
     const stripeSessionId = searchParams.get('stripe_session_id');
 
     if (status === 'cancelled') {
-      toast.info('Payment was cancelled.');
+      toast.info('Transaction aborted.');
       setSearchParams({}, { replace: true });
       return;
     }
@@ -96,13 +92,13 @@ export default function CoinShop() {
             body: { action: 'verify-session', sessionId: stripeSessionId },
           });
           if (error || !data?.success) {
-            toast.error(data?.error || 'Payment verification failed');
+            toast.error(data?.error || 'Verification failed');
           } else {
-            toast.success(`${data.coins_added} ${currencyName} added to your balance!`);
+            toast.success(`Successfully acquired ${data.coins_added} ${currencyName}.`);
             queryClient.invalidateQueries({ queryKey: ['coin-balance'] });
           }
         } catch {
-          toast.error('Could not verify payment');
+          toast.error('Could not verify transaction');
         }
         setProcessing(false);
         setSearchParams({}, { replace: true });
@@ -111,7 +107,7 @@ export default function CoinShop() {
   }, [searchParams, queryClient, currencyName]);
 
   const COIN_PACKAGES = useMemo(() => {
-    if (coin_system.packages && coin_system.packages.length > 0) {
+    if (coin_system?.packages && coin_system.packages.length > 0) {
       return coin_system.packages;
     }
     return [
@@ -122,7 +118,7 @@ export default function CoinShop() {
       { id: '5', coins: Math.round(baseAmount * 32), price: +(basePrice * 32).toFixed(2), label: 'Mega', bonus: Math.round(baseAmount * 8), popular: false },
       { id: '6', coins: Math.round(baseAmount * 100), price: +(basePrice * 100).toFixed(2), label: 'Ultimate', bonus: Math.round(baseAmount * 30), popular: false },
     ];
-  }, [baseAmount, basePrice, coin_system.packages]);
+  }, [baseAmount, basePrice, coin_system?.packages]);
 
   const selectedPkgData = COIN_PACKAGES.find(p => String(p.id) === String(selectedPkg));
 
@@ -186,18 +182,18 @@ export default function CoinShop() {
           if (error || !captureData?.success) {
             toast.error(captureData?.error || 'Payment capture failed');
           } else {
-            toast.success(`${captureData.coins_added} ${currencyName} added to your balance!`);
+            toast.success(`Successfully acquired ${captureData.coins_added} ${currencyName}.`);
             queryClient.invalidateQueries({ queryKey: ['coin-balance'] });
           }
         } catch {
-          toast.error('Could not verify payment');
+          toast.error('Could not verify transaction');
         }
         setProcessing(false);
       },
-      onCancel: () => toast.info('Payment cancelled.'),
+      onCancel: () => toast.info('Transaction aborted.'),
       onError: (err: any) => {
         console.error('PayPal error:', err);
-        toast.error('Payment failed. Please try again.');
+        toast.error('Transaction failed. Please try again.');
       },
     }).render(paypalContainerRef.current);
     paypalButtonsRendered.current = true;
@@ -207,7 +203,7 @@ export default function CoinShop() {
     currencyIconUrl ? (
       <img src={currencyIconUrl} alt={currencyName} className={`${className} object-contain`} style={{ ...style, ...(size ? { width: size, height: size } : {}) }} />
     ) : (
-      <Icon icon="ph:coins-bold" className={className} style={{ ...style, ...(size ? { width: size, height: size } : {}) }} />
+      <Icon icon="ph:coin-duotone" className={className} style={{ ...style, ...(size ? { width: size, height: size } : {}) }} />
     );
 
   const handlePurchase = async () => {
@@ -220,13 +216,13 @@ export default function CoinShop() {
           body: { action: 'create-checkout', coins: selectedPkgData.coins, amount: selectedPkgData.price, returnUrl },
         });
         if (error || !data?.url) {
-          toast.error(data?.error || 'Failed to create checkout session');
+          toast.error(data?.error || 'Failed to initialize gateway');
           setProcessing(false);
           return;
         }
         window.location.href = data.url;
       } catch (err: any) {
-        toast.error(err.message || 'Payment failed');
+        toast.error(err.message || 'Transaction failed');
         setProcessing(false);
       }
     } else if (paymentMethod === 'usdt') {
@@ -236,278 +232,175 @@ export default function CoinShop() {
           body: { action: 'create-payment', coins: selectedPkgData.coins, amount: selectedPkgData.price },
         });
         if (error || !data?.payAddress) {
-          toast.error(data?.error || 'Failed to create USDT payment');
+          toast.error(data?.error || 'Failed to initialize crypto gateway');
           setProcessing(false);
           return;
         }
         setUsdtPayment(data);
         setProcessing(false);
       } catch (err: any) {
-        toast.error(err.message || 'Payment failed');
+        toast.error(err.message || 'Transaction failed');
         setProcessing(false);
       }
     }
   };
 
-  if (!general.enable_coins && !settingsLoading) {
+  if (!general?.enable_coins && !settingsLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-vh-[60vh] text-center p-6 bg-background">
-        <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6">
-          <Icon icon="ph:storefront-bold" className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2">Shop is Closed</h2>
-        <p className="text-muted-foreground max-w-md">The coin shop is currently unavailable. Please check back later.</p>
-        <Button variant="outline" className="mt-8 rounded-xl" onClick={() => window.history.back()}>Go Back</Button>
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-center p-6">
+        <h2 className="text-3xl font-light text-white mb-4" style={{ fontFamily: 'Georgia, serif' }}>The Exchange is Closed</h2>
+        <p className="text-[#888] tracking-widest uppercase text-xs">Return at a later time.</p>
+        <Button className="mt-8 bg-transparent border border-[#333] text-white hover:bg-[#111]" onClick={() => window.history.back()}>Retreat</Button>
       </div>
     );
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 xl:px-16 py-6 sm:py-10 max-w-7xl mx-auto min-h-[80vh] flex flex-col">
-      {/* Dynamic Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-card border border-border/60 shadow-sm mb-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent" />
-        <div className="relative p-6 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-2xl bg-amber-500/15 flex items-center justify-center shrink-0">
-              <Icon icon="ph:shopping-cart-duotone" className="w-8 sm:w-10 h-8 sm:h-10 text-amber-500" />
+    <div className="min-h-screen bg-[#050505] text-[#e0e0e0] font-sans selection:bg-[#cba677] selection:text-black">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-32 flex flex-col lg:flex-row gap-20">
+        
+        {/* Left Column - Information */}
+        <div className="lg:w-1/3 flex flex-col gap-12">
+          <div>
+            <h1 className="text-5xl lg:text-7xl font-light text-white mb-6" style={{ fontFamily: 'Georgia, serif' }}>
+              The <br/><span className="text-[#cba677] italic">Exchange</span>
+            </h1>
+            <p className="text-[#888] leading-relaxed">
+              Acquire {currencyName.toLowerCase()} to permanently unlock deep archive entries. Your acquisitions directly support the scribes and artisans.
+            </p>
+          </div>
+
+          <div className="p-8 border border-[#222] bg-[#0a0a0a]">
+            <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#666] mb-4">Your Ledger</p>
+            <div className="flex items-end gap-3">
+              <CurrencyIcon className="text-[#cba677] w-8 h-8 mb-1" />
+              <span className="text-5xl font-light text-white" style={{ fontFamily: 'Georgia, serif' }}>{coinBalance.toLocaleString()}</span>
+            </div>
+            <p className="text-[#666] text-sm mt-2">Available Balance</p>
+          </div>
+
+          <div className="space-y-6 pt-12 border-t border-[#222]">
+            <div>
+              <p className="text-sm font-bold text-white mb-1 tracking-wide">Are assets permanent?</p>
+              <p className="text-[#888] text-sm leading-relaxed">Yes. Once a chapter is unlocked, it remains in your possession indefinitely.</p>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">{currencyName} Shop</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">Unlock premium chapters and support creators.</p>
-            </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Current Balance</p>
-            <div
-              className="flex items-center gap-2 shadow-sm rounded-xl"
-              style={{
-                backgroundColor: badge_bg_color,
-                padding: `${badge_padding_y + 4}px ${badge_padding_x + 8}px`
-              }}
-            >
-              <CurrencyIcon size={badge_icon_size + 4} className="text-current" style={{ color: badge_text_color }} />
-              <span style={{ color: badge_text_color, fontSize: '18px', fontWeight: 900, letterSpacing: '-0.025em' }}>
-                {coinBalance.toLocaleString()}
-              </span>
+              <p className="text-sm font-bold text-white mb-1 tracking-wide">Are transactions secure?</p>
+              <p className="text-[#888] text-sm leading-relaxed">All exchanges are processed through encrypted, industry-standard gateways.</p>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-        {/* Main Content Area */}
-        <div className="flex-1 space-y-10">
+        {/* Right Column - Packages and Checkout */}
+        <div className="lg:w-2/3 flex flex-col gap-16">
+          
+          {/* Packages */}
           <section>
-            <h2 className="text-xl font-bold text-foreground mb-5 flex items-center gap-2">
-              <Icon icon="ph:sparkle-fill" className="w-5 h-5 text-amber-500" />
-              Select a Package
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {COIN_PACKAGES.map((pkg, idx) => {
-                const isPremiumTier = idx >= COIN_PACKAGES.length - 2;
-                return (
-                  <button
-                    key={pkg.id}
-                    onClick={() => setSelectedPkg(pkg.id)}
-                    className={`relative rounded-3xl border p-5 text-left transition-all duration-300 group overflow-hidden focus:outline-none ${
-                      selectedPkg === pkg.id 
-                        ? 'border-primary bg-primary/[0.03] ring-4 ring-primary/20 shadow-lg scale-[1.02]' 
-                        : 'border-border/60 bg-card hover:border-primary/50 hover:bg-muted/30 hover:scale-[1.01] hover:shadow-md'
-                    }`}
-                  >
-                    {isPremiumTier && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
-                    )}
-                    {pkg.popular && (
-                      <span className="absolute top-0 right-0 rounded-bl-xl rounded-tr-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold px-3 py-1.5 flex items-center gap-1 shadow-sm z-10">
-                        <Icon icon="ph:star-fill" className="w-3 h-3" /> BEST VALUE
+            <h2 className="text-xs font-bold tracking-[0.4em] uppercase text-[#cba677] mb-8">Select Acquisition</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {COIN_PACKAGES.map((pkg, idx) => (
+                <button
+                  key={pkg.id}
+                  onClick={() => setSelectedPkg(pkg.id)}
+                  className={`text-left p-6 border transition-all duration-500 relative flex flex-col justify-between h-32 ${
+                    selectedPkg === pkg.id 
+                      ? 'border-[#cba677] bg-[#cba677]/5' 
+                      : 'border-[#222] bg-[#0a0a0a] hover:border-[#444]'
+                  }`}
+                >
+                  <div className="flex justify-between items-start w-full">
+                    <div className="flex items-center gap-2">
+                      <CurrencyIcon className={`w-5 h-5 ${selectedPkg === pkg.id ? 'text-[#cba677]' : 'text-[#666]'}`} />
+                      <span className={`text-2xl font-light ${selectedPkg === pkg.id ? 'text-white' : 'text-[#888]'}`}>
+                        {pkg.coins.toLocaleString()}
+                      </span>
+                    </div>
+                    {pkg.bonus > 0 && (
+                      <span className="text-[10px] uppercase tracking-widest text-[#cba677] border border-[#cba677]/30 px-2 py-1 bg-[#cba677]/10">
+                        +{pkg.bonus} Bonus
                       </span>
                     )}
-
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 mb-3">
-                        <CurrencyIcon className={`w-8 h-8 ${isPremiumTier ? 'text-amber-500 drop-shadow-md' : 'text-amber-500/80'}`} />
-                        <span className={`text-2xl font-black tracking-tight ${isPremiumTier ? 'bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent' : 'text-foreground'}`}>
-                          {pkg.coins.toLocaleString()}
-                        </span>
-                      </div>
-
-                      {pkg.bonus && pkg.bonus > 0 ? (
-                        <div className="mb-4">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-500/10 text-emerald-500 px-2.5 py-1 rounded-md border border-emerald-500/20">
-                            <Icon icon="ph:gift-fill" className="w-3 h-3" />
-                            +{pkg.bonus.toLocaleString()} BONUS
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="h-6 mb-4"></div>
-                      )}
-
-                      <div className="flex items-baseline justify-between pt-4 border-t border-border/50">
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{pkg.label}</span>
-                        <span className="text-xl font-bold text-foreground">${pkg.price}</span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+                  </div>
+                  <div className="flex justify-between items-end w-full mt-auto">
+                    <span className="text-xs text-[#555] uppercase tracking-widest">{pkg.label}</span>
+                    <span className={`text-xl ${selectedPkg === pkg.id ? 'text-white' : 'text-[#666]'}`}>
+                      ${pkg.price.toFixed(2)}
+                    </span>
+                  </div>
+                </button>
+              ))}
             </div>
           </section>
 
-          <section>
-            <h2 className="text-xl font-bold text-foreground mb-5">Payment Method</h2>
+          {/* Checkout Area */}
+          <section className={`transition-opacity duration-500 ${selectedPkgData ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+            <h2 className="text-xs font-bold tracking-[0.4em] uppercase text-[#cba677] mb-8">Gateway Selection</h2>
+            
             {activeMethods.length === 0 ? (
-              <div className="p-8 rounded-3xl border-2 border-dashed border-border bg-muted/20 text-center text-muted-foreground flex flex-col items-center">
-                <Icon icon="ph:warning-circle-duotone" className="w-10 h-10 mb-3 text-muted-foreground/50" />
-                No payment methods are currently active. Please contact support.
-              </div>
+              <p className="text-[#666] italic">No active gateways available.</p>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-wrap gap-4 mb-10">
                 {activeMethods.map((method) => (
-                  <button key={method.id} onClick={() => setPaymentMethod(method.id)}
-                    className={`flex items-center gap-4 rounded-2xl border px-5 py-4 sm:flex-1 transition-all duration-200 focus:outline-none ${
+                  <button 
+                    key={method.id} 
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`flex items-center gap-3 px-6 py-4 border transition-colors ${
                       paymentMethod === method.id 
-                        ? 'border-primary bg-primary/[0.04] ring-2 ring-primary/30 shadow-sm' 
-                        : 'border-border/60 bg-card hover:border-border/80'
-                    }`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${paymentMethod === method.id ? 'bg-primary/10' : 'bg-muted/60'}`}>
-                      <Icon icon={method.icon} className={`w-5 h-5 ${paymentMethod === method.id ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <span className={`text-base font-semibold ${paymentMethod === method.id ? 'text-foreground' : 'text-muted-foreground'}`}>{method.label}</span>
-                    {paymentMethod === method.id && (
-                      <div className="ml-auto w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                        <Icon icon="ph:check-bold" className="w-3 h-3 text-primary-foreground" />
-                      </div>
-                    )}
+                        ? 'border-[#cba677] text-[#cba677] bg-[#cba677]/5' 
+                        : 'border-[#222] text-[#666] hover:text-[#888] hover:border-[#444]'
+                    }`}
+                  >
+                    <Icon icon={method.icon} className="w-5 h-5" />
+                    <span className="text-sm tracking-wide">{method.label}</span>
                   </button>
                 ))}
               </div>
             )}
+
+            {selectedPkgData && (
+              <div className="p-8 border border-[#222] bg-[#0a0a0a]">
+                <div className="flex justify-between items-end mb-8 border-b border-[#222] pb-8">
+                  <div>
+                    <p className="text-xs text-[#555] uppercase tracking-widest mb-2">Total Payable</p>
+                    <p className="text-4xl font-light text-white" style={{ fontFamily: 'Georgia, serif' }}>
+                      ${selectedPkgData.price.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[#cba677] text-xl font-light">{selectedPkgData.coins.toLocaleString()} {currencyName}</p>
+                    {selectedPkgData.bonus > 0 && <p className="text-xs text-[#666] mt-1">Includes {selectedPkgData.bonus} bonus tokens</p>}
+                  </div>
+                </div>
+
+                {paymentMethod !== 'paypal' && (
+                  <Button 
+                    className="w-full h-16 bg-[#cba677] hover:bg-[#b59265] text-black uppercase tracking-[0.2em] font-bold text-xs transition-colors rounded-none"
+                    onClick={handlePurchase} 
+                    disabled={processing || !user}
+                  >
+                    {processing ? 'Processing...' : 'Authorize Transaction'}
+                  </Button>
+                )}
+
+                {paymentMethod === 'paypal' && (
+                  <div className="mt-4">
+                    {paypalLoading && <p className="text-[#666] text-sm mb-4">Initializing PayPal Gateway...</p>}
+                    <div ref={paypalContainerRef} className={processing ? 'opacity-50 pointer-events-none' : ''} />
+                  </div>
+                )}
+              </div>
+            )}
           </section>
 
-          <div className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden relative">
-            <div className="h-1.5 w-full bg-gradient-to-r from-primary via-emerald-400 to-amber-500" />
-            <div className="p-6 sm:p-8">
-              {selectedPkgData ? (
-                <>
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-2">
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-                        <CurrencyIcon className="w-6 h-6 text-amber-500" />
-                      </div>
-                      <div>
-                        <p className="text-xl font-bold text-foreground">
-                          {selectedPkgData.coins.toLocaleString()} {currencyName}
-                          {selectedPkgData.bonus ? <span className="text-emerald-500 text-sm ml-2">({selectedPkgData.bonus} Free)</span> : ''}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                          Checkout via <strong>{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}</strong>
-                          <Icon icon="ph:lock-key-fill" className="w-3.5 h-3.5 text-muted-foreground/60" />
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full md:w-auto text-center md:text-right">
-                      <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-1">Total Due</p>
-                      <p className="text-3xl font-black">${selectedPkgData.price.toFixed(2)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">USD • Secure Checkout</p>
-                    </div>
-                  </div>
-
-                  {paymentMethod !== 'paypal' && (
-                    <div className="mt-8">
-                      <Button className="rounded-2xl px-8 h-14 w-full text-base font-bold shadow-md hover:shadow-lg transition-all" onClick={handlePurchase} disabled={processing || !user}>
-                        {processing ? <Icon icon="ph:spinner-gap-bold" className="w-5 h-5 animate-spin mr-2" /> : <Icon icon="ph:lock-key-fill" className="w-5 h-5 mr-2" />}
-                        {processing ? 'Processing Payment...' : `Pay $${selectedPkgData.price.toFixed(2)} Securely`}
-                      </Button>
-                    </div>
-                  )}
-
-                  {paymentMethod === 'paypal' && (
-                    <div className="mt-8 text-center bg-muted/20 p-4 rounded-2xl border border-border/40">
-                      {paypalLoading && (
-                        <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
-                          <Icon icon="ph:spinner-gap-bold" className="w-5 h-5 animate-spin" />
-                          <span className="text-sm font-medium">Loading PayPal Secure Gateway...</span>
-                        </div>
-                      )}
-                      <div ref={paypalContainerRef} className={processing ? 'opacity-50 pointer-events-none' : ''} />
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                   <div className="w-16 h-16 rounded-full bg-muted/40 flex items-center justify-center mx-auto mb-4">
-                     <Icon icon="ph:cursor-click-duotone" className="w-8 h-8 text-muted-foreground/60" />
-                   </div>
-                   <p className="text-base font-medium text-foreground">Awaiting Selection</p>
-                   <p className="text-sm text-muted-foreground mt-1">Please select a package above to proceed to checkout.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Info Sidebar */}
-        <div className="hidden lg:block w-[320px] shrink-0 space-y-6">
-          <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
-            <h3 className="font-bold text-foreground flex items-center gap-2 mb-5">
-               <Icon icon="ph:shield-check-fill" className="w-5 h-5 text-emerald-500" />
-               Safe & Secure
-            </h3>
-            <ul className="space-y-4 text-left">
-               <li className="flex gap-3">
-                 <Icon icon="ph:lock-key-fill" className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                 <div>
-                   <p className="text-sm font-semibold text-foreground">Encrypted Checkout</p>
-                   <p className="text-xs text-muted-foreground mt-0.5">Your payment is encrypted and handled by bank-grade providers.</p>
-                 </div>
-               </li>
-               <li className="flex gap-3">
-                 <Icon icon="ph:lightning-fill" className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                 <div>
-                   <p className="text-sm font-semibold text-foreground">Instant Delivery</p>
-                   <p className="text-xs text-muted-foreground mt-0.5">Coins are instantly credited to your wallet securely.</p>
-                 </div>
-               </li>
-               <li className="flex gap-3">
-                 <Icon icon="ph:headset-fill" className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                 <div>
-                   <p className="text-sm font-semibold text-foreground">Fast Support</p>
-                   <p className="text-xs text-muted-foreground mt-0.5">We are always available to help resolve any issues.</p>
-                 </div>
-               </li>
-            </ul>
-          </div>
-          
-          <div className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm">
-             <h3 className="font-bold text-foreground mb-4">Frequently Asked Questions</h3>
-             <div className="space-y-4 text-left">
-                <div>
-                   <p className="text-sm font-semibold text-foreground">Do {currencyName.toLowerCase()} expire?</p>
-                   <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">No, any {currencyName.toLowerCase()} you purchase or earn via bonuses remain in your wallet forever.</p>
-                </div>
-                <div>
-                   <p className="text-sm font-semibold text-foreground">Are chapters permanently unlocked?</p>
-                   <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">Yes! Once you spend {currencyName.toLowerCase()} to unlock a premium chapter, you retain access to it permanently.</p>
-                </div>
-                <div>
-                   <p className="text-sm font-semibold text-foreground">Is my payment recurring?</p>
-                   <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">No, these are strictly one-time payments. There are no hidden subscription charges.</p>
-                </div>
-             </div>
-          </div>
         </div>
       </div>
 
       <Dialog open={!!usdtPayment} onOpenChange={(open) => !open && setUsdtPayment(null)}>
-        <DialogContent className="sm:max-w-md p-6">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><Icon icon="cryptocurrency-color:usdt" className="w-5 h-5" /> USDT Payment</DialogTitle></DialogHeader>
+        <DialogContent className="sm:max-w-md p-8 bg-[#0a0a0a] border border-[#222] text-white">
+          <DialogHeader><DialogTitle className="font-light tracking-wide text-[#cba677]">USDT Gateway Initiated</DialogTitle></DialogHeader>
           {usdtPayment && (
-            <div className="space-y-6 pt-2">
-              {/* QR Code */}
-              <div className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm mx-auto max-w-fit">
+            <div className="space-y-8 pt-4">
+              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-sm mx-auto w-fit">
                 <img 
                    src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${usdtPayment.payAddress}`} 
                    alt="Wallet Address QR" 
@@ -515,30 +408,28 @@ export default function CoinShop() {
                 />
               </div>
 
-              {/* Amount */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">Send exactly</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold tracking-[0.2em] text-[#666] uppercase">Exact Transfer Amount</label>
                 <div className="flex gap-2">
-                  <Input readOnly value={`${usdtPayment.payAmount} ${usdtPayment.payCurrency?.toUpperCase()}`} className="font-mono bg-muted/50 rounded-lg h-11 text-lg font-bold text-emerald-600" />
-                  <Button variant="secondary" className="h-11 px-4 shrinks-0" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAmount); toast.success('Amount copied!'); }}>
-                    <Icon icon="ph:copy-bold" className="w-4 h-4" />
+                  <Input readOnly value={`${usdtPayment.payAmount} ${usdtPayment.payCurrency?.toUpperCase()}`} className="font-mono bg-[#111] border-[#333] rounded-none h-12 text-[#cba677]" />
+                  <Button variant="secondary" className="h-12 rounded-none bg-[#222] hover:bg-[#333] border-0 text-white" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAmount); toast.success('Copied to clipboard'); }}>
+                    <Icon icon="ph:copy-light" className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
 
-              {/* Address */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase">To this {usdtPayment.network || 'BSC'} address</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold tracking-[0.2em] text-[#666] uppercase">Destination Address ({usdtPayment.network || 'BSC'})</label>
                 <div className="flex gap-2">
-                  <Input readOnly value={usdtPayment.payAddress} className="font-mono bg-muted/50 rounded-lg h-11 text-xs" />
-                  <Button variant="secondary" className="h-11 px-4 shrinks-0" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAddress); toast.success('Address copied!'); }}>
-                    <Icon icon="ph:copy-bold" className="w-4 h-4" />
+                  <Input readOnly value={usdtPayment.payAddress} className="font-mono bg-[#111] border-[#333] rounded-none h-12 text-xs" />
+                  <Button variant="secondary" className="h-12 rounded-none bg-[#222] hover:bg-[#333] border-0 text-white" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAddress); toast.success('Copied to clipboard'); }}>
+                    <Icon icon="ph:copy-light" className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
-              <p className="text-xs font-medium text-blue-500 text-center bg-blue-500/10 p-2.5 rounded-lg flex items-center justify-center gap-2">
-                <Icon icon="ph:spinner-bold" className="w-4 h-4 animate-spin" />
-                Your balance will update automatically.
+              <p className="text-[10px] tracking-widest uppercase text-[#555] text-center flex items-center justify-center gap-2">
+                <Icon icon="ph:spinner-gap-light" className="w-4 h-4 animate-spin" />
+                Awaiting confirmation
               </p>
             </div>
           )}
