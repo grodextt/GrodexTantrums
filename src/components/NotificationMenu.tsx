@@ -131,7 +131,7 @@ export default function NotificationMenu() {
         
         <div className="border-t border-border bg-muted/20">
           <Link
-            to="/dashboard"
+            to="/notifications"
             onClick={() => setOpen(false)}
             className="block py-3 text-center text-sm font-semibold text-primary hover:bg-muted/40 transition-colors"
           >

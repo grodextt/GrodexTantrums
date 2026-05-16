@@ -61,10 +61,19 @@ export const useNotifications = () => {
         .eq('is_read', false);
       if (error) throw error;
     },
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', user.id);
+      if (error) throw error;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
-  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead };
+  return { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, clearAll };
 };
 
 export const useMangaSubscription = (mangaId: string | undefined) => {

@@ -30,6 +30,7 @@ const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const SubscribeCheckout = lazy(() => import("./pages/SubscribeCheckout"));
 const SubscribeSuccess = lazy(() => import("./pages/SubscribeSuccess"));
+const AllNotifications = lazy(() => import("./pages/AllNotifications"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -114,6 +115,7 @@ const AppLayout = () => {
             <Route path="/subscribe" element={<Subscribe />} />
             <Route path="/subscribe/checkout/:planId" element={<SubscribeCheckout />} />
             <Route path="/subscribe/success" element={<SubscribeSuccess />} />
+            <Route path="/notifications" element={<AllNotifications />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
