@@ -61,6 +61,9 @@ export const useNotifications = () => {
         .eq('is_read', false);
       if (error) throw error;
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
   const clearAll = useMutation({
     mutationFn: async () => {
       if (!user) return;
