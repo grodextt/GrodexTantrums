@@ -128,43 +128,51 @@ export const useComments = (mangaId: string | undefined, contextType?: 'manga' |
         .single();
       if (error) throw error;
 
+      // Get current user's profile to display their name properly
+      let senderName = user.user_metadata?.full_name || 'Someone';
+      const { data: currentUserProfile } = await supabase
+        .from('profiles_public' as any)
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle() as any;
+      if (currentUserProfile && currentUserProfile.display_name) {
+        senderName = currentUserProfile.display_name;
+      }
+
       // If replying, create notification for parent comment author
       if (parentId) {
         const parentComment = comments.find(c => c.id === parentId) ||
           comments.flatMap(c => c.replies || []).find(r => r.id === parentId);
         if (parentComment && parentComment.user_id !== user.id) {
-          await supabase.from('notifications').insert({
-            user_id: parentComment.user_id,
-            type: 'comment_reply' as any,
-            manga_id: mangaId,
-            comment_id: data.id,
-            title: 'New reply to your comment',
-            message: text.slice(0, 100),
+          await supabase.rpc('send_notification', {
+            p_user_id: parentComment.user_id,
+            p_type: 'comment_reply',
+            p_manga_id: mangaId,
+            p_comment_id: data.id,
+            p_title: 'New reply to your comment',
+            p_message: text.slice(0, 100),
           });
         }
       }
 
       // Handle @mentions
       if (mentions && mentions.length > 0) {
-        const { data: mentionedProfiles } = await (supabase
-          .from('profiles_public' as any)
-          .select('id, display_name')
-          .in('display_name', mentions)) as any;
+        for (const m of mentions) {
+          const { data: mentionedProfile } = await supabase
+            .from('profiles_public' as any)
+            .select('id, display_name')
+            .ilike('display_name', m)
+            .maybeSingle() as any;
 
-        if (mentionedProfiles) {
-          const notifications = mentionedProfiles
-            .filter(p => p.id !== user.id)
-            .map(p => ({
-              user_id: p.id,
-              type: 'comment_reply' as any,
-              manga_id: mangaId,
-              comment_id: data.id,
-              title: `${user.user_metadata?.full_name || 'Someone'} mentioned you`,
-              message: text.slice(0, 100),
-            }));
-
-          if (notifications.length > 0) {
-            await supabase.from('notifications').insert(notifications);
+          if (mentionedProfile && mentionedProfile.id !== user.id) {
+            await supabase.rpc('send_notification', {
+              p_user_id: mentionedProfile.id,
+              p_type: 'comment_reply',
+              p_manga_id: mangaId,
+              p_comment_id: data.id,
+              p_title: `${senderName} mentioned you`,
+              p_message: text.slice(0, 100),
+            });
           }
         }
       }
