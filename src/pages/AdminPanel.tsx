@@ -1444,7 +1444,7 @@ export default function AdminPanel() {
 
       {/* User Actions Modal */}
       <Dialog open={!!userActionModal} onOpenChange={() => setUserActionModal(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Manage User — {userActionModal?.display_name || 'Unknown'}</DialogTitle>
           </DialogHeader>
@@ -1456,8 +1456,17 @@ export default function AdminPanel() {
               <Input placeholder="Avatar URL" value={editUserAvatar} onChange={e => setEditUserAvatar(e.target.value)} className="rounded-lg" />
               <Button size="sm" onClick={async () => {
                 if (!userActionModal) return;
-                await supabase.from('profiles').update({ display_name: editUserName, avatar_url: editUserAvatar || null }).eq('id', userActionModal.id);
-                toast.success('Profile updated'); fetchUsers();
+                try {
+                  const { error } = await supabase.rpc('admin_update_profile', {
+                    p_target_user_id: userActionModal.id,
+                    p_display_name: editUserName,
+                    p_avatar_url: editUserAvatar || null
+                  });
+                  if (error) throw error;
+                  toast.success('Profile updated'); fetchUsers();
+                } catch (err: any) {
+                  toast.error(`Failed to update profile: ${err.message}`);
+                }
               }}>Save Profile</Button>
             </div>
 
@@ -1529,12 +1538,24 @@ export default function AdminPanel() {
             {/* Restrict by IP */}
             <div className="space-y-2 rounded-xl border border-border p-3">
               <h4 className="text-sm font-semibold">Restrict by IP</h4>
-              <Input placeholder="IP Address" value={blockIp} onChange={e => setBlockIp(e.target.value)} className="rounded-lg" />
-              <Button size="sm" variant="destructive" onClick={async () => {
-                if (!blockIp.trim()) return;
-                await supabase.from('blocked_ips').insert({ ip_address: blockIp.trim() });
-                toast.success('IP blocked'); setBlockIp('');
-              }}>Block IP</Button>
+              <Input placeholder="IP Address (Manual entry)" value={blockIp} onChange={e => setBlockIp(e.target.value)} className="rounded-lg" />
+              <div className="flex gap-2">
+                <Button size="sm" variant="destructive" onClick={async () => {
+                  if (!blockIp.trim()) return;
+                  await supabase.from('blocked_ips').insert({ ip_address: blockIp.trim() });
+                  toast.success('IP blocked'); setBlockIp('');
+                }}>Block Manual IP</Button>
+                <Button size="sm" variant="outline" className="border-destructive text-destructive hover:bg-destructive hover:text-white" onClick={async () => {
+                  if (!userActionModal) return;
+                  try {
+                    const { error } = await supabase.rpc('admin_block_user_ip', { p_target_user_id: userActionModal.id });
+                    if (error) throw error;
+                    toast.success(`Successfully blocked ${userActionModal.display_name}'s IP`);
+                  } catch (err: any) {
+                    toast.error(`Failed to block IP: ${err.message}`);
+                  }
+                }}>Auto-Block User's IP</Button>
+              </div>
             </div>
 
             {/* Role Management (Admin Only) */}
@@ -1618,8 +1639,15 @@ export default function AdminPanel() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={async () => {
               if (!deleteUserId) return;
-              await supabase.from('profiles').delete().eq('id', deleteUserId);
-              toast.success('User deleted'); setDeleteUserId(null); fetchUsers();
+              try {
+                const { error } = await supabase.rpc('admin_delete_user', { p_target_user_id: deleteUserId });
+                if (error) throw error;
+                toast.success('User deleted'); 
+              } catch (err: any) {
+                toast.error(`Failed to delete user: ${err.message}`);
+              } finally {
+                setDeleteUserId(null); fetchUsers();
+              }
             }}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
