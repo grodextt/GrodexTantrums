@@ -247,46 +247,83 @@ export default function CoinShop() {
 
   if (!general?.enable_coins && !settingsLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-center p-6">
-        <h2 className="text-3xl font-light text-white mb-4" style={{ fontFamily: 'Georgia, serif' }}>The Exchange is Closed</h2>
-        <p className="text-[#888] tracking-widest uppercase text-xs">Return at a later time.</p>
-        <Button className="mt-8 bg-transparent border border-[#333] text-white hover:bg-[#111]" onClick={() => window.history.back()}>Retreat</Button>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center p-6 text-foreground">
+        <h2 className="text-3xl font-light mb-4" style={{ fontFamily: 'Georgia, serif' }}>The Exchange is Closed</h2>
+        <p className="text-muted-foreground tracking-widest uppercase text-xs">Return at a later time.</p>
+        <Button className="mt-8 bg-transparent border border-border text-foreground hover:bg-muted" onClick={() => window.history.back()}>Retreat</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#e0e0e0] font-sans selection:bg-[#cba677] selection:text-black">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-[#cba677] selection:text-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-32 flex flex-col lg:flex-row gap-20">
         
         {/* Left Column - Information */}
         <div className="lg:w-1/3 flex flex-col gap-12">
           <div>
-            <h1 className="text-5xl lg:text-7xl font-light text-white mb-6" style={{ fontFamily: 'Georgia, serif' }}>
+            <h1 className="text-5xl lg:text-7xl font-light text-foreground mb-6" style={{ fontFamily: 'Georgia, serif' }}>
               The <br/><span className="text-[#cba677] italic">Exchange</span>
             </h1>
-            <p className="text-[#888] leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               Acquire {currencyName.toLowerCase()} to permanently unlock deep archive entries. Your acquisitions directly support the scribes and artisans.
             </p>
           </div>
 
-          <div className="p-8 border border-[#222] bg-[#0a0a0a]">
-            <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#666] mb-4">Your Ledger</p>
+          <div className="p-8 border border-border bg-card">
+            <p className="text-xs font-bold tracking-[0.3em] uppercase text-muted-foreground/70 mb-4">Your Ledger</p>
             <div className="flex items-end gap-3">
               <CurrencyIcon className="text-[#cba677] w-8 h-8 mb-1" />
-              <span className="text-5xl font-light text-white" style={{ fontFamily: 'Georgia, serif' }}>{coinBalance.toLocaleString()}</span>
+              <span className="text-5xl font-light text-foreground" style={{ fontFamily: 'Georgia, serif' }}>{coinBalance.toLocaleString()}</span>
             </div>
-            <p className="text-[#666] text-sm mt-2">Available Balance</p>
+            <p className="text-muted-foreground/70 text-sm mt-2">Available Balance</p>
           </div>
 
-          <div className="space-y-6 pt-12 border-t border-[#222]">
+          <div className="space-y-12 pt-12 border-t border-border">
+            {/* Safe & Secure */}
             <div>
-              <p className="text-sm font-bold text-white mb-1 tracking-wide">Are assets permanent?</p>
-              <p className="text-[#888] text-sm leading-relaxed">Yes. Once a chapter is unlocked, it remains in your possession indefinitely.</p>
+              <h3 className="font-bold text-foreground flex items-center gap-2 mb-6 uppercase tracking-widest text-xs text-[#cba677]">
+                 <Icon icon="ph:shield-check-light" className="w-5 h-5" />
+                 Safe & Secure
+              </h3>
+              <ul className="space-y-6 text-left">
+                 <li className="flex gap-4">
+                   <Icon icon="ph:lock-key-light" className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                   <div>
+                     <p className="text-sm font-semibold text-foreground">Encrypted Checkout</p>
+                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Your payment is heavily encrypted and handled by bank-grade providers.</p>
+                   </div>
+                 </li>
+                 <li className="flex gap-4">
+                   <Icon icon="ph:lightning-light" className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                   <div>
+                     <p className="text-sm font-semibold text-foreground">Instant Delivery</p>
+                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Tokens are instantly credited to your ledger upon confirmation.</p>
+                   </div>
+                 </li>
+              </ul>
             </div>
-            <div>
-              <p className="text-sm font-bold text-white mb-1 tracking-wide">Are transactions secure?</p>
-              <p className="text-[#888] text-sm leading-relaxed">All exchanges are processed through encrypted, industry-standard gateways.</p>
+
+            {/* FAQ */}
+            <div className="pt-12 border-t border-border">
+               <h3 className="font-bold text-foreground mb-6 uppercase tracking-widest text-xs text-[#cba677] flex items-center gap-2">
+                 <Icon icon="ph:question-light" className="w-5 h-5" />
+                 Frequently Asked Questions
+               </h3>
+               <div className="space-y-6 text-left">
+                  <div>
+                     <p className="text-sm font-bold text-foreground mb-1 tracking-wide">Do {currencyName.toLowerCase()} expire?</p>
+                     <p className="text-xs text-muted-foreground leading-relaxed">No, any {currencyName.toLowerCase()} you acquire remain in your ledger indefinitely.</p>
+                  </div>
+                  <div>
+                     <p className="text-sm font-bold text-foreground mb-1 tracking-wide">Are chapters permanently unlocked?</p>
+                     <p className="text-xs text-muted-foreground leading-relaxed">Yes! Once you authorize an exchange to unlock an archive, you retain access permanently.</p>
+                  </div>
+                  <div>
+                     <p className="text-sm font-bold text-foreground mb-1 tracking-wide">Is this a recurring subscription?</p>
+                     <p className="text-xs text-muted-foreground leading-relaxed">No, these are strictly one-time acquisitions. No hidden charges will occur.</p>
+                  </div>
+               </div>
             </div>
           </div>
         </div>
@@ -305,13 +342,13 @@ export default function CoinShop() {
                   className={`text-left p-6 border transition-all duration-500 relative flex flex-col justify-between h-32 ${
                     selectedPkg === pkg.id 
                       ? 'border-[#cba677] bg-[#cba677]/5' 
-                      : 'border-[#222] bg-[#0a0a0a] hover:border-[#444]'
+                      : 'border-border bg-card hover:border-border/80'
                   }`}
                 >
                   <div className="flex justify-between items-start w-full">
                     <div className="flex items-center gap-2">
-                      <CurrencyIcon className={`w-5 h-5 ${selectedPkg === pkg.id ? 'text-[#cba677]' : 'text-[#666]'}`} />
-                      <span className={`text-2xl font-light ${selectedPkg === pkg.id ? 'text-white' : 'text-[#888]'}`}>
+                      <CurrencyIcon className={`w-5 h-5 ${selectedPkg === pkg.id ? 'text-[#cba677]' : 'text-muted-foreground'}`} />
+                      <span className={`text-2xl font-light ${selectedPkg === pkg.id ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {pkg.coins.toLocaleString()}
                       </span>
                     </div>
@@ -322,8 +359,8 @@ export default function CoinShop() {
                     )}
                   </div>
                   <div className="flex justify-between items-end w-full mt-auto">
-                    <span className="text-xs text-[#555] uppercase tracking-widest">{pkg.label}</span>
-                    <span className={`text-xl ${selectedPkg === pkg.id ? 'text-white' : 'text-[#666]'}`}>
+                    <span className="text-xs text-muted-foreground/80 uppercase tracking-widest">{pkg.label}</span>
+                    <span className={`text-xl ${selectedPkg === pkg.id ? 'text-foreground' : 'text-muted-foreground'}`}>
                       ${pkg.price.toFixed(2)}
                     </span>
                   </div>
@@ -337,7 +374,7 @@ export default function CoinShop() {
             <h2 className="text-xs font-bold tracking-[0.4em] uppercase text-[#cba677] mb-8">Gateway Selection</h2>
             
             {activeMethods.length === 0 ? (
-              <p className="text-[#666] italic">No active gateways available.</p>
+              <p className="text-muted-foreground italic">No active gateways available.</p>
             ) : (
               <div className="flex flex-wrap gap-4 mb-10">
                 {activeMethods.map((method) => (
@@ -347,7 +384,7 @@ export default function CoinShop() {
                     className={`flex items-center gap-3 px-6 py-4 border transition-colors ${
                       paymentMethod === method.id 
                         ? 'border-[#cba677] text-[#cba677] bg-[#cba677]/5' 
-                        : 'border-[#222] text-[#666] hover:text-[#888] hover:border-[#444]'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:border-border/80'
                     }`}
                   >
                     <Icon icon={method.icon} className="w-5 h-5" />
@@ -358,17 +395,17 @@ export default function CoinShop() {
             )}
 
             {selectedPkgData && (
-              <div className="p-8 border border-[#222] bg-[#0a0a0a]">
-                <div className="flex justify-between items-end mb-8 border-b border-[#222] pb-8">
+              <div className="p-8 border border-border bg-card">
+                <div className="flex justify-between items-end mb-8 border-b border-border pb-8">
                   <div>
-                    <p className="text-xs text-[#555] uppercase tracking-widest mb-2">Total Payable</p>
-                    <p className="text-4xl font-light text-white" style={{ fontFamily: 'Georgia, serif' }}>
+                    <p className="text-xs text-muted-foreground/80 uppercase tracking-widest mb-2">Total Payable</p>
+                    <p className="text-4xl font-light text-foreground" style={{ fontFamily: 'Georgia, serif' }}>
                       ${selectedPkgData.price.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-[#cba677] text-xl font-light">{selectedPkgData.coins.toLocaleString()} {currencyName}</p>
-                    {selectedPkgData.bonus > 0 && <p className="text-xs text-[#666] mt-1">Includes {selectedPkgData.bonus} bonus tokens</p>}
+                    {selectedPkgData.bonus > 0 && <p className="text-xs text-muted-foreground/80 mt-1">Includes {selectedPkgData.bonus} bonus tokens</p>}
                   </div>
                 </div>
 
@@ -384,7 +421,7 @@ export default function CoinShop() {
 
                 {paymentMethod === 'paypal' && (
                   <div className="mt-4">
-                    {paypalLoading && <p className="text-[#666] text-sm mb-4">Initializing PayPal Gateway...</p>}
+                    {paypalLoading && <p className="text-muted-foreground text-sm mb-4">Initializing PayPal Gateway...</p>}
                     <div ref={paypalContainerRef} className={processing ? 'opacity-50 pointer-events-none' : ''} />
                   </div>
                 )}
@@ -396,7 +433,7 @@ export default function CoinShop() {
       </div>
 
       <Dialog open={!!usdtPayment} onOpenChange={(open) => !open && setUsdtPayment(null)}>
-        <DialogContent className="sm:max-w-md p-8 bg-[#0a0a0a] border border-[#222] text-white">
+        <DialogContent className="sm:max-w-md p-8 bg-card border border-border text-foreground">
           <DialogHeader><DialogTitle className="font-light tracking-wide text-[#cba677]">USDT Gateway Initiated</DialogTitle></DialogHeader>
           {usdtPayment && (
             <div className="space-y-8 pt-4">
@@ -409,25 +446,25 @@ export default function CoinShop() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold tracking-[0.2em] text-[#666] uppercase">Exact Transfer Amount</label>
+                <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground/80 uppercase">Exact Transfer Amount</label>
                 <div className="flex gap-2">
-                  <Input readOnly value={`${usdtPayment.payAmount} ${usdtPayment.payCurrency?.toUpperCase()}`} className="font-mono bg-[#111] border-[#333] rounded-none h-12 text-[#cba677]" />
-                  <Button variant="secondary" className="h-12 rounded-none bg-[#222] hover:bg-[#333] border-0 text-white" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAmount); toast.success('Copied to clipboard'); }}>
+                  <Input readOnly value={`${usdtPayment.payAmount} ${usdtPayment.payCurrency?.toUpperCase()}`} className="font-mono bg-background border-border rounded-none h-12 text-[#cba677]" />
+                  <Button variant="secondary" className="h-12 rounded-none bg-muted hover:bg-muted/80 border-0 text-foreground" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAmount); toast.success('Copied to clipboard'); }}>
                     <Icon icon="ph:copy-light" className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold tracking-[0.2em] text-[#666] uppercase">Destination Address ({usdtPayment.network || 'BSC'})</label>
+                <label className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground/80 uppercase">Destination Address ({usdtPayment.network || 'BSC'})</label>
                 <div className="flex gap-2">
-                  <Input readOnly value={usdtPayment.payAddress} className="font-mono bg-[#111] border-[#333] rounded-none h-12 text-xs" />
-                  <Button variant="secondary" className="h-12 rounded-none bg-[#222] hover:bg-[#333] border-0 text-white" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAddress); toast.success('Copied to clipboard'); }}>
+                  <Input readOnly value={usdtPayment.payAddress} className="font-mono bg-background border-border rounded-none h-12 text-xs" />
+                  <Button variant="secondary" className="h-12 rounded-none bg-muted hover:bg-muted/80 border-0 text-foreground" onClick={() => { navigator.clipboard.writeText(usdtPayment.payAddress); toast.success('Copied to clipboard'); }}>
                     <Icon icon="ph:copy-light" className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
-              <p className="text-[10px] tracking-widest uppercase text-[#555] text-center flex items-center justify-center gap-2">
+              <p className="text-[10px] tracking-widest uppercase text-muted-foreground text-center flex items-center justify-center gap-2">
                 <Icon icon="ph:spinner-gap-light" className="w-4 h-4 animate-spin" />
                 Awaiting confirmation
               </p>

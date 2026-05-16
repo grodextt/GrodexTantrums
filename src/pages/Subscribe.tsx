@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useSubscriptionPlans, useSubscriptionStats, useHasActiveSubscription } from '@/hooks/useSubscription';
@@ -39,22 +40,22 @@ export default function SubscribePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#e0e0e0] font-sans selection:bg-[#cba677] selection:text-black">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-[#cba677] selection:text-white">
       
       {/* Editorial Header */}
-      <header className="pt-40 pb-20 px-8 max-w-6xl mx-auto flex flex-col md:flex-row items-end justify-between border-b border-[#222] gap-12">
+      <header className="pt-40 pb-20 px-8 max-w-6xl mx-auto flex flex-col md:flex-row items-end justify-between border-b border-border gap-12">
         <div className="max-w-2xl">
-          <h1 className="text-6xl md:text-8xl font-light tracking-tighter mb-6 text-white uppercase" style={{ fontFamily: 'Georgia, serif' }}>
+          <h1 className="text-6xl md:text-8xl font-light tracking-tighter mb-6 text-foreground uppercase" style={{ fontFamily: 'Georgia, serif' }}>
             The <br/>
             <span className="italic text-[#cba677]">Ascension</span>
           </h1>
-          <p className="text-xl md:text-2xl text-[#888] font-light leading-relaxed">
+          <p className="text-xl md:text-2xl text-muted-foreground font-light leading-relaxed">
             A private tier for those who demand the finest narrative experience. Elevate your status within {siteName}.
           </p>
         </div>
-        <div className="text-right pb-4 border-l border-[#333] pl-8">
-          <p className="text-sm tracking-[0.3em] uppercase text-[#666] mb-2">Current Inductees</p>
-          <p className="text-4xl font-light text-white" style={{ fontFamily: 'Georgia, serif' }}>{stats?.activeSubscribers || 'Elite'}</p>
+        <div className="text-right pb-4 border-l border-border pl-8">
+          <p className="text-sm tracking-[0.3em] uppercase text-muted-foreground mb-2">Current Inductees</p>
+          <p className="text-4xl font-light text-foreground" style={{ fontFamily: 'Georgia, serif' }}>{stats?.activeSubscribers || 'Elite'}</p>
         </div>
       </header>
 
@@ -66,10 +67,10 @@ export default function SubscribePage() {
           {MANIFESTO.map((item, idx) => (
             <div key={idx} className="group cursor-default">
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-sm font-bold text-[#444] group-hover:text-[#cba677] transition-colors duration-500">0{idx + 1}</span>
-                <h3 className="text-2xl text-white font-light tracking-wide">{item.title}</h3>
+                <span className="text-sm font-bold text-muted-foreground group-hover:text-[#cba677] transition-colors duration-500">0{idx + 1}</span>
+                <h3 className="text-2xl text-foreground font-light tracking-wide">{item.title}</h3>
               </div>
-              <p className="text-[#888] leading-relaxed pl-8 border-l border-transparent group-hover:border-[#cba677]/30 transition-all duration-500">
+              <p className="text-muted-foreground leading-relaxed pl-8 border-l border-transparent group-hover:border-[#cba677]/30 transition-all duration-500">
                 {item.description}
               </p>
             </div>
@@ -78,12 +79,12 @@ export default function SubscribePage() {
       </section>
 
       {/* The Offering (Pricing) */}
-      <section className="py-32 px-8 bg-[#0a0a0a] border-y border-[#222]">
+      <section className="py-32 px-8 bg-card border-y border-border">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
             <div>
               <h2 className="text-xs font-bold tracking-[0.4em] uppercase text-[#cba677] mb-4">The Offering</h2>
-              <p className="text-3xl text-white font-light" style={{ fontFamily: 'Georgia, serif' }}>Secure your passage.</p>
+              <p className="text-3xl text-foreground font-light" style={{ fontFamily: 'Georgia, serif' }}>Secure your passage.</p>
             </div>
           </div>
 
@@ -91,7 +92,7 @@ export default function SubscribePage() {
             {/* Interactive Plan Selector */}
             <div className="space-y-4">
               {plansLoading ? (
-                <div className="h-64 bg-[#111] animate-pulse rounded-sm" />
+                <div className="h-64 bg-muted animate-pulse rounded-sm" />
               ) : (
                 plans.map((plan, idx) => (
                   <button
@@ -100,16 +101,16 @@ export default function SubscribePage() {
                     className={`w-full text-left p-8 border transition-all duration-500 flex justify-between items-center ${
                       selectedPlanIdx === idx 
                         ? 'border-[#cba677] bg-[#cba677]/5' 
-                        : 'border-[#222] hover:border-[#444]'
+                        : 'border-border hover:border-border/80'
                     }`}
                   >
                     <div>
-                      <h4 className={`text-xl mb-1 ${selectedPlanIdx === idx ? 'text-[#cba677]' : 'text-white'}`}>{plan.name}</h4>
-                      <p className="text-sm text-[#666] uppercase tracking-widest">{plan.duration_days} Days</p>
+                      <h4 className={`text-xl mb-1 ${selectedPlanIdx === idx ? 'text-[#cba677]' : 'text-foreground'}`}>{plan.name}</h4>
+                      <p className="text-sm text-muted-foreground uppercase tracking-widest">{plan.duration_days} Days</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-lg text-[#666] mr-1">$</span>
-                      <span className={`text-3xl font-light ${selectedPlanIdx === idx ? 'text-white' : 'text-[#888]'}`}>
+                      <span className="text-lg text-muted-foreground mr-1">$</span>
+                      <span className={`text-3xl font-light ${selectedPlanIdx === idx ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {Number(plan.price_usd).toFixed(2)}
                       </span>
                     </div>
@@ -119,7 +120,7 @@ export default function SubscribePage() {
             </div>
 
             {/* Plan Details & Action */}
-            <div className="p-12 border border-[#222] bg-[#050505] relative overflow-hidden">
+            <div className="p-12 border border-border bg-background relative overflow-hidden">
               {/* Decorative corner */}
               <div className="absolute top-0 right-0 w-16 h-16 border-t border-r border-[#cba677] opacity-50 m-4" />
               <div className="absolute bottom-0 left-0 w-16 h-16 border-b border-l border-[#cba677] opacity-50 m-4" />
@@ -128,11 +129,11 @@ export default function SubscribePage() {
                 <div className="relative z-10 space-y-12">
                   <div>
                     <p className="text-[#cba677] text-sm uppercase tracking-widest mb-4">Selected Offering</p>
-                    <h3 className="text-4xl text-white font-light mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+                    <h3 className="text-4xl text-foreground font-light mb-2" style={{ fontFamily: 'Georgia, serif' }}>
                       {plans[selectedPlanIdx].name}
                     </h3>
                     {plans[selectedPlanIdx].bonus_coins > 0 && (
-                      <p className="text-[#888]">Includes a stipend of {plans[selectedPlanIdx].bonus_coins} tokens.</p>
+                      <p className="text-muted-foreground">Includes a stipend of {plans[selectedPlanIdx].bonus_coins} tokens.</p>
                     )}
                   </div>
 
@@ -140,7 +141,7 @@ export default function SubscribePage() {
                     {['Unrestricted Archive Access', 'Ad-Free Reading', 'High-Fidelity Art', 'Exclusive Patron Badge'].map((feature, i) => (
                       <div key={i} className="flex items-center gap-4">
                         <div className="w-1.5 h-1.5 bg-[#cba677] rotate-45" />
-                        <span className="text-[#ddd] font-light tracking-wide">{feature}</span>
+                        <span className="text-foreground/90 font-light tracking-wide">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -153,7 +154,7 @@ export default function SubscribePage() {
                     {isSubscriber ? 'Status Already Attained' : 'Initiate Ascension'}
                   </Button>
                   
-                  <p className="text-center text-[#555] text-xs tracking-widest uppercase mt-4">
+                  <p className="text-center text-muted-foreground text-xs tracking-widest uppercase mt-4">
                     Secure transaction processing
                   </p>
                 </div>
@@ -168,14 +169,14 @@ export default function SubscribePage() {
         <h2 className="text-xs font-bold tracking-[0.4em] uppercase text-[#cba677] mb-16 text-center">Inquiries</h2>
         <div className="space-y-4">
           {FAQ.map((faq, i) => (
-            <details key={i} className="group border border-[#222] bg-[#0a0a0a] open:border-[#cba677]/30 transition-colors duration-300">
+            <details key={i} className="group border border-border bg-card open:border-[#cba677]/30 transition-colors duration-300">
               <summary className="flex justify-between items-center cursor-pointer p-8 list-none outline-none [&::-webkit-details-marker]:hidden">
-                <span className="text-lg text-white font-light tracking-wide">{faq.q}</span>
+                <span className="text-lg text-foreground font-light tracking-wide">{faq.q}</span>
                 <span className="text-[#cba677] group-open:rotate-45 transition-transform duration-300">
                   <Icon icon="ph:plus-light" className="w-6 h-6" />
                 </span>
               </summary>
-              <div className="px-8 pb-8 text-[#888] leading-relaxed border-t border-[#222]/50 pt-6 mt-2">
+              <div className="px-8 pb-8 text-muted-foreground leading-relaxed border-t border-border/50 pt-6 mt-2">
                 {faq.a}
               </div>
             </details>
@@ -184,7 +185,7 @@ export default function SubscribePage() {
       </section>
 
       {/* Footer minimal */}
-      <footer className="py-20 text-center text-[#444] text-xs tracking-[0.2em] uppercase">
+      <footer className="py-20 text-center text-muted-foreground text-xs tracking-[0.2em] uppercase">
         <p>End of Transmission. The choice is yours.</p>
       </footer>
     </div>
