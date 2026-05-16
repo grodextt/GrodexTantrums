@@ -6,14 +6,17 @@ import AnnouncementBar from '@/components/AnnouncementBar';
 import PinnedCarousel from '@/components/PinnedCarousel';
 import LatestUpdates from '@/components/LatestUpdates';
 import EditorChoice from '@/components/EditorChoice';
+import Collections from '@/components/Collections';
 import TypeBadge from '@/components/TypeBadge';
 import { useAllManga } from '@/hooks/useAllManga';
 import { useTrendingManga } from '@/hooks/useTrendingManga';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { optimizedImageUrl } from '@/lib/utils';
 
 export default function Index() {
   const { data: allManga = [] } = useAllManga();
   const { data: trending = [] } = useTrendingManga(6);
+  const { settings } = useSiteSettings();
   const mangaType = allManga.filter(m => m.type === 'manga');
 
   return (
@@ -26,6 +29,7 @@ export default function Index() {
       <div className="container max-w-[1600px] xl:px-12 2xl:px-16 space-y-10">
 
       {/* Trending */}
+      {settings.layouts.trending_visible && (
       <section>
         <h2 className="text-2xl font-extrabold mb-4 flex items-center gap-2">
           <Icon icon="ph:trend-up-bold" className="w-6 h-6 text-primary" />
@@ -60,6 +64,10 @@ export default function Index() {
           ))}
         </div>
       </section>
+      )}
+
+      {/* Collections */}
+      {settings.layouts.collections_visible && <Collections />}
 
       <AnnouncementBar />
 

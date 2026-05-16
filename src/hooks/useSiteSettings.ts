@@ -60,6 +60,18 @@ export interface SEOSettings {
   extra_head_scripts?: string;
 }
 
+export interface LayoutSettings {
+  header_desktop_style: string;
+  header_mobile_style: string;
+  featured_slider_style: string;
+  trending_style: string;
+  trending_visible: boolean;
+  collections_visible: boolean;
+  manga_card_style: string;
+  footer_style: string;
+  manga_info_style: string;
+}
+
 export interface SiteSettings {
   general: GeneralSettings;
   announcements: AnnouncementSettings;
@@ -67,6 +79,7 @@ export interface SiteSettings {
   storage: StorageSettings;
   theme: ThemeSettings;
   seo: SEOSettings;
+  layouts: LayoutSettings;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -92,6 +105,17 @@ const DEFAULT_SETTINGS: SiteSettings = {
     robots_meta: 'index, follow',
     sitemap_url: '',
     extra_head_scripts: '',
+  },
+  layouts: {
+    header_desktop_style: 'style-1',
+    header_mobile_style: 'style-1',
+    featured_slider_style: 'style-1',
+    trending_style: 'style-1',
+    trending_visible: true,
+    collections_visible: true,
+    manga_card_style: 'style-1',
+    footer_style: 'style-1',
+    manga_info_style: 'style-1',
   },
 };
 
