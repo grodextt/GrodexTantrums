@@ -103,6 +103,10 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
 
   const { settings: siteSettings } = useSiteSettings();
   const isManualBlogger = siteSettings.storage.provider === 'manual_blogger';
+  const genresList = siteSettings.metadata?.genres || GENRES;
+  const authorsList = siteSettings.metadata?.authors || [];
+  const artistsList = siteSettings.metadata?.artists || [];
+  const yearsList = siteSettings.metadata?.years || [];
 
   const createManga = useCreateManga();
   const updateManga = useUpdateManga();
@@ -455,8 +459,13 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                       <FormItem>
                         <FormLabel>Author</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} list="manga-form-authors" />
                         </FormControl>
+                        <datalist id="manga-form-authors">
+                          {authorsList.map((a) => (
+                            <option key={a} value={a} />
+                          ))}
+                        </datalist>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -469,8 +478,13 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                       <FormItem>
                         <FormLabel>Artist</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} list="manga-form-artists" />
                         </FormControl>
+                        <datalist id="manga-form-artists">
+                          {artistsList.map((a) => (
+                            <option key={a} value={a} />
+                          ))}
+                        </datalist>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -521,9 +535,15 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                           <Input
                             type="number"
                             {...field}
+                            list="manga-form-years"
                             onChange={(e) => field.onChange(parseInt(e.target.value))}
                           />
                         </FormControl>
+                        <datalist id="manga-form-years">
+                          {yearsList.map((y) => (
+                            <option key={y} value={y.toString()} />
+                          ))}
+                        </datalist>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -639,7 +659,7 @@ export const MangaFormModal = ({ open, onOpenChange, manga }: MangaFormModalProp
                         <p className="text-xs text-muted-foreground">Select all relevant genres for this series</p>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-[40vh] overflow-y-auto p-4 border rounded-2xl bg-muted/5">
-                        {GENRES.map((genre) => (
+                        {genresList.map((genre) => (
                           <FormField
                             key={genre}
                             control={form.control}

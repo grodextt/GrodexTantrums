@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import PremiumContent from '@/pages/admin/PremiumContent';
-import LayoutsTab from '@/pages/admin/LayoutsTab';
+import CustomizationTab from '@/pages/admin/CustomizationTab';
 import { StorageSection } from '@/components/admin/StorageSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
 type Manga = Tables<"manga">;
-type Tab = 'overview' | 'manga' | 'premium' | 'layouts' | 'google_setup' | 'users' | 'settings';
+type Tab = 'overview' | 'manga' | 'premium' | 'customization' | 'google_setup' | 'users' | 'settings';
 type SettingsSubTab = 'general' | 'theme' | 'announcements' | 'upload' | 'storage';
 type GoogleSubTab = 'search_console' | 'analytics' | 'oauth' | 'ads' | 'seo';
 type UserTab = 'all' | 'admins';
@@ -66,7 +66,11 @@ export default function AdminPanel() {
   const deleteManga = useDeleteManga();
   const { settings, updateSettings } = useSiteSettings();
 
-  const [activeTab, setActiveTab] = useState<Tab>((searchParams.get('tab') as Tab) || 'overview');
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const tabParam = searchParams.get('tab') as Tab;
+    if (tabParam === 'layouts' as any) return 'customization';
+    return tabParam || 'overview';
+  });
   const [settingsSubTab, setSettingsSubTab] = useState<SettingsSubTab>('general');
   type GoogleSubTab = 'seo' | 'analytics' | 'oauth' | 'ads';
   const [googleSubTab, setGoogleSubTab] = useState<GoogleSubTab>('seo');
@@ -274,7 +278,7 @@ export default function AdminPanel() {
     { id: 'overview', label: 'Overview', icon: <Icon icon="ph:layout-bold" className="w-4 h-4" /> },
     { id: 'manga', label: 'Manga', icon: <Icon icon="ph:book-open-bold" className="w-4 h-4" /> },
     { id: 'premium', label: 'Premium Content', icon: <Icon icon="ph:crown-bold" className="w-4 h-4" /> },
-    { id: 'layouts', label: 'Layouts', icon: <Icon icon="ph:squares-four-bold" className="w-4 h-4" /> },
+    { id: 'customization', label: 'Customization', icon: <Icon icon="ph:palette-bold" className="w-4 h-4" /> },
     { id: 'google_setup', label: 'Google Setup', icon: <Icon icon="ph:google-logo-bold" className="w-4 h-4" /> },
     { id: 'users', label: 'Users', icon: <Icon icon="ph:users-bold" className="w-4 h-4" /> },
     { id: 'settings', label: 'Settings', icon: <Icon icon="ph:gear-bold" className="w-4 h-4" /> },
@@ -694,7 +698,7 @@ export default function AdminPanel() {
 
         {activeTab === 'premium' && <PremiumContent />}
 
-        {activeTab === 'layouts' && <LayoutsTab />}
+        {activeTab === 'customization' && <CustomizationTab />}
 
         {activeTab === 'google_setup' && (
           <div className="space-y-6 max-w-6xl">

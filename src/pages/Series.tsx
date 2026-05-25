@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import MangaCard from '@/components/MangaCard';
 import { useAllManga } from '@/hooks/useAllManga';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const allGenres = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Isekai',
@@ -30,6 +31,8 @@ type SortOption = 'a-z' | 'z-a' | 'latest' | 'views';
 
 export default function Series() {
   const { data: allManga = [] } = useAllManga();
+  const { settings } = useSiteSettings();
+  const genresList = settings?.metadata?.genres || allGenres;
   const [search, setSearch] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<MangaType | ''>('');
@@ -133,7 +136,7 @@ export default function Series() {
           </button>
           {genresExpanded && (
             <div className="flex gap-2 flex-wrap">
-              {allGenres.map(g => (
+              {genresList.map(g => (
                 <Button
                   key={g}
                   size="sm"

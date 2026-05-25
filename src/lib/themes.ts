@@ -72,25 +72,20 @@ export const THEME_PRESETS: ThemePreset[] = [
         '--card': '270 100% 99%',
         '--card-foreground': '270 20% 12%',
         '--popover': '0 0% 100%',
-        '--background': '273 86% 6%',
-        '--foreground': '273 86% 98%',
-        '--card': '273 86% 9%',
-        '--card-foreground': '273 86% 98%',
-        '--popover': '273 86% 11%',
-        '--popover-foreground': '273 86% 98%',
-        '--primary': '273 86% 65%',
-        '--primary-foreground': '273 86% 6%',
-        '--secondary': '273 86% 15%',
-        '--secondary-foreground': '273 86% 98%',
-        '--muted': '273 86% 15%',
-        '--muted-foreground': '273 86% 98%',
-        '--accent': '273 86% 20%',
-        '--accent-foreground': '273 86% 75%',
+        '--popover-foreground': '270 20% 12%',
+        '--primary': '273 86% 55%',
+        '--primary-foreground': '270 100% 98%',
+        '--secondary': '270 30% 92%',
+        '--secondary-foreground': '270 20% 12%',
+        '--muted': '270 18% 85%',
+        '--muted-foreground': '270 12% 48%',
+        '--accent': '270 80% 94%',
+        '--accent-foreground': '273 86% 40%',
         '--destructive': '0 84% 60%',
         '--destructive-foreground': '0 85% 97%',
-        '--border': '273 86% 15%',
-        '--input': '273 86% 15%',
-        '--ring': '273 86% 65%',
+        '--border': '270 18% 85%',
+        '--input': '270 18% 85%',
+        '--ring': '273 86% 55%',
       },
       dark: {
         '--background': '273 86% 6%',
@@ -104,13 +99,13 @@ export const THEME_PRESETS: ThemePreset[] = [
         '--secondary': '273 86% 15%',
         '--secondary-foreground': '273 86% 98%',
         '--muted': '273 86% 15%',
-        '--muted-foreground': '273 86% 98%',
+        '--muted-foreground': '273 86% 70%',
         '--accent': '273 86% 20%',
         '--accent-foreground': '273 86% 75%',
         '--destructive': '0 84% 60%',
         '--destructive-foreground': '0 85% 97%',
-        '--border': '273 86% 15%',
-        '--input': '273 86% 15%',
+        '--border': '273 86% 18%',
+        '--input': '273 86% 18%',
         '--ring': '273 86% 65%',
       },
     },
@@ -648,11 +643,46 @@ export const THEME_PRESETS: ThemePreset[] = [
     colors: ['#000000', '#333333', '#ffffff', '#f5f5f5', '#e5e5e5'],
     variables: {
       light: {
+        '--background': '0 0% 96%',
+        '--foreground': '0 0% 6%',
+        '--card': '0 0% 100%',
+        '--card-foreground': '0 0% 6%',
+        '--popover': '0 0% 100%',
+        '--popover-foreground': '0 0% 6%',
+        '--primary': '0 0% 15%',
+        '--primary-foreground': '0 0% 98%',
+        '--secondary': '0 0% 90%',
+        '--secondary-foreground': '0 0% 10%',
+        '--muted': '0 0% 82%',
+        '--muted-foreground': '0 0% 42%',
+        '--accent': '0 0% 94%',
+        '--accent-foreground': '0 0% 15%',
         '--destructive': '0 84% 60%',
         '--destructive-foreground': '0 85% 97%',
-        '--border': '0 0% 20%',
-        '--input': '0 0% 20%',
-        '--ring': '0 0% 100%',
+        '--border': '0 0% 80%',
+        '--input': '0 0% 80%',
+        '--ring': '0 0% 15%',
+      },
+      dark: {
+        '--background': '0 0% 4%',
+        '--foreground': '0 0% 96%',
+        '--card': '0 0% 8%',
+        '--card-foreground': '0 0% 96%',
+        '--popover': '0 0% 12%',
+        '--popover-foreground': '0 0% 96%',
+        '--primary': '0 0% 80%',
+        '--primary-foreground': '0 0% 4%',
+        '--secondary': '0 0% 16%',
+        '--secondary-foreground': '0 0% 96%',
+        '--muted': '0 0% 20%',
+        '--muted-foreground': '0 0% 58%',
+        '--accent': '0 0% 12%',
+        '--accent-foreground': '0 0% 75%',
+        '--destructive': '0 84% 60%',
+        '--destructive-foreground': '0 85% 97%',
+        '--border': '0 0% 18%',
+        '--input': '0 0% 18%',
+        '--ring': '0 0% 80%',
       },
     },
   },
@@ -772,11 +802,15 @@ export function applyTheme(preset: ThemePreset, isDark: boolean) {
     styleEl.id = 'gt-theme-vars';
     document.head.appendChild(styleEl);
   }
+
+  // Safely fallback — some themes may only define one mode
+  const lightSource = preset.variables.light ?? preset.variables.dark ?? {};
+  const darkSource = preset.variables.dark ?? preset.variables.light ?? {};
   
-  const lightVars = Object.entries(preset.variables.light)
+  const lightVars = Object.entries(lightSource)
     .map(([k, v]) => `  ${k}: ${v};`)
     .join('\n');
-  const darkVars = Object.entries(preset.variables.dark)
+  const darkVars = Object.entries(darkSource)
     .map(([k, v]) => `  ${k}: ${v};`)
     .join('\n');
   

@@ -72,6 +72,18 @@ export interface LayoutSettings {
   manga_info_style: string;
 }
 
+export interface MetadataSettings {
+  genres: string[];
+  authors: string[];
+  artists: string[];
+  years: number[];
+}
+
+export interface PageSettings {
+  dmca_content: string;
+  privacy_content: string;
+}
+
 export interface SiteSettings {
   general: GeneralSettings;
   announcements: AnnouncementSettings;
@@ -80,6 +92,8 @@ export interface SiteSettings {
   theme: ThemeSettings;
   seo: SEOSettings;
   layouts: LayoutSettings;
+  metadata: MetadataSettings;
+  pages: PageSettings;
 }
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -116,6 +130,24 @@ const DEFAULT_SETTINGS: SiteSettings = {
     manga_card_style: 'style-1',
     footer_style: 'style-1',
     manga_info_style: 'style-1',
+  },
+  metadata: {
+    genres: [
+      "Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", 
+      "Romance", "Sci-Fi", "Slice of Life", "Supernatural", "Thriller", "Tragedy",
+      "Psychological", "Historical", "Isekai", "Mecha", "Sports", "Martial Arts",
+      "School Life", "Seinen", "Shounen", "Shoujo", "Josei", "Ecchi", "Harem",
+      "Yaoi", "Yuri", "Magic", "Military", "Music", "Parody", "Police",
+      "Post-Apocalyptic", "Reincarnation", "Revenge", "Survival", "Time Travel",
+      "Vampire", "Zombies", "Cyberpunk", "Cooking", "Medical", "Crime", "Detective"
+    ],
+    authors: ["Tang Jia San Shao", "Miku (美紅)", "Tanabata Satori"],
+    artists: ["Asoul, Fan Bao Cao", "Minatogawa Kazuomi", "Nokomi (のこみ)"],
+    years: [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027],
+  },
+  pages: {
+    dmca_content: '',
+    privacy_content: '',
   },
 };
 

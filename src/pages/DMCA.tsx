@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const POLICY_SECTIONS = [
   {
@@ -31,6 +32,9 @@ const POLICY_SECTIONS = [
 ];
 
 export default function DMCA() {
+  const { settings } = useSiteSettings();
+  const customContent = settings?.pages?.dmca_content;
+
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -74,21 +78,27 @@ export default function DMCA() {
       </p>
 
       {/* Policy Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-        {POLICY_SECTIONS.map((s) => (
-          <Card key={s.title} className="bg-secondary/40 border-border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Icon icon="ph:file-text-bold" className="w-4 h-4 text-primary" />
-                {s.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed">{s.content}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {customContent ? (
+        <Card className="bg-secondary/40 border-border mb-12 p-6">
+          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap font-sans">{customContent}</p>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+          {POLICY_SECTIONS.map((s) => (
+            <Card key={s.title} className="bg-secondary/40 border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Icon icon="ph:file-text-bold" className="w-4 h-4 text-primary" />
+                  {s.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.content}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Takedown Form */}
       {submitted ? (
