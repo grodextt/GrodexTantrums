@@ -62,49 +62,49 @@ function CollectionPopup({ collection, onClose }: { collection: any; onClose: ()
 
 /* ─── Fan Cover Spread ───────────────────────────────────────────── */
 // 5 slots: fan spreads from left-leaning to right-leaning
-// Mimics the Kayn Scan diagonal book-spread look
 const FAN = [
-  { deg: -18, tx: -84, ty: 28, z: 1, s: 0.80 },
-  { deg:  -9, tx: -42, ty: 12, z: 2, s: 0.90 },
+  { deg: -20, tx: -100, ty: 28, z: 1, s: 0.85 },
+  { deg: -10, tx: -50, ty: 10, z: 2, s: 0.92 },
   { deg:   0, tx:   0, ty:  0, z: 5, s: 1.00 },  // center – front
-  { deg:   9, tx:  42, ty: 12, z: 2, s: 0.90 },
-  { deg:  18, tx:  84, ty: 28, z: 1, s: 0.80 },
+  { deg:  10, tx:  50, ty: 10, z: 2, s: 0.92 },
+  { deg:  20, tx:  100, ty: 28, z: 1, s: 0.85 },
 ];
 
 function CoverFan({ covers }: { covers: { id: string; cover_url: string; title: string }[] }) {
   const shown = covers.slice(0, 5);
-  const startSlot = Math.floor((5 - shown.length) / 2);
+  // Distribute symmetrically if fewer than 5 covers
+  let slots = [0, 1, 2, 3, 4];
+  if (shown.length === 1) slots = [2];
+  else if (shown.length === 2) slots = [1, 3];
+  else if (shown.length === 3) slots = [0, 2, 4];
+  else if (shown.length === 4) slots = [0, 1, 3, 4];
 
   return (
-    /* Container: tall enough so rotated corners don't clip, overflow visible */
-    <div
-      className="relative w-full"
-      style={{ height: 160 }}
-    >
+    <div className="relative w-full h-[180px]">
       {shown.map((m, i) => {
-        const slot = FAN[startSlot + i] ?? FAN[2];
+        const slot = FAN[slots[i]] ?? FAN[2];
         return (
           <div
             key={m.id}
-            className="absolute rounded-xl overflow-hidden border-2 border-white/10 shadow-2xl"
+            className="absolute rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-white/5"
             style={{
-              width:  88,
-              height: 124,
-              bottom: 0,
-              left:   '50%',
-              marginLeft: -44,          // half of width → centre pivot
+              width: 104,
+              height: 148,
+              bottom: -4, // Pull slightly down so there's no gap at the card edge
+              left: '50%',
+              marginLeft: -52,
               transform: `translateX(${slot.tx}px) translateY(${slot.ty}px) rotate(${slot.deg}deg) scale(${slot.s})`,
               transformOrigin: 'bottom center',
               zIndex: slot.z,
             }}
           >
             <img
-              src={optimizedImageUrl(m.cover_url, 180)}
+              src={optimizedImageUrl(m.cover_url, 200)}
               alt={m.title}
               className="w-full h-full object-cover"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
           </div>
         );
       })}
@@ -137,28 +137,24 @@ function CollectionCard({
         transition-all duration-300 text-left group
         cursor-pointer
       "
-      /* Fixed width: show ~5 on a 1440p screen, ~4 on 1080p */
-      style={{ width: 260 }}
+      style={{ width: 280, height: 320 }}
     >
       {/* ── Top: Info ─────────────────────── */}
-      <div className="flex flex-col gap-2 px-4 pt-4 pb-2">
-        {/* Icon + Title */}
+      <div className="flex flex-col gap-2 px-5 pt-5 pb-2 relative z-10">
         <div className="flex items-center gap-2">
-          <span className="text-base leading-none shrink-0">{collection.icon}</span>
-          <h3 className="font-extrabold text-[15px] leading-snug line-clamp-1 group-hover:text-primary transition-colors">
+          <span className="text-[18px] leading-none shrink-0">{collection.icon}</span>
+          <h3 className="font-extrabold text-[16px] leading-snug line-clamp-1 group-hover:text-primary transition-colors">
             {collection.title}
           </h3>
         </div>
 
-        {/* Description */}
         {collection.description && (
           <p className="text-[12px] text-muted-foreground leading-relaxed line-clamp-2">
             {collection.description}
           </p>
         )}
 
-        {/* Genre tags */}
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5 mt-1">
           {(collection.genres ?? []).slice(0, 3).map((g: string) => (
             <span key={g}
               className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-secondary text-muted-foreground border border-border/50">
@@ -167,15 +163,14 @@ function CollectionCard({
           ))}
         </div>
 
-        {/* Series count */}
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground font-semibold">
-          <Icon icon="ph:books-bold" className="w-3 h-3 text-primary/70" />
-          <span>{matchingManga.length}</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold mt-1">
+          <Icon icon="ph:books-bold" className="w-3.5 h-3.5 text-primary/70" />
+          <span>{matchingManga.length} series</span>
         </div>
       </div>
 
       {/* ── Bottom: Cover Fan ─────────────── */}
-      <div className="px-3 pb-4 mt-auto overflow-visible">
+      <div className="px-3 pb-0 mt-auto overflow-visible relative">
         <CoverFan covers={matchingManga} />
       </div>
     </button>
