@@ -4,15 +4,16 @@ import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { useCollections, useCollectionSeries } from '@/hooks/useCollections';
 import { useAllManga } from '@/hooks/useAllManga';
-import { optimizedImageUrl, formatViews } from '@/lib/utils';
+import { optimizedImageUrl } from '@/lib/utils';
 import TypeBadge from './TypeBadge';
 
+/* ─── Popup Modal ─────────────────────────────────────────────────── */
 function CollectionPopup({ collection, onClose }: { collection: any; onClose: () => void }) {
   const { data: series = [], isLoading } = useCollectionSeries(collection.genres);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div className="relative w-full max-w-3xl max-h-[85vh] rounded-2xl bg-card border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border/50 shrink-0">
@@ -35,9 +36,10 @@ function CollectionPopup({ collection, onClose }: { collection: any; onClose: ()
           </div>
         </div>
 
-        {/* Description */}
         {collection.description && (
-          <p className="px-5 py-3 text-sm text-muted-foreground border-b border-border/50">{collection.description}</p>
+          <p className="px-5 py-3 text-sm text-muted-foreground border-b border-border/50">
+            {collection.description}
+          </p>
         )}
 
         {/* Series Grid */}
@@ -49,7 +51,7 @@ function CollectionPopup({ collection, onClose }: { collection: any; onClose: ()
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {series.map(m => (
-                <Link key={m.id} to={`/manga/${m.slug}`} className="group block">
+                <Link key={m.id} to={`/manga/${m.slug}`} className="group block" onClick={onClose}>
                   <div className="relative overflow-hidden rounded-xl aspect-[3/4] bg-secondary">
                     <img
                       src={optimizedImageUrl(m.cover_url, 200)}
@@ -61,7 +63,9 @@ function CollectionPopup({ collection, onClose }: { collection: any; onClose: ()
                       <TypeBadge type={m.type} />
                     </div>
                   </div>
-                  <p className="text-xs font-semibold mt-1.5 line-clamp-2 group-hover:text-primary transition-colors">{m.title}</p>
+                  <p className="text-xs font-semibold mt-1.5 line-clamp-2 group-hover:text-primary transition-colors">
+                    {m.title}
+                  </p>
                 </Link>
               ))}
             </div>
@@ -72,119 +76,211 @@ function CollectionPopup({ collection, onClose }: { collection: any; onClose: ()
   );
 }
 
-function CollectionCard({ collection, allManga, onClick }: { collection: any; allManga: any[]; onClick: () => void }) {
+/* ─── Fan Cover Layout ────────────────────────────────────────────── */
+// Positions for 5 covers in a fanned/spread diagonal layout
+const FAN_POSITIONS = [
+  { rotate: -14, translateX: -72, translateY: 24, zIndex: 1, scale: 0.82 },
+  { rotate: -7,  translateX: -36, translateY: 10, zIndex: 2, scale: 0.90 },
+  { rotate:  0,  translateX:   0, translateY:  0, zIndex: 3, scale: 1.00 },
+  { rotate:  7,  translateX:  36, translateY: 10, zIndex: 2, scale: 0.90 },
+  { rotate:  14, translateX:  72, translateY: 24, zIndex: 1, scale: 0.82 },
+];
+
+function CoverFan({ covers }: { covers: { id: string; cover_url: string; title: string }[] }) {
+  const shown = covers.slice(0, 5);
+  // If fewer than 5, center them
+  const offset = Math.floor((5 - shown.length) / 2);
+
+  return (
+    <div className="relative h-[148px] w-full flex items-end justify-center overflow-visible mt-2">
+      {shown.map((m, i) => {
+        const pos = FAN_POSITIONS[i + offset] ?? FAN_POSITIONS[2];
+        return (
+          <div
+            key={m.id}
+            className="absolute bottom-0 w-[76px] h-[108px] rounded-xl overflow-hidden shadow-xl border border-white/10 transition-transform duration-300 hover:scale-105"
+            style={{
+              transform: `translateX(${pos.translateX}px) translateY(${pos.translateY}px) rotate(${pos.rotate}deg) scale(${pos.scale})`,
+              zIndex: pos.zIndex,
+            }}
+          >
+            <img
+              src={optimizedImageUrl(m.cover_url, 160)}
+              alt={m.title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            {/* subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Collection Card ─────────────────────────────────────────────── */
+function CollectionCard({
+  collection,
+  allManga,
+  onClick,
+}: {
+  collection: any;
+  allManga: any[];
+  onClick: () => void;
+}) {
   const matchingManga = allManga.filter(m =>
     m.genres?.some((g: string) => collection.genres.includes(g))
   );
-  const totalViews = matchingManga.reduce((acc, m) => acc + (m.views || 0), 0);
 
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-[280px] sm:w-[300px] bg-card border border-border/50 rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all text-left group"
+      className="
+        flex-shrink-0 w-[260px] sm:w-[280px] lg:w-[300px]
+        bg-card border border-border/60 rounded-2xl
+        overflow-visible
+        hover:border-primary/40 hover:shadow-2xl hover:-translate-y-1
+        transition-all duration-300 text-left group
+        flex flex-col
+      "
+      style={{ minHeight: 320 }}
     >
-      {/* Card Header */}
-      <div className="p-4 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{collection.icon}</span>
-          <h3 className="font-bold text-sm truncate">{collection.title}</h3>
+      {/* Top Info Section */}
+      <div className="p-5 flex flex-col gap-2.5 flex-1">
+        {/* Icon + Title */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl leading-none shrink-0">{collection.icon}</span>
+          <h3 className="font-extrabold text-base leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+            {collection.title}
+          </h3>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{collection.description}</p>
+
+        {/* Description */}
+        {collection.description && (
+          <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-2">
+            {collection.description}
+          </p>
+        )}
+
+        {/* Genre Tags */}
         <div className="flex flex-wrap gap-1.5">
-          {(collection.genres || []).slice(0, 2).map((g: string) => (
-            <span key={g} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">{g}</span>
+          {(collection.genres || []).slice(0, 3).map((g: string) => (
+            <span
+              key={g}
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-secondary text-muted-foreground border border-border/60"
+            >
+              {g}
+            </span>
           ))}
         </div>
+
+        {/* Series Count */}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold mt-auto pt-1">
+          <Icon icon="ph:books-bold" className="w-3.5 h-3.5 text-primary/70" />
+          <span>{matchingManga.length}</span>
+        </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="flex items-center gap-4 px-4 pb-2 text-[11px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Icon icon="ph:books-bold" className="w-3 h-3" /> {matchingManga.length}
-        </span>
-        <span className="flex items-center gap-1">
-          <Icon icon="ph:eye-bold" className="w-3 h-3" /> {formatViews(totalViews)}
-        </span>
-      </div>
-
-      {/* Cover Thumbnails Row */}
-      <div className="flex gap-1 px-3 pb-3 overflow-hidden">
-        {matchingManga.slice(0, 5).map(m => (
-          <div key={m.id} className="w-14 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
-            <img
-              src={optimizedImageUrl(m.cover_url, 100)}
-              alt={m.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          </div>
-        ))}
+      {/* Cover Fan */}
+      <div className="px-4 pb-5 overflow-visible">
+        <CoverFan covers={matchingManga.slice(0, 5)} />
       </div>
     </button>
   );
 }
 
+/* ─── Main Section ────────────────────────────────────────────────── */
 export default function Collections() {
   const { data: collections = [], isLoading } = useCollections();
   const { data: allManga = [] } = useAllManga();
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const SCROLL_AMT = 320;
+
   const scrollLeft = useCallback(() => {
-    scrollRef.current?.scrollBy({ left: -320, behavior: 'smooth' });
+    scrollRef.current?.scrollBy({ left: -SCROLL_AMT, behavior: 'smooth' });
   }, []);
   const scrollRight = useCallback(() => {
-    scrollRef.current?.scrollBy({ left: 320, behavior: 'smooth' });
+    scrollRef.current?.scrollBy({ left: SCROLL_AMT, behavior: 'smooth' });
   }, []);
 
   if (isLoading || collections.length === 0) return null;
 
   return (
-    <section>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-extrabold flex items-center gap-2">
-          <Icon icon="ph:folders-bold" className="w-6 h-6 text-primary" />
+    <section className="relative">
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight flex items-center gap-2">
           Collections
         </h2>
-        <Link to="/series" className="text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+        <Link
+          to="/series"
+          className="text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+        >
           View all <Icon icon="ph:caret-right-bold" className="w-3.5 h-3.5" />
         </Link>
       </div>
 
+      {/* Scroll Container with side arrows */}
       <div className="relative">
-        <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+        {/* Left Arrow */}
+        <button
+          onClick={scrollLeft}
+          aria-label="Scroll left"
+          className="
+            absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4
+            z-20 w-9 h-9 rounded-full
+            bg-card border border-border shadow-lg backdrop-blur-sm
+            flex items-center justify-center
+            hover:bg-primary hover:text-primary-foreground hover:border-primary
+            transition-all duration-200
+          "
+        >
+          <Icon icon="ph:caret-left-bold" className="w-4 h-4" />
+        </button>
+
+        {/* Right Arrow */}
+        <button
+          onClick={scrollRight}
+          aria-label="Scroll right"
+          className="
+            absolute right-0 top-1/2 -translate-y-1/2 translate-x-4
+            z-20 w-9 h-9 rounded-full
+            bg-card border border-border shadow-lg backdrop-blur-sm
+            flex items-center justify-center
+            hover:bg-primary hover:text-primary-foreground hover:border-primary
+            transition-all duration-200
+          "
+        >
+          <Icon icon="ph:caret-right-bold" className="w-4 h-4" />
+        </button>
+
+        {/* Cards Track */}
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 px-2"
+          style={{ scrollSnapType: 'x mandatory' }}
+        >
           {collections.map(c => (
-            <CollectionCard
-              key={c.id}
-              collection={c}
-              allManga={allManga}
-              onClick={() => setSelectedCollection(c)}
-            />
+            <div key={c.id} style={{ scrollSnapAlign: 'start' }}>
+              <CollectionCard
+                collection={c}
+                allManga={allManga}
+                onClick={() => setSelectedCollection(c)}
+              />
+            </div>
           ))}
         </div>
-
-        {/* Scroll Arrows */}
-        {collections.length > 3 && (
-          <>
-            <button
-              onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-9 h-9 rounded-full bg-card/80 border border-border backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors z-10 shadow-lg"
-            >
-              <Icon icon="ph:caret-left-bold" className="w-4 h-4" />
-            </button>
-            <button
-              onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-9 h-9 rounded-full bg-card/80 border border-border backdrop-blur-sm flex items-center justify-center hover:bg-card transition-colors z-10 shadow-lg"
-            >
-              <Icon icon="ph:caret-right-bold" className="w-4 h-4" />
-            </button>
-          </>
-        )}
       </div>
 
       {/* Popup Modal */}
       {selectedCollection && (
-        <CollectionPopup collection={selectedCollection} onClose={() => setSelectedCollection(null)} />
+        <CollectionPopup
+          collection={selectedCollection}
+          onClose={() => setSelectedCollection(null)}
+        />
       )}
     </section>
   );
