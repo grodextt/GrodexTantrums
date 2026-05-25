@@ -63,11 +63,11 @@ function CollectionPopup({ collection, onClose }: { collection: any; onClose: ()
 /* ─── Fan Cover Spread ───────────────────────────────────────────── */
 // 5 slots: fan spreads from left-leaning to right-leaning
 const FAN = [
-  { deg: -20, tx: -100, ty: 28, z: 1, s: 0.85 },
-  { deg: -10, tx: -50, ty: 10, z: 2, s: 0.92 },
-  { deg:   0, tx:   0, ty:  0, z: 5, s: 1.00 },  // center – front
-  { deg:  10, tx:  50, ty: 10, z: 2, s: 0.92 },
-  { deg:  20, tx:  100, ty: 28, z: 1, s: 0.85 },
+  { deg: -16, tx: -90, ty: 20, z: 1, s: 0.85 },
+  { deg:  -8, tx: -45, ty: 8,  z: 2, s: 0.92 },
+  { deg:   0, tx:   0, ty: 0,  z: 5, s: 1.00 },  // center – front
+  { deg:   8, tx:  45, ty: 8,  z: 2, s: 0.92 },
+  { deg:  16, tx:  90, ty: 20, z: 1, s: 0.85 },
 ];
 
 function CoverFan({ covers }: { covers: { id: string; cover_url: string; title: string }[] }) {
@@ -80,7 +80,7 @@ function CoverFan({ covers }: { covers: { id: string; cover_url: string; title: 
   else if (shown.length === 4) slots = [0, 1, 3, 4];
 
   return (
-    <div className="relative w-full h-[180px]">
+    <div className="relative w-full h-[200px]">
       {shown.map((m, i) => {
         const slot = FAN[slots[i]] ?? FAN[2];
         return (
@@ -88,18 +88,19 @@ function CoverFan({ covers }: { covers: { id: string; cover_url: string; title: 
             key={m.id}
             className="absolute rounded-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-white/5"
             style={{
-              width: 104,
-              height: 148,
-              bottom: -4, // Pull slightly down so there's no gap at the card edge
+              width: 130,
+              height: 184,
+              bottom: -6, // Pull down to ensure it sits exactly at the bottom edge
               left: '50%',
-              marginLeft: -52,
+              marginLeft: -65,
               transform: `translateX(${slot.tx}px) translateY(${slot.ty}px) rotate(${slot.deg}deg) scale(${slot.s})`,
               transformOrigin: 'bottom center',
               zIndex: slot.z,
+              transition: 'transform 0.3s ease-out'
             }}
           >
             <img
-              src={optimizedImageUrl(m.cover_url, 200)}
+              src={optimizedImageUrl(m.cover_url, 300)}
               alt={m.title}
               className="w-full h-full object-cover"
               loading="lazy"
