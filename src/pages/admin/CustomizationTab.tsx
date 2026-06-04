@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+"use client";
+import { useState, useEffect, useRef } from 'react';
 import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,12 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const STYLE_OPTIONS = [
-  { value: 'style-1', label: 'Style 1 (Current)' },
+  { value: 'style-1', label: 'Style 1' },
+];
+
+const CHAPTER_STYLE_OPTIONS = [
+  { value: 'style-1', label: 'Style 1 — Grid' },
+  { value: 'style-2', label: 'Style 2 — List' },
 ];
 
 const DEFAULT_GENRE_LIST = [
@@ -41,6 +47,62 @@ interface CollectionForm {
 
 const EMPTY_COLLECTION: CollectionForm = { title: '', description: '', icon: '📚', genres: [] };
 
+// ─── Style Preview SVGs ──────────────────────────────────────────────────────
+const CHAPTER_STYLE_PREVIEWS: Record<string, React.ReactNode> = {
+  'style-1': (
+    <svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      {/* Grid layout preview */}
+      <rect x="4" y="4" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="4" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="8" y="20" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="8" y="26" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+      <rect x="62" y="4" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="62" y="4" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="66" y="20" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="66" y="26" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+      <rect x="4" y="40" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="40" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="8" y="56" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="8" y="62" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+      <rect x="62" y="40" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="62" y="40" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="66" y="56" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="66" y="62" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+    </svg>
+  ),
+  'style-2': (
+    <svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      {/* List layout preview */}
+      <rect x="4" y="4" width="112" height="14" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="4" width="14" height="14" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="7" width="50" height="3" rx="1.5" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="12" width="34" height="2.5" rx="1.25" fill="currentColor" opacity="0.15"/>
+      <rect x="4" y="22" width="112" height="14" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="22" width="14" height="14" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="25" width="50" height="3" rx="1.5" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="30" width="34" height="2.5" rx="1.25" fill="currentColor" opacity="0.15"/>
+      <rect x="4" y="40" width="112" height="14" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="40" width="14" height="14" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="43" width="50" height="3" rx="1.5" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="48" width="34" height="2.5" rx="1.25" fill="currentColor" opacity="0.15"/>
+      <rect x="4" y="58" width="112" height="14" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="58" width="14" height="14" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="61" width="50" height="3" rx="1.5" fill="currentColor" opacity="0.25"/>
+      <rect x="24" y="66" width="34" height="2.5" rx="1.25" fill="currentColor" opacity="0.15"/>
+    </svg>
+  ),
+};
+
+const GENERIC_PREVIEW = (
+  <svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    <rect x="4" y="4" width="112" height="20" rx="4" fill="currentColor" opacity="0.2"/>
+    <rect x="4" y="30" width="70" height="10" rx="3" fill="currentColor" opacity="0.15"/>
+    <rect x="4" y="46" width="112" height="6" rx="2" fill="currentColor" opacity="0.1"/>
+    <rect x="4" y="56" width="90" height="6" rx="2" fill="currentColor" opacity="0.08"/>
+    <rect x="4" y="66" width="60" height="6" rx="2" fill="currentColor" opacity="0.06"/>
+  </svg>
+);
+
 export default function CustomizationTab() {
   const { settings, updateSettings } = useSiteSettings();
   const { data: collections = [], isLoading: collectionsLoading } = useCollections();
@@ -51,8 +113,22 @@ export default function CustomizationTab() {
   // Sub Tab: layouts or general
   const [subTab, setSubTab] = useState<'layouts' | 'general'>('layouts');
 
-  // Layouts tab state
+  // ──────────────────────────────────────────────────────────────────────────
+  // CRITICAL FIX: Proper state management for layouts
+  // ──────────────────────────────────────────────────────────────────────────
+  // `layouts` holds the current UI selection (may differ from DB)
+  // `savedLayouts` holds what's actually committed in the DB
+  // `hasUnsavedChanges` is a flag - true when user has made changes not yet saved
+  // We use a ref to track this so the useEffect closure doesn't capture stale state
   const [layouts, setLayouts] = useState(settings.layouts);
+  const [savedLayouts, setSavedLayouts] = useState(settings.layouts);
+  const hasUnsavedChangesRef = useRef(false);
+  const [hasUnsavedChanges, setHasUnsavedChangesState] = useState(false);
+
+  const setHasUnsavedChanges = (val: boolean) => {
+    hasUnsavedChangesRef.current = val;
+    setHasUnsavedChangesState(val);
+  };
 
   // General metadata state
   const [genres, setGenres] = useState<string[]>(settings.metadata?.genres || DEFAULT_GENRE_LIST);
@@ -80,25 +156,56 @@ export default function CustomizationTab() {
   const [deleteCollectionId, setDeleteCollectionId] = useState<string | null>(null);
   const [genreSearch, setGenreSearch] = useState('');
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // CRITICAL FIX: useEffect ONLY depends on `settings`, NOT on `hasUnsavedChanges`
+  // This prevents the effect from firing when the dirty flag changes and overwriting
+  // the user's selection with stale DB data.
+  // ──────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    setLayouts(settings.layouts);
+    // Only sync layouts from server when user has no pending unsaved changes.
+    // We read from the ref (not state) to avoid stale closure issues.
+    if (!hasUnsavedChangesRef.current) {
+      setLayouts(settings.layouts);
+      setSavedLayouts(settings.layouts);
+    } else {
+      // Still update savedLayouts so the "Current" badge stays accurate
+      setSavedLayouts(settings.layouts);
+    }
     setGenres(settings.metadata?.genres || DEFAULT_GENRE_LIST);
     setAuthors(settings.metadata?.authors || DEFAULT_AUTHOR_LIST);
     setArtists(settings.metadata?.artists || DEFAULT_ARTIST_LIST);
     setYears(settings.metadata?.years || DEFAULT_YEAR_LIST);
     setDmcaContent(settings.pages?.dmca_content || '');
     setPrivacyContent(settings.pages?.privacy_content || '');
-  }, [settings]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]); // ← Only depends on settings, not hasUnsavedChanges!
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // CRITICAL FIX: handleStyleChange no longer uses a debounce timeout.
+  // It simply updates the layouts state and marks changes as unsaved.
+  // ──────────────────────────────────────────────────────────────────────────
+  const handleStyleChange = (key: string, value: string | boolean) => {
+    setLayouts((prev: any) => ({ ...prev, [key]: value }));
+    setHasUnsavedChanges(true);
+  };
 
   const handleSaveLayouts = async () => {
     setSaving(true);
     try {
       await updateSettings.mutateAsync({ key: 'layouts', value: layouts });
+      setSavedLayouts(layouts);
+      setHasUnsavedChanges(false); // ← Mark as clean BEFORE settings refetch
       toast.success('Layout settings saved!');
     } catch {
       toast.error('Failed to save layout settings');
     }
     setSaving(false);
+  };
+
+  const handleDiscardLayouts = () => {
+    setLayouts(savedLayouts);
+    setHasUnsavedChanges(false);
+    toast.info('Changes discarded');
   };
 
   const handleSaveGeneral = async () => {
@@ -219,41 +326,111 @@ export default function CustomizationTab() {
 
   const filteredGenresForCollection = genres.filter(g => g.toLowerCase().includes(genreSearch.toLowerCase()));
 
-  const StyleDropdown = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-foreground">{label}</label>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full rounded-xl bg-background border border-border h-11 px-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
-      >
-        {STYLE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </div>
-  );
+  // ─── Sub-components ────────────────────────────────────────────────────────
 
-  const VisibilityToggle = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
-    <div className="flex items-center justify-between py-2">
-      <span className="text-sm font-semibold text-foreground">{label}</span>
+  const StyleCardSelector = ({
+    label,
+    settingKey,
+    value,
+    onChange,
+    options = STYLE_OPTIONS,
+    previews,
+  }: {
+    label: string;
+    settingKey: string;
+    value: string;
+    onChange: (key: string, v: string) => void;
+    options?: { value: string; label: string }[];
+    previews?: Record<string, React.ReactNode>;
+  }) => {
+    const savedValue = (savedLayouts as any)[settingKey];
+    return (
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-foreground">{label}</label>
+        <div className={`grid gap-4 ${options.length === 1 ? 'grid-cols-1 max-w-xs' : options.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'}`}>
+          {options.map(o => {
+            const isSelected = value === o.value;
+            const isSaved = savedValue === o.value;
+            const preview = previews?.[o.value] ?? GENERIC_PREVIEW;
+            return (
+              <div
+                key={o.value}
+                onClick={() => onChange(settingKey, o.value)}
+                className={`relative p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 select-none group ${
+                  isSelected
+                    ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10 ring-1 ring-primary/20'
+                    : 'border-border/50 bg-card hover:border-primary/40 hover:shadow-md hover:bg-muted/30'
+                }`}
+              >
+                {/* Preview thumbnail */}
+                <div className={`w-full h-20 rounded-lg mb-3 overflow-hidden flex items-center justify-center transition-colors ${
+                  isSelected ? 'bg-primary/10 text-primary' : 'bg-secondary/50 text-muted-foreground/60 group-hover:bg-muted/50'
+                }`}>
+                  {preview}
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`font-bold text-sm transition-colors ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                    {o.label}
+                  </span>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                    isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/30'
+                  }`}>
+                    {isSelected && <Icon icon="ph:check-bold" className="w-2.5 h-2.5 text-white" />}
+                  </div>
+                </div>
+
+                {isSaved && (
+                  <div className="absolute -top-2.5 left-3 bg-emerald-500 text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm pointer-events-none flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 inline-block" />
+                    Active
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  const VisibilityToggle = ({ label, description, settingKey, checked, onChange }: {
+    label: string;
+    description?: string;
+    settingKey: string;
+    checked: boolean;
+    onChange: (key: string, v: boolean) => void;
+  }) => (
+    <div className="flex items-center justify-between py-2.5 px-1 gap-4">
+      <div>
+        <span className="text-sm font-semibold text-foreground block">{label}</span>
+        {description && <span className="text-xs text-muted-foreground">{description}</span>}
+      </div>
       <button
         type="button"
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-muted'}`}
+        onClick={() => onChange(settingKey, !checked)}
+        className={`relative inline-flex h-7 w-13 min-w-[52px] items-center rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+          checked ? 'bg-primary shadow-md shadow-primary/20' : 'bg-muted hover:bg-muted/80'
+        }`}
+        title={checked ? 'Click to hide' : 'Click to show'}
       >
-        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
+        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-200 ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
     </div>
   );
 
-  const Section = ({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) => (
-    <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
-      <div className="flex items-center gap-3 p-5 border-b border-border/50 bg-muted/20">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+  const Section = ({ icon, title, subtitle, children }: { icon: string; title: string; subtitle?: string; children: React.ReactNode }) => (
+    <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-border/50 bg-gradient-to-r from-muted/30 to-transparent">
+        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
           <Icon icon={icon} className="w-5 h-5 text-primary" />
         </div>
-        <h3 className="font-bold text-base">{title}</h3>
+        <div>
+          <h3 className="font-bold text-sm text-foreground">{title}</h3>
+          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
       </div>
-      <div className="p-5 space-y-4">{children}</div>
+      <div className="p-5 space-y-5">{children}</div>
     </div>
   );
 
@@ -328,9 +505,10 @@ export default function CustomizationTab() {
 
   return (
     <div className="space-y-6 max-w-6xl">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Appearance & General Customization</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Appearance & Customization</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage layouts, homepage widgets, metadata, and static policy pages.</p>
         </div>
         
@@ -356,35 +534,84 @@ export default function CustomizationTab() {
       </div>
 
       {subTab === 'layouts' ? (
-        <div className="space-y-6 max-w-4xl">
-          <div className="flex justify-between items-center bg-muted/20 border border-border/50 p-4 rounded-2xl">
-            <span className="text-sm font-semibold text-muted-foreground">Save layout modifications to update website UI components.</span>
-            <Button className="gap-2 rounded-xl" onClick={handleSaveLayouts} disabled={saving}>
-              <Icon icon="ph:floppy-disk-bold" className="w-4 h-4" />
-              {saving ? 'Saving...' : 'Save Layouts'}
-            </Button>
+        <div className="space-y-5 max-w-4xl">
+          {/* Save / Discard bar — shows unsaved indicator */}
+          <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+            hasUnsavedChanges
+              ? 'bg-amber-500/5 border-amber-500/30 shadow-sm shadow-amber-500/10'
+              : 'bg-muted/20 border-border/50'
+          }`}>
+            <div className="flex items-center gap-2.5">
+              {hasUnsavedChanges ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">Unsaved changes</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm font-semibold text-muted-foreground">All changes saved</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {hasUnsavedChanges && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDiscardLayouts}
+                  className="text-xs h-9 px-3 rounded-lg text-muted-foreground hover:text-foreground"
+                >
+                  Discard
+                </Button>
+              )}
+              <Button
+                className="gap-2 rounded-xl h-9 px-4"
+                onClick={handleSaveLayouts}
+                disabled={saving || !hasUnsavedChanges}
+              >
+                <Icon icon={saving ? 'ph:spinner-gap-bold' : 'ph:floppy-disk-bold'} className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
+                {saving ? 'Saving...' : 'Save Layouts'}
+              </Button>
+            </div>
           </div>
 
           {/* Header */}
-          <Section icon="ph:navigation-arrow-bold" title="Header / Navigation">
-            <StyleDropdown label="Desktop Header Style" value={layouts.header_desktop_style} onChange={v => setLayouts(l => ({ ...l, header_desktop_style: v }))} />
-            <StyleDropdown label="Mobile Header Style" value={layouts.header_mobile_style} onChange={v => setLayouts(l => ({ ...l, header_mobile_style: v }))} />
+          <Section icon="ph:navigation-arrow-bold" title="Header / Navigation" subtitle="Desktop and mobile navigation bar style">
+            <StyleCardSelector label="Desktop Header Style" settingKey="header_desktop_style" value={layouts.header_desktop_style} onChange={handleStyleChange} />
+            <div className="border-t border-border/30 pt-5">
+              <StyleCardSelector label="Mobile Header Style" settingKey="header_mobile_style" value={layouts.header_mobile_style} onChange={handleStyleChange} />
+            </div>
           </Section>
 
           {/* Featured Slider */}
-          <Section icon="ph:slideshow-bold" title="Featured Slider">
-            <StyleDropdown label="Slider Style" value={layouts.featured_slider_style} onChange={v => setLayouts(l => ({ ...l, featured_slider_style: v }))} />
+          <Section icon="ph:slideshow-bold" title="Featured Slider" subtitle="Homepage hero banner and featured manga carousel">
+            <StyleCardSelector label="Slider Style" settingKey="featured_slider_style" value={layouts.featured_slider_style} onChange={handleStyleChange} />
           </Section>
 
           {/* Trending */}
-          <Section icon="ph:trend-up-bold" title="Trending Section">
-            <StyleDropdown label="Trending Style" value={layouts.trending_style} onChange={v => setLayouts(l => ({ ...l, trending_style: v }))} />
-            <VisibilityToggle label="Show Trending Section" checked={layouts.trending_visible} onChange={v => setLayouts(l => ({ ...l, trending_visible: v }))} />
+          <Section icon="ph:trend-up-bold" title="Trending Section" subtitle="Trending manga section on the homepage">
+            <VisibilityToggle
+              label="Show Trending Section"
+              description="Display the trending manga section on the homepage"
+              settingKey="trending_visible"
+              checked={layouts.trending_visible}
+              onChange={handleStyleChange}
+            />
+            <div className="border-t border-border/30 pt-4">
+              <StyleCardSelector label="Trending Style" settingKey="trending_style" value={layouts.trending_style} onChange={handleStyleChange} />
+            </div>
           </Section>
 
           {/* Collections */}
-          <Section icon="ph:folders-bold" title="Collections">
-            <VisibilityToggle label="Show Collections on Homepage" checked={layouts.collections_visible} onChange={v => setLayouts(l => ({ ...l, collections_visible: v }))} />
+          <Section icon="ph:folders-bold" title="Collections" subtitle="Curated genre-based manga collections on the homepage">
+            <VisibilityToggle
+              label="Show Collections on Homepage"
+              description="Display genre collections section on the homepage"
+              settingKey="collections_visible"
+              checked={layouts.collections_visible}
+              onChange={handleStyleChange}
+            />
 
             {layouts.collections_visible && (
               <div className="space-y-4 pt-2 border-t border-border/50">
@@ -427,18 +654,28 @@ export default function CustomizationTab() {
           </Section>
 
           {/* Manga Card */}
-          <Section icon="ph:cards-bold" title="Manga Card">
-            <StyleDropdown label="Card Style" value={layouts.manga_card_style} onChange={v => setLayouts(l => ({ ...l, manga_card_style: v }))} />
+          <Section icon="ph:cards-bold" title="Manga Card" subtitle="Appearance of manga cards throughout the site">
+            <StyleCardSelector label="Card Style" settingKey="manga_card_style" value={layouts.manga_card_style} onChange={handleStyleChange} />
           </Section>
 
           {/* Footer */}
-          <Section icon="ph:text-align-center-bold" title="Footer">
-            <StyleDropdown label="Footer Style" value={layouts.footer_style} onChange={v => setLayouts(l => ({ ...l, footer_style: v }))} />
+          <Section icon="ph:text-align-center-bold" title="Footer" subtitle="Site footer style and layout">
+            <StyleCardSelector label="Footer Style" settingKey="footer_style" value={layouts.footer_style} onChange={handleStyleChange} />
           </Section>
 
           {/* Manga Info Page */}
-          <Section icon="ph:info-bold" title="Manga Info Page">
-            <StyleDropdown label="Info Page Style" value={layouts.manga_info_style} onChange={v => setLayouts(l => ({ ...l, manga_info_style: v }))} />
+          <Section icon="ph:info-bold" title="Manga Info Page" subtitle="Series detail page and chapter list appearance">
+            <StyleCardSelector label="Info Page Style" settingKey="manga_info_style" value={layouts.manga_info_style} onChange={handleStyleChange} />
+            <div className="border-t border-border/30 pt-5">
+              <StyleCardSelector
+                label="Chapters List Style"
+                settingKey="chapter_list_style"
+                value={layouts.chapter_list_style}
+                onChange={handleStyleChange}
+                options={CHAPTER_STYLE_OPTIONS}
+                previews={CHAPTER_STYLE_PREVIEWS}
+              />
+            </div>
           </Section>
         </div>
       ) : (

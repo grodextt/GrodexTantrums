@@ -1,5 +1,7 @@
-import { Icon } from "@iconify/react";
+"use client";
 import { Link } from "react-router-dom";
+import { Icon } from "@iconify/react";
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useSiteSettings } from "@/hooks/useSiteSettings";

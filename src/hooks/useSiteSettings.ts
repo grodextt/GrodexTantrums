@@ -70,6 +70,7 @@ export interface LayoutSettings {
   manga_card_style: string;
   footer_style: string;
   manga_info_style: string;
+  chapter_list_style: string;
 }
 
 export interface MetadataSettings {
@@ -130,6 +131,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     manga_card_style: 'style-1',
     footer_style: 'style-1',
     manga_info_style: 'style-1',
+    chapter_list_style: 'style-1',
   },
   metadata: {
     genres: [
@@ -172,7 +174,9 @@ export const useSiteSettings = () => {
       }
       return result;
     },
-    staleTime: 1000 * 30,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const updateSettings = useMutation({
