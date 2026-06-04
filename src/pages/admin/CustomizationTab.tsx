@@ -20,8 +20,8 @@ const STYLE_OPTIONS = [
 ];
 
 const CHAPTER_STYLE_OPTIONS = [
-  { value: 'style-1', label: 'Style 1 — Grid' },
-  { value: 'style-2', label: 'Style 2 — List' },
+  { value: 'style-1', label: 'Style 1 — List' },
+  { value: 'style-2', label: 'Style 2 — Grid' },
 ];
 
 const DEFAULT_GENRE_LIST = [
@@ -51,27 +51,6 @@ const EMPTY_COLLECTION: CollectionForm = { title: '', description: '', icon: '�
 const CHAPTER_STYLE_PREVIEWS: Record<string, React.ReactNode> = {
   'style-1': (
     <svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      {/* Grid layout preview */}
-      <rect x="4" y="4" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
-      <rect x="4" y="4" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
-      <rect x="8" y="20" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
-      <rect x="8" y="26" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
-      <rect x="62" y="4" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
-      <rect x="62" y="4" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
-      <rect x="66" y="20" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
-      <rect x="66" y="26" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
-      <rect x="4" y="40" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
-      <rect x="4" y="40" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
-      <rect x="8" y="56" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
-      <rect x="8" y="62" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
-      <rect x="62" y="40" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
-      <rect x="62" y="40" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
-      <rect x="66" y="56" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
-      <rect x="66" y="62" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
-    </svg>
-  ),
-  'style-2': (
-    <svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
       {/* List layout preview */}
       <rect x="4" y="4" width="112" height="14" rx="4" fill="currentColor" opacity="0.12"/>
       <rect x="4" y="4" width="14" height="14" rx="3" fill="currentColor" opacity="0.25"/>
@@ -89,6 +68,27 @@ const CHAPTER_STYLE_PREVIEWS: Record<string, React.ReactNode> = {
       <rect x="4" y="58" width="14" height="14" rx="3" fill="currentColor" opacity="0.25"/>
       <rect x="24" y="61" width="50" height="3" rx="1.5" fill="currentColor" opacity="0.25"/>
       <rect x="24" y="66" width="34" height="2.5" rx="1.25" fill="currentColor" opacity="0.15"/>
+    </svg>
+  ),
+  'style-2': (
+    <svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      {/* Grid layout preview */}
+      <rect x="4" y="4" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="4" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="8" y="20" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="8" y="26" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+      <rect x="62" y="4" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="62" y="4" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="66" y="20" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="66" y="26" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+      <rect x="4" y="40" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="4" y="40" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="8" y="56" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="8" y="62" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
+      <rect x="62" y="40" width="54" height="30" rx="4" fill="currentColor" opacity="0.12"/>
+      <rect x="62" y="40" width="54" height="8" rx="3" fill="currentColor" opacity="0.25"/>
+      <rect x="66" y="56" width="40" height="3" rx="1.5" fill="currentColor" opacity="0.2"/>
+      <rect x="66" y="62" width="28" height="3" rx="1.5" fill="currentColor" opacity="0.15"/>
     </svg>
   ),
 };
